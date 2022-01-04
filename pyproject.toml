@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[tool.poetry]
+name = "iDEA"
+version = "0.1.0"
+description = "interacting Dynamic Electrons Approach"
+authors = ["Jack Wetherell <jack.wetherell@gmail.com>"]
+license = "GPLv3"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.11"
+black = "^22.3.0"
+numpy = "^1.22.3"
+scipy = "^1.8.0"
+matplotlib = "^3.5.1"
+jupyterlab = "^3.3.2"
+
+[tool.poetry.dev-dependencies]
