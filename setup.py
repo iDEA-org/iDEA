@@ -13,9 +13,9 @@ setuptools.setup(
     description="interacting Dynamic Electrons Approach",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/iDEA-org/iDEA",
     project_urls={
-        "Bug Tracker": "https://github.com/pypa/sampleproject/issues",
+        "Bug Tracker": "https://github.com/iDEA-org/iDEA/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
