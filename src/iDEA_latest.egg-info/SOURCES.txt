@@ -1,0 +1,12 @@
+COPYING.txt
+LICENSE
+README.md
+pyproject.toml
+setup.py
+src/iDEA/__init__.py
+src/iDEA/example.py
+src/iDEA_latest.egg-info/PKG-INFO
+src/iDEA_latest.egg-info/SOURCES.txt
+src/iDEA_latest.egg-info/dependency_links.txt
+src/iDEA_latest.egg-info/requires.txt
+src/iDEA_latest.egg-info/top_level.txt
