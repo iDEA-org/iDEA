@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: iDEA-latest
-Version: 0.1.1
+Version: 0.1.2
 Summary: interacting Dynamic Electrons Approach (iDEA)
 Home-page: https://github.com/iDEA-org/iDEA
 Author: Jack Wetherell
@@ -17,8 +17,6 @@ License-File: LICENSE
 License-File: COPYING.txt
 
 # iDEA
-
-V 0.1.0
 
 iDEA Coming soon!
 
