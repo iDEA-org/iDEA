@@ -1,0 +1,14 @@
+iDEA:
+    system: System, systems.
+    interactions: softened_interaction, softened_interaction_alternative, raw_interaction.
+    state: State, InteractingState, NonInteratingState.
+    observables: density, hartree_potential, hartree_energy, density_matrix, exchange_potential, exchange_energy, external_energy, slater_determinant, kinetic_energy.
+    methods:
+        interacting: solve_state, antisymmetrize, hamiltionian, total_energy, propigate.
+        non_interacting: solve_state, hamiltionian, total_energy, propigate.
+        hartree: solve_state, hamiltionian, total_energy, propigate.
+        hartree_fock: solve_state, hamiltionian, total_energy, propigate.
+        lda: solve_state, total_energy, hamiltionian, exchange_correlation_energy, propigate.
+        hybrid: solve_state, hamiltionian, total_energy, propigate.
+    reverse_engineering: reverse, reverse_propigation.
+    utilities: Container, Experiment.
