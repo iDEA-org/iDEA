@@ -5,11 +5,16 @@ import pickle
 import numpy as np
 
 
-__all__ = ['Container', 'Experiment', 'save_experiment', 'load_experiment']
+__all__ = ['Container', 'ArrayPlaceholder', 'Experiment', 'save_experiment', 'load_experiment']
 
 
 class Container:
     """Empty container."""
+    pass
+
+
+class ArrayPlaceholder:
+    """Array Placeholder."""
     pass
 
 
