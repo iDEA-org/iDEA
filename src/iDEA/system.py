@@ -14,7 +14,6 @@ __all__ = ['System', 'save_system', 'load_system', 'systems', 'interactions']
 class System:
     """Model system, containing all defining properties."""
 
-
     def __init__(self, x: np.ndarray, v_ext: np.ndarray, v_int: np.ndarray, electrons: str, stencil: int = 13):
         """
         Model system, containing all defining properties.
@@ -38,7 +37,6 @@ class System:
         self.stencil = stencil
         self.check()
         
-
     def check(self):
         """Performs checks on system properties. Raises AssertionError if any check fails."""
         assert (type(self.x) == np.ndarray), f"x grid is not of type np.ndarray, got {type(self.x)} instead."
@@ -53,7 +51,6 @@ class System:
         assert self.NE >= 0, f"NE is not positive."
         assert set(self.electrons).issubset(set(['u','d'])), f"Electrons must have only up or down spin, e.g 'uudd'. Got {self.electrons} instead"
         assert self.stencil in [3,5,7,9,11,13,], f"stencil must be one of [3,5,7,9,11,13], got {self.stencil} instead."
-
 
     @property
     def x(self):
