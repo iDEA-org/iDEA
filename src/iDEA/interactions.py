@@ -4,11 +4,12 @@
 import numpy as np
 
 
-__all__ = ['softened_interaction', 'softened_interaction_alternative', 'raw_interaction']
+__all__ = ["softened_interaction", "softened_interaction_alternative", "raw_interaction"]
 
 
 def softened_interaction(x: np.ndarray, strength: float = 1.0, softening: float = 1.0) -> np.ndarray:
-    r"""Constructs the softened interaction potential.
+    r"""
+    Constructs the softened interaction potential.
 
     .. math:: v_\mathrm{int}(x,x') = \frac{s}{|x-x'| + a}
 
@@ -29,7 +30,8 @@ def softened_interaction(x: np.ndarray, strength: float = 1.0, softening: float 
 
 
 def softened_interaction_alternative(x: np.ndarray, strength: float = 1.0, softening: float = 1.0) -> np.ndarray:
-    r"""Constructs the alternative softened interaction potential.
+    r"""
+    Constructs the alternative softened interaction potential.
 
     .. math:: v_\mathrm{int}(x,x') = \frac{s}{\sqrt{x-x'}^{2} + a}
 
@@ -49,7 +51,8 @@ def softened_interaction_alternative(x: np.ndarray, strength: float = 1.0, softe
 
 
 def raw_interaction(x: np.ndarray, strength: float = 1.0) -> np.ndarray:
-    r"""Constructs the raw interaction potential.
+    r"""
+    Constructs the raw interaction potential.
 
     .. math:: v_\mathrm{int}(x,x') = \frac{s}{|x-x'| + 10^{-10}}
 
