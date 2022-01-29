@@ -6,7 +6,7 @@ import numpy as np
 import iDEA.utilities
 
 
-__all__ = ['State', 'ManyBodyState', 'SingleBodyState']
+__all__ = ["State", "ManyBodyState", "SingleBodyState"]
 
 class State(Interface):
     """Interface class representing a state."""
@@ -28,8 +28,8 @@ class ManyBodyState(State):
         destroyed when needed.
 
         Args:
-            space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(x_1,x_2,\dots,x_N).
-            spin: np.ndarray, Spin part of the wavefunction on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N).
+            space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(x_1,x_2,\dots,x_N). (default = None)
+            spin: np.ndarray, Spin part of the wavefunction on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). (default = None)
         """
         if space is None:
             self.space = iDEA.utilities.ArrayPlaceholder()
@@ -43,14 +43,15 @@ class ManyBodyState(State):
 
 
 class SingleBodyState(State):
-    r"""State of particles in a single-body state.
+    r"""
+    State of particles in a single-body state.
     
     This is described by three arrays for each spin channel: 
     
     up.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].
     up.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
     up.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
-    
+
     down.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].
     down.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
     down.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
