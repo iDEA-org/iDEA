@@ -8,7 +8,7 @@ import iDEA.utilities
 import iDEA.interactions
 
 
-__all__ = ['System', 'save_system', 'load_system', 'systems', 'interactions']
+__all__ = ["System", "save_system", "load_system", "systems", "interactions"]
 
 
 class System:
@@ -88,13 +88,13 @@ def save_system(s: System, file_name: str) -> None:
 
 
 def load_system(file_name: str) -> System:
-    '''Load the system from a system file. Recommended naming: file_name="system_name.system"'''
+    """Load the system from a system file. Recommended naming: file_name="system_name.system"""
     return pickle.load(open(file_name, "rb"))
 
 
 # Define some default built in systems.
 __x1 = np.linspace(-10, 10, 300)
 systems = iDEA.utilities.Container()
-systems.qho = System(__x1, 0.5 * (0.25 ** 2) * (__x1 ** 2), iDEA.interactions.softened_interaction(__x1), 'uu')
+systems.qho = System(__x1, 0.5 * (0.25 ** 2) * (__x1 ** 2), iDEA.interactions.softened_interaction(__x1), "uu")
 __x2 = np.linspace(-20, 20, 300)
-systems.atom = System(__x2, -2.0 / (abs(__x2) + 1.0), iDEA.interactions.softened_interaction(__x2), 'ud')
+systems.atom = System(__x2, -2.0 / (abs(__x2) + 1.0), iDEA.interactions.softened_interaction(__x2), "ud")
