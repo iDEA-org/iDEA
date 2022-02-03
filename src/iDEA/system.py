@@ -32,8 +32,8 @@ class System:
         self.__dx = self.x[1] - self.x[0]
         self.v_ext = v_ext
         self.v_int = v_int
-        self.electrons = electrons
-        self.NE = len(electrons)
+        self.__electrons = electrons
+        self.count = len(electrons)
         self.stencil = stencil
         self.check()
         
@@ -42,13 +42,13 @@ class System:
         assert (type(self.x) == np.ndarray), f"x grid is not of type np.ndarray, got {type(self.x)} instead."
         assert (type(self.v_ext) == np.ndarray), f"v_ext is not of type np.ndarray, got {type(self.v_ext)} instead."
         assert (type(self.v_int) == np.ndarray), f"v_int is not of type np.ndarray, got {type(self.v_int)} instead."
-        assert type(self.NE) == int, f"NE is not of type int, got {type(self.NE)} instead."
+        assert type(self.count) == int, f"count is not of type int, got {type(self.NE)} instead."
         assert (len(self.x.shape) == 1), f"x grid is not a 1D array, got {len(self.x.shape)}D array instead."
         assert (len(self.v_ext.shape) == 1), f"v_ext is not a 1D array, got {len(self.v_ext.shape)}D array instead."
         assert (len(self.v_int.shape) == 2), f"v_int is not a 2D array, got {len(self.v_int.shape)}D array instead."
         assert (self.x.shape == self.v_ext.shape), f"x grid and v_ext arrays are not the same shape, got x.shape = {self.x.shape} and v_ext.shape = {self.v_ext.shape} instead."
         assert (self.x.shape[0] == self.v_int.shape[0] and self.x.shape[0] == self.v_int.shape[1]), "v_int is not of the correct shape, got shape {self.v_int.shape} instead."
-        assert self.NE >= 0, f"NE is not positive."
+        assert self.count >= 0, f"count is not positive."
         assert set(self.electrons).issubset(set(['u','d'])), f"Electrons must have only up or down spin, e.g 'uudd'. Got {self.electrons} instead"
         assert self.stencil in [3,5,7,9,11,13,], f"stencil must be one of [3,5,7,9,11,13], got {self.stencil} instead."
 
@@ -77,6 +77,19 @@ class System:
     @dx.deleter
     def dx(self):
         del self.__dx
+
+    @property
+    def electrons(self):
+        return self.__electrons
+
+    @electrons.setter
+    def electrons(self, value):
+        self.__electrons = value
+        self.count = len(value)
+
+    @electrons.deleter
+    def electrons(self):
+        del self.__electrons
 
     def __str__(self):
         return f"iDEA.system.System: x = np.array([{self.x[0]:.3f},...,{self.x[-1]:.3f}]), dx = {self.dx:.4f}..., v_ext = np.array([{self.v_ext[0]:.3f},...,{self.v_ext[-1]:.3f}]), electrons = {self.electrons}"

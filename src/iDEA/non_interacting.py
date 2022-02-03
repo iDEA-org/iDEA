@@ -2,6 +2,7 @@
 
 
 import copy
+import itertools
 import numpy as np
 import scipy as sp
 import numpy.linalg as npla
@@ -107,74 +108,8 @@ def solve_state(s, H=None, k: int = 0):
     state.down.energies = copy.deepcopy(energies)
     state.up.orbitals = copy.deepcopy(orbitals)
     state.down.orbitals = copy.deepcopy(orbitals)
-    calculate_occupations(s, state, k)
+    state = calculate_occupations(s, state, k)
     return state
-
-
-def calculate_occupations(s, state, k):
-    # Count number of electrons in each spin channel.
-    N_up = s.electrons.count('u')
-    N_down = s.electrons.count('d')
-
-    # Initialise occupations to 0.
-    state.up.occupations = np.zeros(shape = state.up.energies.shape, dtype=np.float)
-    state.down.occupations = np.zeros(shape = state.down.energies.shape, dtype=np.float)
-    assert state.up.occupations.shape == state.down.occupations.shape, f"Occuations must have same shape for up and down spin channels."
-
-    # Compute the ground state occupations.
-    state.up.occupations[:N_up] = 1.0
-    state.down.occupations[:N_down] = 1.0 
-
-    print(state.up.occupations[:8].astype(np.int))
-    print(state.down.occupations[:8].astype(np.int))
-    print(total_energy(s, state))
-    print('-----------')
-
-    # Compute higher energy states.
-    for _ in range(1, k+1):
-        
-        # Get the lumos for the current state, as possible excitations. 
-        up_args = np.argwhere(state.up.occupations == 1.0)
-        down_args = np.argwhere(state.down.occupations == 1.0)
-        up_lumo = np.max(up_args) + 1
-        down_lumo = np.max(down_args) + 1
-
-        # Try all possible up excitations.
-        up_trial_energies = []
-        up_trial_states = []
-        for ua in up_args:
-            state_copy = copy.deepcopy(state)
-            state_copy.up.occupations[ua] = 0.0
-            state_copy.up.occupations[up_lumo] = 1.0
-            E = total_energy(s, state_copy)
-            up_trial_energies.append(E)
-            up_trial_states.append(state_copy)
-
-        # Try all possible down excitations.
-        down_trial_energies = []
-        down_trial_states = []
-        for da in down_args:
-            state_copy = copy.deepcopy(state)
-            state_copy.down.occupations[da] = 0.0
-            state_copy.down.occupations[down_lumo] = 1.0
-            E = total_energy(s, state_copy)
-            down_trial_energies.append(E)
-            down_trial_states.append(state_copy)
-
-        # Replace the state with the correct state.
-        up_argmax = np.argmax(up_trial_energies)
-        down_argmax = np.argmax(down_trial_energies)
-        if up_trial_energies[up_argmax] >= down_trial_energies[down_argmax]:
-            state = copy.deepcopy(up_trial_states[up_argmax])
-            print('true')
-        else:
-            print('false')
-            state = copy.deepcopy(down_trial_states[down_argmax])
-        print(state.up.occupations[:8].astype(np.int))
-        print(state.down.occupations[:8].astype(np.int))
-        print(total_energy(s, state))
-        print('-----------')
-        # TODO: Fix up and down seperation error here.
 
 
 def total_energy(s, state):
@@ -182,13 +117,49 @@ def total_energy(s, state):
     return E
 
 
+def calculate_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k: int) -> None:
+    # Calculate the max level or orbitals needed to achieve required state and only use these.
+    max_level = (k + 1) * int(np.ceil(s.count/2))
+    up_energies = state.up.energies[:max_level]
+    down_energies = state.down.energies[:max_level]
 
+    # Calculate all possible combinations of spin indices.
+    up_indices = list(itertools.combinations(range(max_level), s.electrons.count('u')))
+    down_indices = list(itertools.combinations(range(max_level), s.electrons.count('d')))
 
+    # Construct all possible occupations.
+    up_occupations = []
+    for up_index in up_indices:
+        up_occupation = np.zeros(shape=up_energies.shape, dtype=np.float)
+        np.put(up_occupation, up_index, [1.0]*s.electrons.count('u'))
+        up_occupations.append(up_occupation)
+    down_occupations = []
+    for down_index in down_indices:
+        down_occupation = np.zeros(shape=down_energies.shape, dtype=np.float)
+        np.put(down_occupation, down_index, [1.0]*s.electrons.count('d'))
+        down_occupations.append(down_occupation)
+    occupations = list(itertools.product(up_occupations, down_occupations))
 
+    # Calculate the energies of all possible occpuations.
+    energies = []
+    for occupation in occupations:
+        state_copy = copy.deepcopy(state)
+        state_copy.up.occupations = np.zeros(shape=state_copy.up.energies.shape)
+        state_copy.up.occupations[:max_level] = occupation[0]
+        state_copy.down.occupations = np.zeros(shape=state_copy.down.energies.shape)
+        state_copy.down.occupations[:max_level] = occupation[1]
+        E = total_energy(s, state_copy)
+        energies.append(E)
+    
+    # Choose the correct energy index.
+    energy_index = np.argsort(energies)[k]
 
-
-
-
+    # Construct correct occupations.
+    state.up.occupations = np.zeros(shape=state_copy.up.energies.shape)
+    state.up.occupations[:max_level] = occupations[energy_index][0]
+    state.down.occupations = np.zeros(shape=state_copy.down.energies.shape)
+    state.down.occupations[:max_level] = occupations[energy_index][1]
+    return state
 
 # def charge_density(s, orbitals):
 #     r"""Compute charge density from given non-interacting orbitals.
