@@ -34,6 +34,8 @@ class System:
         self.v_int = v_int
         self.__electrons = electrons
         self.count = len(electrons)
+        self.up_count = electrons.count('u')
+        self.down_count = electrons.count('d')
         self.stencil = stencil
         self.check()
         
@@ -50,6 +52,7 @@ class System:
         assert (self.x.shape[0] == self.v_int.shape[0] and self.x.shape[0] == self.v_int.shape[1]), "v_int is not of the correct shape, got shape {self.v_int.shape} instead."
         assert self.count >= 0, f"count is not positive."
         assert set(self.electrons).issubset(set(['u','d'])), f"Electrons must have only up or down spin, e.g 'uudd'. Got {self.electrons} instead"
+        assert self.count == self.up_count + self.down_count, f"Electrons must obay up_count + down_count = count."
         assert self.stencil in [3,5,7,9,11,13,], f"stencil must be one of [3,5,7,9,11,13], got {self.stencil} instead."
 
     @property
@@ -86,6 +89,8 @@ class System:
     def electrons(self, value):
         self.__electrons = value
         self.count = len(value)
+        self.up_count = value.count('u')
+        self.down_count = value.count('d')
 
     @electrons.deleter
     def electrons(self):

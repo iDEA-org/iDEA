@@ -6,7 +6,7 @@ iDEA:
     observables: density, hartree_potential, hartree_energy, density_matrix, exchange_potential, exchange_energy, external_energy, slater_determinant, kinetic_energy.
     methods:
         interacting: solve_state, antisymmetrize, hamiltionian, total_energy, propigate.
-        non_interacting: solve_state, hamiltionian, total_energy, propigate.
+        non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, calculate_occupations, solve_state.
         hartree: solve_state, hamiltionian, total_energy, propigate.
         hartree_fock: solve_state, hamiltionian, total_energy, propigate.
         lda: solve_state, total_energy, hamiltionian, exchange_correlation_energy, propigate.
