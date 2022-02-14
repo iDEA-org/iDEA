@@ -1,14 +1,14 @@
 iDEA:
-    utilities: Container, ArrayPlaceholder, Experiment.
-    system: System, systems.
+    utilities: Container, ArrayPlaceholder, Experiment, save_experiment, load_experiment.
+    system: System, save_system, load_system, systems.
     interactions: softened_interaction, softened_interaction_alternative, raw_interaction.
-    state: State, ManyBodyState, SingleBodyState.
-    observables: density, hartree_potential, hartree_energy, density_matrix, exchange_potential, exchange_energy, external_energy, slater_determinant, kinetic_energy.
+    state: State, ManyBodyState, SingleBodyState, Evolution, ManyBodyEvolution, SingleBodyEvolution.
+    observables: density, external_potential, external_energy, hartree_potential, hartree_energy, density_matrix, exchange_potential, exchange_energy, kinetic_energy, slater_determinant.
     methods:
-        interacting: solve_state, antisymmetrize, hamiltionian, total_energy, propigate.
-        non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, calculate_occupations, solve_state.
-        hartree: solve_state, hamiltionian, total_energy, propigate.
-        hartree_fock: solve_state, hamiltionian, total_energy, propigate.
-        lda: solve_state, total_energy, hamiltionian, exchange_correlation_energy, propigate.
-        hybrid: solve_state, hamiltionian, total_energy, propigate.
+        interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, antisymmetrize, solve, propigate.
+        non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, add_occupations, solve, propigate.
+        hartree: hartree_potential_operator, hamiltionian, total_energy, sc_step, solve, propigate.
+        hartree_fock: exchange_potential_operator, hamiltionian, total_energy, sc_step, solve, propigate.
+        lda: xc_potential_operator, hamiltionian, total_energy, exchange_correlation_energy, sc_step, solve, propigate.
+        hybrid: hamiltionian, total_energy, sc_step, solve, propigate.
     reverse_engineering: reverse, reverse_propigation.
