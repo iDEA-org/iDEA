@@ -3,10 +3,13 @@
 
 import copy
 import itertools
+from typing import Union
 import numpy as np
 import scipy as sp
+import scipy.sparse as sps
 import numpy.linalg as npla
 import scipy.linalg as spla
+import scipy.sparse.linalg as spsla
 import iDEA.system
 
 
@@ -50,9 +53,9 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
 
 def external_potential_operator(s: iDEA.system.System) -> np.ndarray:
     """
-    Compute single-particle external potential energy operator as a matrix.
+    Compute the external potential operator.
 
-    Args:
+    Args;
         s: iDEA.system.System, System object.
 
     Returns:
@@ -82,12 +85,39 @@ def hamiltonian(s: iDEA.system.System, K: np.ndarray = None, V: np.ndarray = Non
     return H
 
 
-def total_energy(s, state):
-    E = np.sum(state.up.energies * state.up.occupations) + np.sum(state.down.energies * state.down.occupations)
+def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None, evolution: iDEA.state.SingleBodyEvolution = None) -> Union[float, np.ndarray]:
+    """
+    Compute the total energy of a non_interacting state.
+
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
+
+    Returns:
+        E: float or np.ndarray, Total energy, or evolution of total energy.
+    """
+    if state is not None:
+        E = np.sum(state.up.energies * state.up.occupations) + np.sum(state.down.energies * state.down.occupations)
+    elif evolution is not None:
+        raise NotImplementedError() # TODO
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
     return E
 
 
-def calculate_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k: int) -> None:
+def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k: int) -> iDEA.state.SingleBodyState:
+    """
+    Calculate the occpuations of a state in a given energy excitation.
+
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState, State.
+        k: int, Excitation state [k = 0 is the ground-state]. 
+
+    Returns:
+        state: iDEA.state.SingleBodyState, State.
+    """
     # Calculate the max level or orbitals needed to achieve required state and only use these.
     max_level = (k + 1) * int(np.ceil(s.count/2))
     up_energies = state.up.energies[:max_level]
@@ -133,9 +163,9 @@ def calculate_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodySta
     return state
 
 
-def solve_state(s, H=None, k: int = 0):
+def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0) -> iDEA.state.SingleBodyState:
     """
-    Solves for the non-interacting eigenstate of the given system.
+    Solves the non-interacting Schrodinger equation of the given system.
 
     Args:
         s: iDEA.system.System, System object.
@@ -143,14 +173,16 @@ def solve_state(s, H=None, k: int = 0):
         k: int, Energy state to solve for. (default = 0, the ground-state)
 
     Returns:
-        state: iDEA.state.SingleBodyState, solved ground_state.
+        state: iDEA.state.SingleBodyState, Solved ground_state.
     """
     # Construct the Hamiltonian.
     if H is None:
         H = hamiltonian(s)
 
-    # Solve the state and normalise orbitals.
+    # Solve the non-interacting Schrodinger equation.
     energies, orbitals = spla.eigh(H)
+
+    # Normalise orbitals.
     orbitals = orbitals / np.sqrt(s.dx) 
 
     # Construct the single-body state.
@@ -159,27 +191,46 @@ def solve_state(s, H=None, k: int = 0):
     state.down.energies = copy.deepcopy(energies)
     state.up.orbitals = copy.deepcopy(orbitals)
     state.down.orbitals = copy.deepcopy(orbitals)
-    state = calculate_occupations(s, state, k)
+    state = add_occupations(s, state, k)
 
     return state
 
 
-def propagate(s, state, v_ptrb, t, H=None):
-    """Propigate a set of orbitals forward in time due to a local pertubation
+def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState(), v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None):
+    """
+    Propigate a set of orbitals forward in time due to a local pertubation.
 
-    s: System
-        System object.
-    orbitals: np.ndarray
-        Array of normalised orbitals, indexed as orbitals[space,orbital_number].
-    v_ptrb: np.ndarray
-        Local perturbing potential on the grid of x values.
-    times: np.ndarray
-        Grid of time values.
+    Args: 
+        s: iDEA.system.System, System object.
+        state: np.ndarray, Array of normalised orbitals, indexed as orbitals[space,orbital_number].
+        v_ptrb: np.ndarray, Local perturbing potential [static or dynamic].
+        t: np.ndarray, Grid of time values.
+        H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
 
-    returns:
-    td_oribtals: nparray
-        Array of time dependent orbitals, indexed as orbitals[time,space,orbital_number]
-        Note: Returned orbitals is only the occupied orbitals, and so td_orbitals.shape[2] = s.NE.
+    Returns:
+        evolution: iDEA.state.TDSingleBodyState, Solved time-dependent state.
+    """
+    if len(v_ptrb.shape) == 1:
+        return _propigate_static(s, state, v_ptrb, t, H=None)
+    elif len(v_ptrb.shape) == 2:
+        return _propigate_dynamic(s, state, v_ptrb, t, H=None)
+    else:
+        raise AttributeError(f"v_ptrb must have shape 1 or 2, got {v_ptrb.shape} instead.")
+
+
+def _propigate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState(), v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None):
+    """
+    Propigate a set of orbitals forward in time due to a static local pertubation.
+
+    Args: 
+        s: iDEA.system.System, System object.
+        state: np.ndarray, Array of normalised orbitals, indexed as orbitals[space,orbital_number].
+        v_ptrb: np.ndarray, Local perturbing potential on the grid of x values, indexed as v_ptrb[space].
+        t: np.ndarray, Grid of time values.
+        H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
+
+    Returns:
+        evolution: iDEA.state.TDSingleBodyState, Solved time-dependent state.
     """
     # Construct the unperturbed Hamiltonian.
     if H is None:
@@ -193,9 +244,6 @@ def propagate(s, state, v_ptrb, t, H=None):
 
     # Construct time propigation operator.
     U = spla.expm(-1.0j * (H + Vptrb) * dt)
-    U = spla.expm(-1.0j * H * dt) * spla.expm(-1.0j * Vptrb * dt)
-
-    
 
     # Initilise time dependent orbitals.
     td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], s.up_count), dtype=np.complex)
@@ -223,4 +271,71 @@ def propagate(s, state, v_ptrb, t, H=None):
                 td_down_orbitals[j, :, i] /= norm
         print()
 
-    return td_up_orbitals, td_down_orbitals
+    # Construct the single-body time-dependent evolution.
+    evolution = iDEA.state.SingleBodyEvolution(state)
+    evolution.up.td_orbitals = td_up_orbitals
+    evolution.down.td_orbitals = td_down_orbitals
+    evolution.v_ptrb = v_ptrb
+    evolution.t = t
+
+    return evolution
+
+
+def _propigate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState(), v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None):
+    """
+    Propigate a set of orbitals forward in time due to a dynamic local pertubation.
+
+    Args: 
+        s: iDEA.system.System, System object.
+        state: np.ndarray, Array of normalised orbitals, indexed as orbitals[space,orbital_number].
+        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+        t: np.ndarray, Grid of time values.
+        H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
+
+    Returns:
+        evolution: iDEA.state.TDSingleBodyState, Solved time-dependent state.
+    """
+    # Construct the unperturbed Hamiltonian.
+    if H is None:
+        H = hamiltonian(s)
+    H = sps.csc_matrix(H)
+
+    # Compute timestep.
+    dt = t[1] - t[0]
+
+    # Initilise time dependent orbitals.
+    td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], s.up_count), dtype=np.complex)
+    td_down_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], s.down_count), dtype=np.complex)
+    td_up_orbitals[0, :, :] = state.up.orbitals[:, :s.up_count]
+    td_down_orbitals[0, :, :] = state.down.orbitals[:, :s.down_count]
+
+    # Propigate up orbitals.
+    for i in range(s.up_count):
+        for j, ti in enumerate(t):
+            if j != 0:
+                print("iDEA.methods.non_interacting.propagate: propagating up orbital {0}/{1}, time = {2:.3f}/{3:.3f}".format(i + 1, s.up_count, ti, np.max(t)), end="\r")
+                Vptrb = sps.diags(v_ptrb[j,:]).tocsc()
+                td_up_orbitals[j, :, i] = spsla.expm_multiply(spla.expm(-1.0j * (H + Vptrb) * dt), td_up_orbitals[j - 1, :, i])
+                norm = npla.norm(td_up_orbitals[j, :, i]) * np.sqrt(s.dx)
+                td_up_orbitals[j, :, i] /= norm
+        print()
+
+    # Propigate down orbitals.
+    for i in range(s.down_count):
+        for j, ti in enumerate(t):
+            if j != 0:
+                print("iDEA.methods.non_interacting.propagate: propagating down orbital {0}/{1}, time = {2:.3f}/{3:.3f}".format(i + 1, s.down_count, ti, np.max(t)), end="\r")
+                Vptrb = sps.diags(v_ptrb[j,:]).tocsc()
+                td_down_orbitals[j, :, i] = spsla.expm_multiply(spla.expm(-1.0j * (H + Vptrb) * dt), td_down_orbitals[j - 1, :, i])
+                norm = npla.norm(td_down_orbitals[j, :, i]) * np.sqrt(s.dx)
+                td_down_orbitals[j, :, i] /= norm
+        print()
+
+    # Construct the single-body time-dependent evolution.
+    evolution = iDEA.state.SingleBodyEvolution(state)
+    evolution.up.td_orbitals = td_up_orbitals
+    evolution.down.td_orbitals = td_down_orbitals
+    evolution.v_ptrb = v_ptrb
+    evolution.t = t
+
+    return evolution
