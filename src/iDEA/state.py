@@ -2,14 +2,21 @@
 
 
 from abc import ABC as Interface
+import copy
 import numpy as np
 import iDEA.utilities
 
 
-__all__ = ["State", "ManyBodyState", "SingleBodyState"]
+__all__ = ["State", "ManyBodyState", "SingleBodyState", "Evolution", "ManyBodyEvolution", "SingleBodyEvolution"]
+
 
 class State(Interface):
-    """Interface class representing a state."""
+    """Interface class representing a static state."""
+    pass
+
+
+class Evolution(Interface):
+    """Interface class representing a time-dependent evolution of a state."""
     pass
 
 
@@ -43,7 +50,7 @@ class ManyBodyState(State):
 
 
 class SingleBodyState(State):
-    r"""
+    """
     State of particles in a single-body state.
     
     This is described by three arrays for each spin channel: 
@@ -56,7 +63,6 @@ class SingleBodyState(State):
     down.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
     down.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
     """
-
     def __init__(self):
         self.up = iDEA.utilities.Container()
         self.down = iDEA.utilities.Container()
@@ -68,3 +74,46 @@ class SingleBodyState(State):
         self.down.energies = iDEA.utilities.ArrayPlaceholder()
         self.down.orbitals = iDEA.utilities.ArrayPlaceholder()
         self.down.occupations = iDEA.utilities.ArrayPlaceholder()
+
+
+class ManyBodyEvolution(Evolution):
+    r"""
+    Time-dependent evolution of particles in a many-body state.
+
+    In addition to the arrays defined within the initial ManyBodyState, this state is described by three additional arrays:
+
+    td_space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(t,x_1,x_2,\dots,x_N).
+    td_full: np.ndarray, Full wavefunction on the spatial and spin grid \Psi(t,x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N)
+    v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.
+    t: np.ndarray, Time grid used during evolution.
+    """
+    def __init__(self, initial_state: ManyBodyState):
+        self.space = copy.deepcopy(initial_state.space)
+        self.spin = copy.deepcopy(initial_state.spin)
+        self.full = copy.deepcopy(initial_state.full)
+        self.td_space = iDEA.utilities.ArrayPlaceholder()
+        self.td_full = iDEA.utilities.ArrayPlaceholder()
+        self.v_ptrb = iDEA.utilities.ArrayPlaceholder()
+        self.t = iDEA.utilities.ArrayPlaceholder()
+
+
+class SingleBodyEvolution(Evolution):
+    """
+    Time-dependent evolution of particles in a single-body state.
+
+    In addition to the arrays defined within the initial SingleBodyState, this state is described by three additional arrays:
+
+    up.td_orbitals: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number]. 
+    down.td_orbital: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].
+    v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.
+    t: np.ndarray, Time grid used during evolution.
+
+    In this case, only the occupied time-dependent orbitals are stored, as only these are propigated.
+    """
+    def __init__(self, initial_state: SingleBodyState):
+        self.up = copy.deepcopy(initial_state.up)
+        self.down = copy.deepcopy(initial_state.down)
+        self.up.td_orbitals = iDEA.utilities.ArrayPlaceholder()
+        self.down.td_orbitals = iDEA.utilities.ArrayPlaceholder()
+        self.v_ptrb = iDEA.utilities.ArrayPlaceholder()
+        self.t = iDEA.utilities.ArrayPlaceholder()
