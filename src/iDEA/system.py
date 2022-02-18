@@ -1,14 +1,13 @@
 """Contains all functionality to define and manage definitions of model systems."""
 
 
-import pickle
 import warnings
 import numpy as np
 import iDEA.utilities
 import iDEA.interactions
 
 
-__all__ = ["System", "save_system", "load_system", "systems", "interactions"]
+__all__ = ["System", "save_system", "load_system", "systems"]
 
 
 class System:
@@ -101,12 +100,26 @@ class System:
 
 
 def save_system(s: System, file_name: str) -> None:
-    """Save the system to a system file. Recommended naming: file_name="system_name.system"""
+    """
+    Save a system to an system file.
+    
+    Args:
+        system: iDEA.system.System, System object to save.
+        file_name: str, file name.
+    """
     pickle.dump(s, open(file_name, "wb"))
 
 
 def load_system(file_name: str) -> System:
-    """Load the system from a system file. Recommended naming: file_name="system_name.system"""
+    """
+    Load a system from an system file.
+
+    Args:
+        file_name: str, file name.
+
+    Returns
+        system: iDEA.system.System, Loaded System object.
+    """
     return pickle.load(open(file_name, "rb"))
 
 
