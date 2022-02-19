@@ -1,8 +1,7 @@
-"""Contains many utilities needed for efficient iDEA usage."""
+"""Contains many utilities useful for efficient iDEA usage."""
 
 
 import pickle
-import numpy as np
 
 
 __all__ = ["Container", "ArrayPlaceholder", "Experiment", "save_experiment", "load_experiment"]
@@ -24,10 +23,24 @@ class Experiment(Container):
 
 
 def save_experiment(experiment: Experiment, file_name: str) -> None:
-    """Save an experiment to an experiment file."""
+    """
+    Save an experiment to an experiment file.
+    
+    Args:
+        experiment: iDEA.utilities.Experiment, Experiment object to save.
+        file_name: str, file name.
+    """
     pickle.dump(experiment, open(file_name, "wb"))
 
 
 def load_experiment(file_name: str) -> Experiment:
-    """Load an experiment from an experiment file."""
+    """
+    Load an experiment from an experiment file.
+
+    Args:
+        file_name: str, file name.
+
+    Returns
+        experiment: iDEA.utilities.Experiment, Loaded Experiment object.
+    """
     return pickle.load(open(file_name, "rb"))
