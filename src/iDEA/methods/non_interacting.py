@@ -119,7 +119,7 @@ def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k:
         state: iDEA.state.SingleBodyState, State.
     """
     # Calculate the max level or orbitals needed to achieve required state and only use these.
-    max_level = (k + 1) * int(np.ceil(s.count/2))
+    max_level = (k + 1) * int(np.ceil(s.count))
     up_energies = state.up.energies[:max_level]
     down_energies = state.down.energies[:max_level]
 
