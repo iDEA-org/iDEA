@@ -11,6 +11,7 @@ import numpy.linalg as npla
 import scipy.linalg as spla
 import scipy.sparse.linalg as spsla
 import iDEA.system
+import iDEA.state
 
 
 def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
@@ -116,7 +117,7 @@ def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k:
         k: int, Excitation state [k = 0 is the ground-state]. 
 
     Returns:
-        state: iDEA.state.SingleBodyState, State.
+        state: iDEA.state.SingleBodyState, State with occupations added.
     """
     # Calculate the max level or orbitals needed to achieve required state and only use these.
     max_level = (k + 1) * int(np.ceil(s.count))
@@ -196,7 +197,7 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0) -> iDEA.state
     return state
 
 
-def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState(), v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None):
+def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
     """
     Propigate a set of orbitals forward in time due to a local pertubation.
 
@@ -218,7 +219,7 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState(), v_ptrb
         raise AttributeError(f"v_ptrb must have shape 1 or 2, got {v_ptrb.shape} instead.")
 
 
-def _propigate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState(), v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None):
+def _propigate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
     """
     Propigate a set of orbitals forward in time due to a static local pertubation.
 
@@ -281,7 +282,7 @@ def _propigate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState()
     return evolution
 
 
-def _propigate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState(), v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None):
+def _propigate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
     """
     Propigate a set of orbitals forward in time due to a dynamic local pertubation.
 
