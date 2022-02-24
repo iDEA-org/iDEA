@@ -1,31 +1,44 @@
+from typing import Union
 import numpy as np
+import iDEA.system
+import iDEA.state
 
 
-# def charge_density(s, orbitals):
-#     r"""Compute charge density from given non-interacting orbitals.
+#def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState. iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
+def charge_density(s, state = None, evolution = None, return_spins = False):
 
-#     .. math:: n(x) = \sum_j^\mathrm{occ} = \phi_j^*(x)\phi_j(x)
+    """
+    Compute the charge density of a non_interacting state.
 
-#     s: System
-#         System object.
-#     orbitals: np.ndarray
-#         Array of normalised orbitals, indexed as orbitals[space,orbital_number] or [time,space,orbital_number].
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        return_spins: bool, True to also return the spin densities afte the total density total, up, down. (default = False)
 
-#     returns:
-#     n: np.ndarray
-#         Charge density. indexed as [space] or [time,space]
-#     """
-#     if len(orbitals.shape) == 3:
-#         n = np.zeros(shape=(orbitals.shape[0], orbitals.shape[1]))
-#         for j in range(orbitals.shape[0]):
-#             n[j, :] = charge_density(s, orbitals[j, :, :])
-#         return n
-#     elif len(orbitals.shape) == 2:
-#         occupied = orbitals[:, : s.NE]
-#         n = np.sum(occupied.conj() * occupied, axis=1).real
-#         return n
-#     else:
-#         pass  # TODO 
+    Returns:
+        density: float or np.ndarray, Charge density, or evolution of charge density.
+    """
+    if state is not None and type(state) == iDEA.state.SingleBodyState:
+        up_density = np.zeros(shape=s.x.shape[0])
+        down_density = np.zeros(shape=s.x.shape[0])
+        for i in range(s.up_count):
+            up_density += abs(state.up.orbitals[:,i])**2*state.up.occupations[i]
+        for i in range(s.down_count):
+            down_density += abs(state.down.orbitals[:,i])**2*state.down.occupations[i]
+        density = up_density + down_density
+        if return_spins:
+            return density, up_density, down_density
+        else:
+            return density
+    if state is not None and type(state) == iDEA.state.ManyBodyState:
+        raise NotImplementedError() # TODO
+    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+        pass
+    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+        raise NotImplementedError() # TODO
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
 
 
 # def probability_density(s, orbitals):
