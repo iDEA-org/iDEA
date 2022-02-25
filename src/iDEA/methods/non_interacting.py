@@ -12,6 +12,7 @@ import scipy.linalg as spla
 import scipy.sparse.linalg as spsla
 import iDEA.system
 import iDEA.state
+import iDEA.observables
 
 
 def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
@@ -98,13 +99,13 @@ def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None
     Returns:
         E: float or np.ndarray, Total energy, or evolution of total energy.
     """
+    H = hamiltonian(s)
     if state is not None:
-        E = np.sum(state.up.energies * state.up.occupations) + np.sum(state.down.energies * state.down.occupations)
+        return iDEA.observables.observable(s, H, state=state)
     elif evolution is not None:
-        raise NotImplementedError() # TODO
+        return iDEA.observables.observable(s, H, evolution=evolution)
     else:
         raise AttributeError(f"State or Evolution must be provided.")
-    return E
 
 
 def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k: int) -> iDEA.state.SingleBodyState:
@@ -149,7 +150,7 @@ def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k:
         state_copy.up.occupations[:max_level] = occupation[0]
         state_copy.down.occupations = np.zeros(shape=state_copy.down.energies.shape)
         state_copy.down.occupations[:max_level] = occupation[1]
-        E = total_energy(s, state_copy)
+        E = total_energy(s, state=state_copy)
         energies.append(E)
     
     # Choose the correct energy index.
