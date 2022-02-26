@@ -4,9 +4,7 @@ import iDEA.system
 import iDEA.state
 
 
-#def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState. iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
-def charge_density(s, state = None, evolution = None, return_spins = False):
-
+def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
     """
     Compute the charge density of a non_interacting state.
 
@@ -14,7 +12,7 @@ def charge_density(s, state = None, evolution = None, return_spins = False):
         s: iDEA.system.System, System object.
         state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
         evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-        return_spins: bool, True to also return the spin densities afte the total density total, up, down. (default = False)
+        return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
 
     Returns:
         density: float or np.ndarray, Charge density, or evolution of charge density.
@@ -37,6 +35,81 @@ def charge_density(s, state = None, evolution = None, return_spins = False):
         pass
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         raise NotImplementedError() # TODO
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
+
+
+def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> Union[float, np.ndarray]:
+
+    """
+    Placeholer function. Use this as a template when constructing observable methods.
+
+    Args:
+        s: iDEA.system.System, System object.
+        observable_operator: np.ndarray, Obserbable operator.
+        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        return_spins: bool, True to also return the spin observables: total, up, down. (default = False)
+
+    Returns:
+        observable: float or np.ndarray, Observable.
+    """
+    if state is not None and type(state) == iDEA.state.SingleBodyState:
+        up_O = 0.0
+        for i in range(state.up.orbitals.shape[1]):
+            up_O += np.vdot(state.up.orbitals[:,i], np.dot(observable_operator, state.up.orbitals[:,i])) * state.up.occupations[i] * s.dx
+        down_O = 0.0
+        for i in range(state.down.orbitals.shape[1]):
+            down_O += np.vdot(state.down.orbitals[:,i], np.dot(observable_operator, state.down.orbitals[:,i])) * state.down.occupations[i] * s.dx
+        O = up_O + down_O
+        if return_spins:
+            return  O, up_O, down_O
+        else:
+            return O
+    if state is not None and type(state) == iDEA.state.ManyBodyState:
+        raise NotImplementedError() 
+    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+        up_O = np.zeros(shape=evolution.t.shape, dtype=complex)
+        for i in range(s.up_count):
+                for j, ti in enumerate(evolution.t):
+                    up_O[j] += np.vdot(evolution.up.td_orbitals[j,:,i], np.dot(observable_operator, evolution.up.td_orbitals[j,:,i])) * evolution.up.occupations[i] * s.dx
+        down_O = np.zeros(shape=evolution.t.shape, dtype=complex)
+        for i in range(s.down_count):
+            for j, ti in enumerate(evolution.t):
+                down_O[j] += np.vdot(evolution.down.td_orbitals[j,:,i], np.dot(observable_operator, evolution.down.td_orbitals[j,:,i])) * evolution.down.occupations[i] * s.dx
+        O = up_O + down_O
+        if return_spins:
+            return  O, up_O, down_O
+        else:
+            return O
+    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+        raise NotImplementedError()
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
+
+
+def _placeholder(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> Union[float, np.ndarray]:
+
+    """
+    Placeholer function. Use this as a template when constructing observable methods.
+
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        return_spins: bool, True to also return the spin placeholer: total, up, down. (default = False)
+
+    Returns:
+        observable: float or np.ndarray, Placeholer.
+    """
+    if state is not None and type(state) == iDEA.state.SingleBodyState:
+        raise NotImplementedError() 
+    if state is not None and type(state) == iDEA.state.ManyBodyState:
+        raise NotImplementedError() 
+    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+        raise NotImplementedError()
+    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+        raise NotImplementedError()
     else:
         raise AttributeError(f"State or Evolution must be provided.")
 
