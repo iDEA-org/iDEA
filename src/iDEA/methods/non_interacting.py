@@ -200,7 +200,7 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0) -> iDEA.state
 
 def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
     """
-    Propigate a set of orbitals forward in time due to a local pertubation.
+    propagate a set of orbitals forward in time due to a local pertubation.
 
     Args: 
         s: iDEA.system.System, System object.
@@ -213,16 +213,16 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
         evolution: iDEA.state.TDSingleBodyState, Solved time-dependent state.
     """
     if len(v_ptrb.shape) == 1:
-        return _propigate_static(s, state, v_ptrb, t, H=None)
+        return _propagate_static(s, state, v_ptrb, t, H=None)
     elif len(v_ptrb.shape) == 2:
-        return _propigate_dynamic(s, state, v_ptrb, t, H=None)
+        return _propagate_dynamic(s, state, v_ptrb, t, H=None)
     else:
         raise AttributeError(f"v_ptrb must have shape 1 or 2, got {v_ptrb.shape} instead.")
 
 
-def _propigate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
+def _propagate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
     """
-    Propigate a set of orbitals forward in time due to a static local pertubation.
+    Propagate a set of orbitals forward in time due to a static local pertubation.
 
     Args: 
         s: iDEA.system.System, System object.
@@ -248,12 +248,14 @@ def _propigate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, 
     U = spla.expm(-1.0j * (H + Vptrb) * dt)
 
     # Initilise time dependent orbitals.
-    td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], s.up_count), dtype=np.complex)
-    td_down_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], s.down_count), dtype=np.complex)
-    td_up_orbitals[0, :, :] = state.up.orbitals[:, :s.up_count]
-    td_down_orbitals[0, :, :] = state.down.orbitals[:, :s.down_count]
+    up_occupied = np.nonzero(state.up.occupations)[0]
+    down_occupied = np.nonzero(state.down.occupations)[0]
+    td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], up_occupied.shape[0]), dtype=np.complex)
+    td_down_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], down_occupied.shape[0]), dtype=np.complex)
+    td_up_orbitals[0, :, :] = state.up.orbitals[:, up_occupied]
+    td_down_orbitals[0, :, :] = state.down.orbitals[:, down_occupied]
 
-    # Propigate up orbitals.
+    # Propagate up orbitals.
     for i in range(s.up_count):
         for j, ti in enumerate(t):
             if j != 0:
@@ -263,7 +265,7 @@ def _propigate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, 
                 td_up_orbitals[j, :, i] /= norm
         print()
 
-    # Propigate down orbitals.
+    # Propagate down orbitals.
     for i in range(s.down_count):
         for j, ti in enumerate(t):
             if j != 0:
@@ -283,9 +285,9 @@ def _propigate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, 
     return evolution
 
 
-def _propigate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
+def _propagate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
     """
-    Propigate a set of orbitals forward in time due to a dynamic local pertubation.
+    Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
     Args: 
         s: iDEA.system.System, System object.
@@ -306,12 +308,14 @@ def _propigate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState,
     dt = t[1] - t[0]
 
     # Initilise time dependent orbitals.
-    td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], s.up_count), dtype=np.complex)
-    td_down_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], s.down_count), dtype=np.complex)
-    td_up_orbitals[0, :, :] = state.up.orbitals[:, :s.up_count]
-    td_down_orbitals[0, :, :] = state.down.orbitals[:, :s.down_count]
+    up_occupied = np.nonzero(state.up.occupations)[0]
+    down_occupied = np.nonzero(state.down.occupations)[0]
+    td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], up_occupied.shape[0]), dtype=np.complex)
+    td_down_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], down_occupied.shape[0]), dtype=np.complex)
+    td_up_orbitals[0, :, :] = state.up.orbitals[:, up_occupied]
+    td_down_orbitals[0, :, :] = state.down.orbitals[:, down_occupied]
 
-    # Propigate up orbitals.
+    # Propagate up orbitals.
     for i in range(s.up_count):
         for j, ti in enumerate(t):
             if j != 0:
@@ -322,7 +326,7 @@ def _propigate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState,
                 td_up_orbitals[j, :, i] /= norm
         print()
 
-    # Propigate down orbitals.
+    # Propagate down orbitals.
     for i in range(s.down_count):
         for j, ti in enumerate(t):
             if j != 0:

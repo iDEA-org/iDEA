@@ -3,7 +3,7 @@ iDEA:
     system: System, save_system, load_system, systems.
     interactions: softened_interaction, softened_interaction_alternative, raw_interaction.
     state: State, ManyBodyState, SingleBodyState, Evolution, ManyBodyEvolution, SingleBodyEvolution.
-    observables: density, external_potential, external_energy, hartree_potential, hartree_energy, density_matrix, exchange_potential, exchange_energy, kinetic_energy, slater_determinant.
+    observables: observable, density, external_potential, external_energy, hartree_potential, hartree_energy, density_matrix, exchange_potential, exchange_energy, kinetic_energy, slater_determinant.
     methods:
         interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, antisymmetrize, solve, propigate.
         non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, add_occupations, solve, propigate.

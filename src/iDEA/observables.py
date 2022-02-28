@@ -4,41 +4,6 @@ import iDEA.system
 import iDEA.state
 
 
-def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
-    """
-    Compute the charge density of a non_interacting state.
-
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
-        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-        return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
-
-    Returns:
-        density: float or np.ndarray, Charge density, or evolution of charge density.
-    """
-    if state is not None and type(state) == iDEA.state.SingleBodyState:
-        up_density = np.zeros(shape=s.x.shape[0])
-        down_density = np.zeros(shape=s.x.shape[0])
-        for i in range(s.up_count):
-            up_density += abs(state.up.orbitals[:,i])**2*state.up.occupations[i]
-        for i in range(s.down_count):
-            down_density += abs(state.down.orbitals[:,i])**2*state.down.occupations[i]
-        density = up_density + down_density
-        if return_spins:
-            return density, up_density, down_density
-        else:
-            return density
-    if state is not None and type(state) == iDEA.state.ManyBodyState:
-        raise NotImplementedError() # TODO
-    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
-        pass
-    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
-        raise NotImplementedError() # TODO
-    else:
-        raise AttributeError(f"State or Evolution must be provided.")
-
-
 def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> Union[float, np.ndarray]:
 
     """
@@ -84,6 +49,41 @@ def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Un
             return O
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         raise NotImplementedError()
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
+
+
+def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
+    """
+    Compute the charge density of a non_interacting state.
+
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
+
+    Returns:
+        density: float or np.ndarray, Charge density, or evolution of charge density.
+    """
+    if state is not None and type(state) == iDEA.state.SingleBodyState:
+        up_density = np.zeros(shape=s.x.shape[0])
+        down_density = np.zeros(shape=s.x.shape[0])
+        for i in range(state.up.orbitals.shape[1]):
+            up_density += abs(state.up.orbitals[:,i])**2*state.up.occupations[i]
+        for i in range(state.down.orbitals.shape[1]):
+            down_density += abs(state.down.orbitals[:,i])**2*state.down.occupations[i]
+        density = up_density + down_density
+        if return_spins:
+            return density, up_density, down_density
+        else:
+            return density
+    if state is not None and type(state) == iDEA.state.ManyBodyState:
+        raise NotImplementedError() # TODO
+    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+        pass
+    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+        raise NotImplementedError() # TODO
     else:
         raise AttributeError(f"State or Evolution must be provided.")
 
