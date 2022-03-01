@@ -31,24 +31,28 @@ def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Un
             return  O, up_O, down_O
         else:
             return O
+
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         raise NotImplementedError() 
+
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
         up_O = np.zeros(shape=evolution.t.shape, dtype=complex)
-        for i in range(s.up_count):
-                for j, ti in enumerate(evolution.t):
-                    up_O[j] += np.vdot(evolution.up.td_orbitals[j,:,i], np.dot(observable_operator, evolution.up.td_orbitals[j,:,i])) * evolution.up.occupations[i] * s.dx
-        down_O = np.zeros(shape=evolution.t.shape, dtype=complex)
-        for i in range(s.down_count):
+        for i in range(evolution.up.occupied.shape[0]):
             for j, ti in enumerate(evolution.t):
-                down_O[j] += np.vdot(evolution.down.td_orbitals[j,:,i], np.dot(observable_operator, evolution.down.td_orbitals[j,:,i])) * evolution.down.occupations[i] * s.dx
+                up_O[j] += np.vdot(evolution.up.td_orbitals[j,:,i], np.dot(observable_operator, evolution.up.td_orbitals[j,:,i])) * evolution.up.occupations[evolution.up.occupied[i]] * s.dx
+        down_O = np.zeros(shape=evolution.t.shape, dtype=complex)
+        for i in range(evolution.down.occupied.shape[0]):
+            for j, ti in enumerate(evolution.t):
+                down_O[j] += np.vdot(evolution.down.td_orbitals[j,:,i], np.dot(observable_operator, evolution.down.td_orbitals[j,:,i])) * evolution.down.occupations[evolution.down.occupied[i]] * s.dx
         O = up_O + down_O
         if return_spins:
-            return  O, up_O, down_O
+            return  O.real, up_O.real, down_O.real
         else:
-            return O
+            return O.real
+
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         raise NotImplementedError()
+        
     else:
         raise AttributeError(f"State or Evolution must be provided.")
 
@@ -78,12 +82,28 @@ def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
             return density, up_density, down_density
         else:
             return density
+
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         raise NotImplementedError() # TODO
+
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
-        pass
+        up_density = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
+        for i in range(evolution.up.occupied.shape[0]):
+            for j, ti in enumerate(evolution.t):
+                up_density[j,:] += abs(evolution.up.td_orbitals[j,:,i])**2*evolution.up.occupations[evolution.up.occupied[i]]
+        down_density = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
+        for i in range(evolution.down.occupied.shape[0]):
+            for j, ti in enumerate(evolution.t):
+                down_density[j,:] += abs(evolution.down.td_orbitals[j,:,i])**2*evolution.down.occupations[evolution.down.occupied[i]]
+        density = up_density + down_density
+        if return_spins:
+            return density.real, up_density.real, down_density.real
+        else:
+            return density.real
+
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         raise NotImplementedError() # TODO
+
     else:
         raise AttributeError(f"State or Evolution must be provided.")
 

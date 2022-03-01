@@ -58,10 +58,12 @@ class SingleBodyState(State):
     up.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].
     up.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
     up.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
+    up.occupied: np.ndarray, Indices of up.occupations that are non-zero, to indicate occupied orbitals.
 
     down.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].
     down.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
     down.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
+    down.occupied: np.ndarray, Indices of down.occupations that are non-zero, to indicate occupied orbitals.
     """
     def __init__(self):
         self.up = iDEA.utilities.Container()
@@ -70,10 +72,12 @@ class SingleBodyState(State):
         self.up.energies = iDEA.utilities.ArrayPlaceholder()
         self.up.orbitals = iDEA.utilities.ArrayPlaceholder()
         self.up.occupations = iDEA.utilities.ArrayPlaceholder()
-
+        self.up.occupied = iDEA.utilities.ArrayPlaceholder()
+        
         self.down.energies = iDEA.utilities.ArrayPlaceholder()
         self.down.orbitals = iDEA.utilities.ArrayPlaceholder()
         self.down.occupations = iDEA.utilities.ArrayPlaceholder()
+        self.down.occupied = iDEA.utilities.ArrayPlaceholder()
 
 
 class ManyBodyEvolution(Evolution):
@@ -101,7 +105,7 @@ class SingleBodyEvolution(Evolution):
     """
     Time-dependent evolution of particles in a single-body state.
 
-    In addition to the arrays defined within the initial SingleBodyState, this state is described by three additional arrays:
+    In addition to the arrays defined within the initial SingleBodyState, this state is described by four additional arrays:
 
     up.td_orbitals: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number]. 
     down.td_orbital: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].

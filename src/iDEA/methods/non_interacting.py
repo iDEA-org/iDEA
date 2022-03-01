@@ -99,10 +99,10 @@ def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None
     Returns:
         E: float or np.ndarray, Total energy, or evolution of total energy.
     """
-    H = hamiltonian(s)
     if state is not None:
-        return iDEA.observables.observable(s, H, state=state)
+        return np.sum(state.up.energies[:] * state.up.occupations[:]) + np.sum(state.down.energies[:] * state.down.occupations[:])
     elif evolution is not None:
+        H = hamiltonian(s)
         return iDEA.observables.observable(s, H, evolution=evolution)
     else:
         raise AttributeError(f"State or Evolution must be provided.")
@@ -159,8 +159,10 @@ def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k:
     # Construct correct occupations.
     state.up.occupations = np.zeros(shape=state_copy.up.energies.shape)
     state.up.occupations[:max_level] = occupations[energy_index][0]
+    state.up.occupied = np.nonzero(state.up.occupations)[0]
     state.down.occupations = np.zeros(shape=state_copy.down.energies.shape)
     state.down.occupations[:max_level] = occupations[energy_index][1]
+    state.down.occupied = np.nonzero(state.down.occupations)[0]
 
     return state
 
@@ -247,16 +249,14 @@ def _propagate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, 
     # Construct time propigation operator.
     U = spla.expm(-1.0j * (H + Vptrb) * dt)
 
-    # Initilise time dependent orbitals.
-    up_occupied = np.nonzero(state.up.occupations)[0]
-    down_occupied = np.nonzero(state.down.occupations)[0]
-    td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], up_occupied.shape[0]), dtype=np.complex)
-    td_down_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], down_occupied.shape[0]), dtype=np.complex)
-    td_up_orbitals[0, :, :] = state.up.orbitals[:, up_occupied]
-    td_down_orbitals[0, :, :] = state.down.orbitals[:, down_occupied]
+    # Initilise time-dependent orbitals.
+    td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], state.up.occupied.shape[0]), dtype=np.complex)
+    td_down_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], state.down.occupied.shape[0]), dtype=np.complex)
+    td_up_orbitals[0, :, :] = state.up.orbitals[:, state.up.occupied]
+    td_down_orbitals[0, :, :] = state.down.orbitals[:, state.down.occupied]
 
     # Propagate up orbitals.
-    for i in range(s.up_count):
+    for i in range(state.up.occupied.shape[0]):
         for j, ti in enumerate(t):
             if j != 0:
                 print("iDEA.methods.non_interacting.propagate: propagating up orbital {0}/{1}, time = {2:.3f}/{3:.3f}".format(i + 1, s.up_count, ti, np.max(t)), end="\r")
@@ -266,7 +266,7 @@ def _propagate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, 
         print()
 
     # Propagate down orbitals.
-    for i in range(s.down_count):
+    for i in range(state.down.occupied.shape[0]):
         for j, ti in enumerate(t):
             if j != 0:
                 print("iDEA.methods.non_interacting.propagate: propagating down orbital {0}/{1}, time = {2:.3f}/{3:.3f}".format(i + 1, s.down_count, ti, np.max(t)), end="\r")
@@ -307,16 +307,14 @@ def _propagate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState,
     # Compute timestep.
     dt = t[1] - t[0]
 
-    # Initilise time dependent orbitals.
-    up_occupied = np.nonzero(state.up.occupations)[0]
-    down_occupied = np.nonzero(state.down.occupations)[0]
-    td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], up_occupied.shape[0]), dtype=np.complex)
-    td_down_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], down_occupied.shape[0]), dtype=np.complex)
-    td_up_orbitals[0, :, :] = state.up.orbitals[:, up_occupied]
-    td_down_orbitals[0, :, :] = state.down.orbitals[:, down_occupied]
+    # Initilise time-dependent orbitals.
+    td_up_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], state.up.occupied.shape[0]), dtype=np.complex)
+    td_down_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], state.down.occupied.shape[0]), dtype=np.complex)
+    td_up_orbitals[0, :, :] = state.up.orbitals[:, state.up.occupied]
+    td_down_orbitals[0, :, :] = state.down.orbitals[:, state.down.occupied]
 
     # Propagate up orbitals.
-    for i in range(s.up_count):
+    for i in range(state.up.occupied.shape[0]):
         for j, ti in enumerate(t):
             if j != 0:
                 print("iDEA.methods.non_interacting.propagate: propagating up orbital {0}/{1}, time = {2:.3f}/{3:.3f}".format(i + 1, s.up_count, ti, np.max(t)), end="\r")
@@ -327,7 +325,7 @@ def _propagate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState,
         print()
 
     # Propagate down orbitals.
-    for i in range(s.down_count):
+    for i in range(state.down.occupied.shape[0]):
         for j, ti in enumerate(t):
             if j != 0:
                 print("iDEA.methods.non_interacting.propagate: propagating down orbital {0}/{1}, time = {2:.3f}/{3:.3f}".format(i + 1, s.down_count, ti, np.max(t)), end="\r")
