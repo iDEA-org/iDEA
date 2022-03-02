@@ -37,13 +37,13 @@ def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Un
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
         up_O = np.zeros(shape=evolution.t.shape, dtype=complex)
-        for i in range(evolution.up.occupied.shape[0]):
+        for i, I in enumerate(evolution.up.occupied):
             for j, ti in enumerate(evolution.t):
-                up_O[j] += np.vdot(evolution.up.td_orbitals[j,:,i], np.dot(observable_operator, evolution.up.td_orbitals[j,:,i])) * evolution.up.occupations[evolution.up.occupied[i]] * s.dx
+                up_O[j] += np.vdot(evolution.up.td_orbitals[j,:,i], np.dot(observable_operator, evolution.up.td_orbitals[j,:,i])) * evolution.up.occupations[I] * s.dx
         down_O = np.zeros(shape=evolution.t.shape, dtype=complex)
-        for i in range(evolution.down.occupied.shape[0]):
+        for i, I in enumerate(evolution.down.occupied):
             for j, ti in enumerate(evolution.t):
-                down_O[j] += np.vdot(evolution.down.td_orbitals[j,:,i], np.dot(observable_operator, evolution.down.td_orbitals[j,:,i])) * evolution.down.occupations[evolution.down.occupied[i]] * s.dx
+                down_O[j] += np.vdot(evolution.down.td_orbitals[j,:,i], np.dot(observable_operator, evolution.down.td_orbitals[j,:,i])) * evolution.down.occupations[I] * s.dx
         O = up_O + down_O
         if return_spins:
             return  O.real, up_O.real, down_O.real
@@ -88,13 +88,13 @@ def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
         up_density = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
-        for i in range(evolution.up.occupied.shape[0]):
+        for i, I in enumerate(evolution.up.occupied):
             for j, ti in enumerate(evolution.t):
-                up_density[j,:] += abs(evolution.up.td_orbitals[j,:,i])**2*evolution.up.occupations[evolution.up.occupied[i]]
+                up_density[j,:] += abs(evolution.up.td_orbitals[j,:,i])**2*evolution.up.occupations[I]
         down_density = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
-        for i in range(evolution.down.occupied.shape[0]):
+        for i, I in enumerate(evolution.down.occupied):
             for j, ti in enumerate(evolution.t):
-                down_density[j,:] += abs(evolution.down.td_orbitals[j,:,i])**2*evolution.down.occupations[evolution.down.occupied[i]]
+                down_density[j,:] += abs(evolution.down.td_orbitals[j,:,i])**2*evolution.down.occupations[I]
         density = up_density + down_density
         if return_spins:
             return density.real, up_density.real, down_density.real
@@ -132,43 +132,6 @@ def _placeholder(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState,
         raise NotImplementedError()
     else:
         raise AttributeError(f"State or Evolution must be provided.")
-
-
-# def probability_density(s, orbitals):
-#     r"""Compute probability density from given non-interacting orbitals.
-
-#     .. math:: n(x) =\frac{1}{N} \sum_j^\mathrm{occ} \phi_j^*(x)\phi_j(x)
-
-#     s: System
-#         System object.
-#     orbitals: np.ndarray
-#         Array of normalised orbitals, indexed as orbitals[space,orbital_number].
-
-#     returns:
-#     n: np.ndarray
-#         Charge density.
-#     """
-#     occupied = orbitals[:, : s.NE]
-#     n = np.sum(occupied.conj() * occupied, axis=1).real / s.NE
-#     return n
-
-
-# def orbital_density(s, orbital):
-#     r"""Compute charge density for a given non-interacting orbital.
-
-#     .. math:: n(x) = \phi^*(x)\phi(x)
-
-#     s: System
-#         System object.
-#     orbital: np.ndarray
-#         Normalised orbital.
-
-#     returns:
-#     n: np.ndarray
-#         Orbital density.
-#     """
-#     n = (orbital.conj() * orbital).real
-#     return n
 
 
 # def one_body_reduced_density_matrix(s, orbitals):
