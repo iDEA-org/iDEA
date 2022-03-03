@@ -57,7 +57,7 @@ def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Un
         raise AttributeError(f"State or Evolution must be provided.")
 
 
-def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
+def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
     """
     Compute the charge density of a non_interacting state.
 
@@ -74,9 +74,9 @@ def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
         up_density = np.zeros(shape=s.x.shape[0])
         down_density = np.zeros(shape=s.x.shape[0])
         for i in range(state.up.orbitals.shape[1]):
-            up_density += abs(state.up.orbitals[:,i])**2*state.up.occupations[i]
+            up_density += abs(state.up.orbitals[:,i])**2 * state.up.occupations[i]
         for i in range(state.down.orbitals.shape[1]):
-            down_density += abs(state.down.orbitals[:,i])**2*state.down.occupations[i]
+            down_density += abs(state.down.orbitals[:,i])**2 * state.down.occupations[i]
         density = up_density + down_density
         if return_spins:
             return density, up_density, down_density
@@ -100,6 +100,57 @@ def charge_density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
             return density.real, up_density.real, down_density.real
         else:
             return density.real
+
+    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+        raise NotImplementedError() # TODO
+
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
+
+
+def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
+    """
+    Compute the charge density matrix of a non_interacting state.
+
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
+
+    Returns:
+        density_matrix: float or np.ndarray, Charge density matrix, or evolution of charge density matrix.
+    """
+    if state is not None and type(state) == iDEA.state.SingleBodyState:
+        up_density_matrix = np.zeros(shape=s.x.shape*2)
+        down_density_matrix = np.zeros(shape=s.x.shape*2)
+        for i in range(state.up.orbitals.shape[1]):
+            up_density_matrix += np.tensordot(state.up.orbitals[:,i].conj(), state.up.orbitals[:,i], axes=0) * state.up.occupations[i]
+        for i in range(state.down.orbitals.shape[1]):
+            down_density_matrix += np.tensordot(state.down.orbitals[:,i].conj(), state.down.orbitals[:,i], axes=0) * state.down.occupations[i]
+        density_matrix = up_density_matrix + down_density_matrix
+        if return_spins:
+            return density_matrix, up_density_matrix, down_density_matrix
+        else:
+            return density_matrix
+
+    if state is not None and type(state) == iDEA.state.ManyBodyState:
+        raise NotImplementedError() # TODO
+
+    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+        up_density_matrix = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+        for i, I in enumerate(evolution.up.occupied):
+            for j, ti in enumerate(evolution.t):
+                up_density_matrix[j,:] += np.tensordot(evolution.up.td_orbitals[j,:,i].conj(), evolution.up.td_orbitals[j,:,i], axes=0) * evolution.up.occupations[I]
+        down_density_matrix = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+        for i, I in enumerate(evolution.down.occupied):
+            for j, ti in enumerate(evolution.t):
+                down_density_matrix[j,:] += np.tensordot(evolution.down.td_orbitals[j,:,i].conj(), evolution.down.td_orbitals[j,:,i], axes=0) * evolution.down.occupations[I]
+        density_matrix = up_density_matrix + down_density_matrix
+        if return_spins:
+            return density_matrix, up_density_matrix, down_density_matrix
+        else:
+            return density_matrix
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         raise NotImplementedError() # TODO
