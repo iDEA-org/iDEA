@@ -177,7 +177,7 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0) -> iDEA.state
         k: int, Energy state to solve for. (default = 0, the ground-state)
 
     Returns:
-        state: iDEA.state.SingleBodyState, Solved ground_state.
+        state: iDEA.state.SingleBodyState, Solved state.
     """
     # Construct the Hamiltonian.
     if H is None:
