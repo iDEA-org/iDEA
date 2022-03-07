@@ -2,6 +2,7 @@ from typing import Union
 import numpy as np
 import iDEA.system
 import iDEA.state
+import iDEA.methods.non_interacting
 
 
 def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> Union[float, np.ndarray]:
@@ -57,6 +58,28 @@ def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Un
         raise AttributeError(f"State or Evolution must be provided.")
 
 
+def kinetic_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None, evolution: iDEA.state.SingleBodyEvolution = None) -> Union[float, np.ndarray]:
+    """
+    Compute the kinetic energy of a non_interacting state.
+
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
+
+    Returns:
+        energy_kin: float or np.ndarray, Total energy, or evolution of total energy.
+    """
+    if state is not None:
+        K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
+        return iDEA.observables.observable(s, K, state=state)
+    elif evolution is not None:
+        K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
+        return iDEA.observables.observable(s, K, evolution=evolution)
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
+
+
 def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
     """
     Compute the charge density of a non_interacting state.
@@ -68,44 +91,83 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
         return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
 
     Returns:
-        density: float or np.ndarray, Charge density, or evolution of charge density.
+        n: float or np.ndarray, Charge density, or evolution of charge density.
     """
     if state is not None and type(state) == iDEA.state.SingleBodyState:
-        up_density = np.zeros(shape=s.x.shape[0])
-        down_density = np.zeros(shape=s.x.shape[0])
+        up_n = np.zeros(shape=s.x.shape[0])
+        down_n = np.zeros(shape=s.x.shape[0])
         for i in range(state.up.orbitals.shape[1]):
-            up_density += abs(state.up.orbitals[:,i])**2 * state.up.occupations[i]
+            up_n += abs(state.up.orbitals[:,i])**2 * state.up.occupations[i]
         for i in range(state.down.orbitals.shape[1]):
-            down_density += abs(state.down.orbitals[:,i])**2 * state.down.occupations[i]
-        density = up_density + down_density
+            down_n += abs(state.down.orbitals[:,i])**2 * state.down.occupations[i]
+        n = up_n + down_n
         if return_spins:
-            return density, up_density, down_density
+            return n, up_n, down_n
         else:
-            return density
+            return n
 
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         raise NotImplementedError() # TODO
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
-        up_density = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
+        up_n = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.up.occupied):
             for j, ti in enumerate(evolution.t):
-                up_density[j,:] += abs(evolution.up.td_orbitals[j,:,i])**2*evolution.up.occupations[I]
-        down_density = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
+                up_n[j,:] += abs(evolution.up.td_orbitals[j,:,i])**2*evolution.up.occupations[I]
+        down_n = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.down.occupied):
             for j, ti in enumerate(evolution.t):
-                down_density[j,:] += abs(evolution.down.td_orbitals[j,:,i])**2*evolution.down.occupations[I]
-        density = up_density + down_density
+                down_n[j,:] += abs(evolution.down.td_orbitals[j,:,i])**2*evolution.down.occupations[I]
+        n = up_n + down_n
         if return_spins:
-            return density.real, up_density.real, down_density.real
+            return n.real, up_n.real, down_n.real
         else:
-            return density.real
+            return n.real
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         raise NotImplementedError() # TODO
 
     else:
         raise AttributeError(f"State or Evolution must be provided.")
+
+
+def external_energy(s: iDEA.system.System, n: np.ndarray, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None) -> Union[float, np.ndarray]:
+    """
+    Compute the charge density matrix of a non_interacting state.
+
+    Args:
+        s: iDEA.system.System, System object.
+        n, Charge density of the system [If None this will be computed]. (default = None)
+        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+
+    Returns:
+        e_ext: float or np.ndarray, External energy, or evolution of external energy.
+    """
+    if n is not None:
+        pass
+
+    elif n is None and state is not None:
+        n = density(state=state)
+
+    elif n is None and evolution is not None:
+        n = density(evolution=evoluation)
+
+    else:
+        raise AttributeError(f"Density, State or Evolution must be provided.")
+
+    if len(n.shape) == 1:
+        e_ext = np.dot(n, s.v_ext) * s.dx
+        return e_ext
+        
+    elif len(n.shape) == 2:
+        e_ext = np.zeros(shape=n.shape[0])
+        for j in range(n.shape[0]):
+            e_ext[j] = np.dot(n[j,:], s.v_ext) * s.dx
+        return e_ext
+
+    else:
+        raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
 
 
 def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
@@ -119,38 +181,38 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
         return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
 
     Returns:
-        density_matrix: float or np.ndarray, Charge density matrix, or evolution of charge density matrix.
+        p: float or np.ndarray, Charge density matrix, or evolution of charge density matrix.
     """
     if state is not None and type(state) == iDEA.state.SingleBodyState:
-        up_density_matrix = np.zeros(shape=s.x.shape*2)
-        down_density_matrix = np.zeros(shape=s.x.shape*2)
+        up_p = np.zeros(shape=s.x.shape*2)
+        down_p = np.zeros(shape=s.x.shape*2)
         for i in range(state.up.orbitals.shape[1]):
-            up_density_matrix += np.tensordot(state.up.orbitals[:,i].conj(), state.up.orbitals[:,i], axes=0) * state.up.occupations[i]
+            up_p += np.tensordot(state.up.orbitals[:,i].conj(), state.up.orbitals[:,i], axes=0) * state.up.occupations[i]
         for i in range(state.down.orbitals.shape[1]):
-            down_density_matrix += np.tensordot(state.down.orbitals[:,i].conj(), state.down.orbitals[:,i], axes=0) * state.down.occupations[i]
-        density_matrix = up_density_matrix + down_density_matrix
+            down_p += np.tensordot(state.down.orbitals[:,i].conj(), state.down.orbitals[:,i], axes=0) * state.down.occupations[i]
+        p = up_p + down_p
         if return_spins:
-            return density_matrix, up_density_matrix, down_density_matrix
+            return p, up_p, down_p
         else:
-            return density_matrix
+            return p
 
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         raise NotImplementedError() # TODO
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
-        up_density_matrix = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+        up_p = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.up.occupied):
             for j, ti in enumerate(evolution.t):
-                up_density_matrix[j,:] += np.tensordot(evolution.up.td_orbitals[j,:,i].conj(), evolution.up.td_orbitals[j,:,i], axes=0) * evolution.up.occupations[I]
-        down_density_matrix = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+                up_p[j,:] += np.tensordot(evolution.up.td_orbitals[j,:,i].conj(), evolution.up.td_orbitals[j,:,i], axes=0) * evolution.up.occupations[I]
+        down_p = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.down.occupied):
             for j, ti in enumerate(evolution.t):
-                down_density_matrix[j,:] += np.tensordot(evolution.down.td_orbitals[j,:,i].conj(), evolution.down.td_orbitals[j,:,i], axes=0) * evolution.down.occupations[I]
-        density_matrix = up_density_matrix + down_density_matrix
+                down_p[j,:] += np.tensordot(evolution.down.td_orbitals[j,:,i].conj(), evolution.down.td_orbitals[j,:,i], axes=0) * evolution.down.occupations[I]
+        p = up_p + down_p
         if return_spins:
-            return density_matrix, up_density_matrix, down_density_matrix
+            return p, up_p, down_p
         else:
-            return density_matrix
+            return p
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         raise NotImplementedError() # TODO
