@@ -99,90 +99,131 @@ def hamiltonian(s: iDEA.system.System) -> sps.dia_matrix:
         U = 0.0
 
     # Construct the total many-body Hamiltonian
-    H = H0 + U
+    H = H0 + U*1e-10
 
     return H
 
 
-# def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None, evolution: iDEA.state.SingleBodyEvolution = None) -> Union[float, np.ndarray]:
-#     """
-#     Compute the total energy of a non_interacting state.
+def total_energy(s: iDEA.system.System, state: iDEA.state.ManyBodyState = None, evolution: iDEA.state.ManyBodyEvolution = None) -> Union[float, np.ndarray]:
+    """
+    Compute the total energy of a interacting state.
 
-#     Args:
-#         s: iDEA.system.System, System object.
-#         state: iDEA.state.SingleBodyState, State. (default = None)
-#         evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.ManyBodyState, State. (default = None)
+        evolution: iDEA.state.ManyBodyEvolution, Evolution. (default = None)
 
-#     Returns:
-#         E: float or np.ndarray, Total energy, or evolution of total energy.
-#     """
-#     if state is not None:
-#         return np.sum(state.up.energies[:] * state.up.occupations[:]) + np.sum(state.down.energies[:] * state.down.occupations[:])
-#     elif evolution is not None:
-#         H = hamiltonian(s)
-#         return iDEA.observables.observable(s, H, evolution=evolution)
-#     else:
-#         raise AttributeError(f"State or Evolution must be provided.")
+    Returns:
+        E: float or np.ndarray, Total energy, or evolution of total energy.
+    """
+    if state is not None:
+        return state.energy
+    elif evolution is not None:
+        raise NotImplementedError() # TODO
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
 
 
-def _permutation_parity(perm):
-    perm = list(perm)
+def _permutation_parity(p):
+    """
+    Compute the permulation paritiy of a given permutation.
+
+    Args:
+        p: tuple, Permutation.
+
+    Returns:
+        parity: float, Permutation parity.
+    """
+    p = list(p)
     parity = 1
-    for i in range(0,len(perm)-1):
-        if perm[i] != i:
+    for i in range(0,len(p)-1):
+        if p[i] != i:
             parity *= -1
-            mn = min(range(i,len(perm)), key=perm.__getitem__)
-            perm[i],perm[mn] = perm[mn],perm[i]
+            mn = min(range(i,len(p)), key=p.__getitem__)
+            p[i], p[mn] = p[mn], p[i]
     return parity
 
 
-def antisymmetrize(s, wavefunctions, chis):
-    # Hard coded method
+def antisymmetrize(s, spaces, spins, energies):
+    """
+    Antisymmetrize the solution to the Schrodinger equation.
+
+    Args:
+        s: iDEA.system.System, System object.
+        spaces: np.ndarray, Spatial parts of the wavefunction.
+        spins: np.ndarray, Spin parts of the wavefunction.
+        energies: np.ndarray, Energies.
+
+    Returns:
+        fulls: np.ndarray, Full anantisymmetrized wavefunction.
+        spaces: np.ndarray, Spatial parts of the wavefunction.
+        spins: np.ndarray, Spin parts of the wavefunction.
+        energies: np.ndarray, Energies.
+
+    """
+    # Perform antisymmetrization.
     l = string.ascii_lowercase[:s.count]
     L = string.ascii_uppercase[:s.count]
     st = l + 'Y,' + L + 'Y->' + ''.join([i for sub in list(zip(l,L)) for i in sub]) + 'Y'
-    wavefunctions = np.einsum(st, wavefunctions, chis)
-    L = [(0,1), (2,3), (4,5)]
-    perms = itertools.permutations([0,1,2])
-    wavefunctions_copy = copy.deepcopy(wavefunctions)
-    wavefunctions = np.zeros_like(wavefunctions)
+    fulls = np.einsum(st, spaces, spins)
+    L = list(zip(list(range(0, s.count*2, 2)), list(range(1, s.count*2, 2))))
+    perms = itertools.permutations(list(range(s.count)))
+    fulls_copy = copy.deepcopy(fulls)
+    fulls = np.zeros_like(fulls)
     for p in perms:
         indices = list(itertools.chain(*[L[e] for e in p]))
-        wavefunctions += permutation_parity(p) * np.moveaxis(wavefunctions_copy, [0,1,2,3,4,5], indices)
+        fulls += _permutation_parity(p) * np.moveaxis(fulls_copy, list(range(s.count*2)), indices)
 
-    # Filter out zeros
-    allowed_wavefunctions = []
+    # Filter out zeros.
+    allowed_fulls = []
     allowed_energies = []
-    for n in range(wavefunctions.shape[-1]):
-        if np.allclose(wavefunctions[...,n], np.zeros(wavefunctions.shape[:-1])):
+    for n in range(fulls.shape[-1]):
+        if np.allclose(fulls[...,n], np.zeros(fulls.shape[:-1])):
             pass
         else:
-            allowed_wavefunctions.append(wavefunctions[...,n])
+            allowed_fulls.append(fulls[...,n])
             allowed_energies.append(energies[n])
-    wavefunctions = np.moveaxis(np.array(allowed_wavefunctions), 0, -1)
+    fulls = np.moveaxis(np.array(allowed_fulls), 0, -1)
     energies = np.array(allowed_energies)
 
-    # Normalise
-    for k in range(wavefunctions.shape[-1]):
-        wavefunctions[...,k] = wavefunctions[...,k] / np.sqrt(np.sum(abs(wavefunctions[...,k])**2)*s.dx**s.count)
+    # Normalise.
+    for k in range(fulls.shape[-1]):
+        fulls[...,k] = fulls[...,k] / np.sqrt(np.sum(abs(fulls[...,k])**2)*s.dx**s.count)
 
-    # Filter out duplicates
-    allowed_wavefunctions = []
+    # Filter out duplicates.
+    allowed_fulls = []
     allowed_energies = []
-    for n in range(wavefunctions.shape[-1] - 1):
-        if np.allclose(abs(wavefunctions[...,n]), abs(wavefunctions[...,n+1])):
+    for n in range(fulls.shape[-1] - 1):
+        if np.allclose(abs(fulls[...,n]), abs(fulls[...,n+1])):
             pass
         else:
-            allowed_wavefunctions.append(wavefunctions[...,n])
+            allowed_fulls.append(fulls[...,n])
             allowed_energies.append(energies[n])
-    allowed_wavefunctions.append(wavefunctions[...,-1])
+    allowed_fulls.append(fulls[...,-1])
     allowed_energies.append(energies[-1])
-    wavefunctions = np.moveaxis(np.array(allowed_wavefunctions), 0, -1)
+    fulls = np.moveaxis(np.array(allowed_fulls), 0, -1)
+    spaces = spaces[...,:fulls.shape[-1]]
+    spins = spins[...,:fulls.shape[-1]]
     energies = np.array(allowed_energies)
-    return wavefunctions, chis
+
+    return fulls, spaces, spins, energies
 
 
-def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, initial_k = None) -> iDEA.state.ManyBodyState:
+def _estimate_kp(s, k):
+    """
+    Estimate the solution to the Schrodinger Equation needed to eachive given energy state.
+
+    Args:
+        s: iDEA.system.System, System object.
+        k: int, Target energy state.
+
+    Returns:
+        kp: int, Extimate of kp.
+    """
+    return (abs(s.up_count - s.down_count) + 1)**2 * s.count * (k + 1)
+
+
+def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, kp = None) -> iDEA.state.ManyBodyState:
     """
     Solves the interacting Schrodinger equation of the given system.
 
@@ -190,7 +231,7 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, initial_k = N
         s: iDEA.system.System, System object.
         H: np.ndarray, Hamiltonian [If None this will be computed from s]. (default = None)
         k: int, Energy state to solve for. (default = 0, the ground-state)
-        initial_k: int. TODO
+        kp: int. TODO
 
     Returns:
         state: iDEA.state.ManyBodyState, Solved state.
@@ -199,31 +240,38 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, initial_k = N
     if H is None:
         H = hamiltonian(s)
 
+    # Estimate the level of excitation. 
+    if kp is None:
+        kp = _estimate_kp(s, k)
+        print(kp)
+
     # Solve the many-body Schrodinger equation.
-    energies, wavefunctions = spsla.eigsh(H.tocsr(), k=5, which='SA') # TODO
+    energies, spaces = spsla.eigsh(H.tocsr(), k=kp, which='SA')
 
     # Reshape and normalise the solutions.
-    wavefunctions = wavefunctions.reshape((s.x.shape[0],)*s.count + (wavefunctions.shape[-1],))
-    for j in range(wavefunctions.shape[-1]):
-        wavefunctions[...,j] = wavefunctions[...,j] / np.sqrt(np.sum(abs(wavefunctions[...,j])**2)*s.dx**s.count)
+    spaces = spaces.reshape((s.x.shape[0],)*s.count + (spaces.shape[-1],))
+    for j in range(spaces.shape[-1]):
+        spaces[...,j] = spaces[...,j] / np.sqrt(np.sum(abs(spaces[...,j])**2)*s.dx**s.count)
 
     # Construct the spin part.
     symbols = string.ascii_lowercase + string.ascii_uppercase
     u = np.array([1,0])
     d = np.array([0,1])
     spin_state = tuple([u if spin == 'u' else d for spin in s.electrons])
-    chi = np.einsum(','.join(symbols[:s.count]) + '->' + ''.join(symbols[:s.count]), *spin_state)
-    chis = np.zeros(shape=((2,)*s.count + (wavefunctions.shape[-1],)))
-    for i in range(wavefunctions.shape[-1]):
-        chis[...,i] = chi
+    spin = np.einsum(','.join(symbols[:s.count]) + '->' + ''.join(symbols[:s.count]), *spin_state)
+    spins = np.zeros(shape=((2,)*s.count + (spaces.shape[-1],)))
+    for i in range(spaces.shape[-1]):
+        spins[...,i] = spin
 
     # Antisymmetrize.
-    wavefunctions, chis = antisymmetrize(s, wavefunctions, chis)
+    fulls, spaces, spins, energies = antisymmetrize(s, spaces, spins, energies)
 
     # Construct the many-body state.
     state = iDEA.state.ManyBodyState()
-    state.space = wavefunctions
-    state.spin = chis
+    state.space = spaces[...,k]
+    state.spin = spins[...,k]
+    state.full = fulls[...,k]
+    state.energy = energies[k]
 
     return state
 
