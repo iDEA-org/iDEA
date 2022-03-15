@@ -23,20 +23,20 @@ class Evolution(Interface):
 class ManyBodyState(State):
     """State of interacting particles."""
 
-    def __init__(self, space: np.ndarray = None, spin: np.ndarray = None):
+    def __init__(self, space: np.ndarray = None, spin: np.ndarray = None, full = None, energy = None):
         r"""
         State of particles in a many-body state.
 
         This is described by a spatial part \psi(x_1,x_2,\dots,x_N) on the spatial grid, and a spin
         part on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). These are NOT necessarily antisymmetric states,
         they can be combined using the antisymmetrisation operaration to produce the full 
-        wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N) using iDEA.interacting functionality.
-        This full array is not initiliased in this object due to is large redundant size, it is calculated and 
-        destroyed when needed.
+        wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N).
 
         Args:
             space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(x_1,x_2,\dots,x_N). (default = None)
             spin: np.ndarray, Spin part of the wavefunction on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). (default = None)
+            full: np.ndarray, Total antisymmetrised wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N). (default = None)
+            energy: float, Total energy of the state.
         """
         if space is None:
             self.space = iDEA.utilities.ArrayPlaceholder()
@@ -46,7 +46,14 @@ class ManyBodyState(State):
             self.spin = iDEA.utilities.ArrayPlaceholder()
         else:
             self.spin = spin
-        self.full = iDEA.utilities.ArrayPlaceholder()
+        if full is None:
+            self.full = iDEA.utilities.ArrayPlaceholder()
+        else:
+            self.full = full
+        if energy is None:
+            self.energy = float()
+        else:
+            self.energy = energy
 
 
 class SingleBodyState(State):
