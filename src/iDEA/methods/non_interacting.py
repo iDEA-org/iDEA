@@ -200,41 +200,41 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0) -> iDEA.state
     return state
 
 
-def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
+def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.SingleBodyEvolution:
     """
-    propagate a set of orbitals forward in time due to a local pertubation.
+    Propagate a set of orbitals forward in time due to a local pertubation.
 
     Args: 
         s: iDEA.system.System, System object.
-        state: np.ndarray, Array of normalised orbitals, indexed as orbitals[space,orbital_number].
+        state: iDEA.state.SingleBodyState, State to be propigated.
         v_ptrb: np.ndarray, Local perturbing potential [static or dynamic].
         t: np.ndarray, Grid of time values.
         H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
 
     Returns:
-        evolution: iDEA.state.TDSingleBodyState, Solved time-dependent state.
+        evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
     if len(v_ptrb.shape) == 1:
-        return _propagate_static(s, state, v_ptrb, t, H=None)
+        return _propagate_static(s, state, v_ptrb, t, H)
     elif len(v_ptrb.shape) == 2:
-        return _propagate_dynamic(s, state, v_ptrb, t, H=None)
+        return _propagate_dynamic(s, state, v_ptrb, t, H)
     else:
         raise AttributeError(f"v_ptrb must have shape 1 or 2, got {v_ptrb.shape} instead.")
 
 
-def _propagate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
+def _propagate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.SingleBodyEvolution:
     """
     Propagate a set of orbitals forward in time due to a static local pertubation.
 
     Args: 
         s: iDEA.system.System, System object.
-        state: np.ndarray, Array of normalised orbitals, indexed as orbitals[space,orbital_number].
+        state: iDEA.state.SingleBodyState, State to be propigated.
         v_ptrb: np.ndarray, Local perturbing potential on the grid of x values, indexed as v_ptrb[space].
         t: np.ndarray, Grid of time values.
         H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
 
     Returns:
-        evolution: iDEA.state.TDSingleBodyState, Solved time-dependent state.
+        evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
     # Construct the unperturbed Hamiltonian.
     if H is None:
@@ -285,19 +285,19 @@ def _propagate_static(s: iDEA.system.System, state: iDEA.state.SingleBodyState, 
     return evolution
 
 
-def _propagate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.Evolution():
+def _propagate_dynamic(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.SingleBodyEvolution:
     """
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
     Args: 
         s: iDEA.system.System, System object.
-        state: np.ndarray, Array of normalised orbitals, indexed as orbitals[space,orbital_number].
+        state: iDEA.state.SingleBodyState, State to be propigated.
         v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
         t: np.ndarray, Grid of time values.
         H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
 
     Returns:
-        evolution: iDEA.state.TDSingleBodyState, Solved time-dependent state.
+        evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
     # Construct the unperturbed Hamiltonian.
     if H is None:
