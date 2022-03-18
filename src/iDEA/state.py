@@ -94,7 +94,6 @@ class ManyBodyEvolution(Evolution):
     In addition to the arrays defined within the initial ManyBodyState, this state is described by three additional arrays:
 
     td_space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(t,x_1,x_2,\dots,x_N).
-    td_full: np.ndarray, Full wavefunction on the spatial and spin grid \Psi(t,x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N)
     v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.
     t: np.ndarray, Time grid used during evolution.
     """
@@ -103,7 +102,6 @@ class ManyBodyEvolution(Evolution):
         self.spin = copy.deepcopy(initial_state.spin)
         self.full = copy.deepcopy(initial_state.full)
         self.td_space = iDEA.utilities.ArrayPlaceholder()
-        self.td_full = iDEA.utilities.ArrayPlaceholder()
         self.v_ptrb = iDEA.utilities.ArrayPlaceholder()
         self.t = iDEA.utilities.ArrayPlaceholder()
 
