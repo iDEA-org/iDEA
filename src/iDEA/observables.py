@@ -107,7 +107,17 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
             return n
 
     if state is not None and type(state) == iDEA.state.ManyBodyState:
-        raise NotImplementedError() # TODO
+        spin_densities = np.zeros(shape=(s.x.shape[0], 2))
+        for i in range(s.x.shape[0]):
+            for j in range(2):
+                spin_densities[i,j] = np.sum(abs(state.full[i,j,...])**2)*s.dx**(s.count - 1) * s.count
+        up_n = spin_densities[:,0]
+        down_n = spin_densities[:,1]
+        n = up_n + down_n
+        if return_spins:
+            return n, up_n, down_n
+        else:
+            return n
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
         up_n = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
