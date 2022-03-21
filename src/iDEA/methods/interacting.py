@@ -175,15 +175,23 @@ def antisymmetrize(s, spaces, spins, energies):
         fulls += _permutation_parity(p) * np.moveaxis(fulls_copy, list(range(s.count*2)), indices)
 
     # Filter out zeros.
+    print('----------------------')
+    print(fulls.shape, spaces.shape, spins.shape, energies.shape)
     allowed_fulls = []
     allowed_energies = []
+    allowed_spaces = []
+    allowed_spins = []
     for n in range(fulls.shape[-1]):
         if np.allclose(fulls[...,n], np.zeros(fulls.shape[:-1])):
             pass
         else:
             allowed_fulls.append(fulls[...,n])
             allowed_energies.append(energies[n])
+            allowed_spaces.append(spaces[...,n])
+            allowed_spins.append(spins[...,n])
     fulls = np.moveaxis(np.array(allowed_fulls), 0, -1)
+    spaces = np.moveaxis(np.array(allowed_spaces), 0, -1)
+    spins = np.moveaxis(np.array(allowed_spins), 0, -1)
     energies = np.array(allowed_energies)
 
     # Normalise.
@@ -205,6 +213,8 @@ def antisymmetrize(s, spaces, spins, energies):
     spaces = spaces[...,:fulls.shape[-1]]
     spins = spins[...,:fulls.shape[-1]]
     energies = np.array(allowed_energies)
+    print(fulls.shape, spaces.shape, spins.shape, energies.shape)
+    print('----------------------')
 
     return fulls, spaces, spins, energies
 
@@ -335,12 +345,13 @@ def _propagate_static(s: iDEA.system.System, state: iDEA.state.ManyBodyState, v_
     # Initilise time-dependent wavefunction.
     evolution = iDEA.state.ManyBodyEvolution(initial_state=state)
     evolution.td_space = np.zeros(shape=t.shape+state.space.shape, dtype=complex)
+    evolution.td_space[0,...] = copy.deepcopy(evolution.space)
 
     # Propagate.
     for j, ti in enumerate(t):
         if j != 0:
             print("iDEA.methods.interacting.propagate: propagating state, time = {0:.3f}/{1:.3f}".format(ti, np.max(t)), end="\r")
-            wavefunction = evolution.td_space[j-1,...].flatten()
+            wavefunction = evolution.td_space[j-1,...].reshape((s.x.shape[0]**s.count))
             wavefunction = spsla.expm_multiply(-1.0j*dt*Hp, wavefunction)
             evolution.td_space[j,...] = wavefunction.reshape((s.x.shape[0],)*s.count)
     print()
@@ -376,6 +387,7 @@ def _propagate_dynamic(s: iDEA.system.System, state: iDEA.state.ManyBodyState, v
     # Initilise time-dependent wavefunction.
     evolution = iDEA.state.ManyBodyEvolution(initial_state=state)
     evolution.td_space = np.zeros(shape=t.shape+state.space.shape, dtype=complex)
+    evolution.td_space[0,...] = copy.deepcopy(evolution.space)
 
     # Construct objects needed to update potential.
     I = sps.identity(s.x.shape[0], format='dia')
@@ -399,7 +411,7 @@ def _propagate_dynamic(s: iDEA.system.System, state: iDEA.state.ManyBodyState, v
             Hp = H + Vptrb
 
             # Evolve.
-            wavefunction = evolution.td_space[j-1,...].flatten()
+            wavefunction = evolution.td_space[j-1,...].reshape((s.x.shape[0]**s.count))
             wavefunction = spsla.expm_multiply(-1.0j*dt*Hp, wavefunction)
             evolution.td_space[j,...] = wavefunction.reshape((s.x.shape[0],)*s.count)
     print()
