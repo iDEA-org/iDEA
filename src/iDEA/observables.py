@@ -1,8 +1,12 @@
+import copy
+import string
+import itertools
 from typing import Union
 import numpy as np
 import iDEA.system
 import iDEA.state
 import iDEA.methods.non_interacting
+import iDEA.methods.interacting
 
 
 def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> Union[float, np.ndarray]:
@@ -109,8 +113,8 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         spin_densities = np.zeros(shape=(s.x.shape[0], 2))
         for i in range(s.x.shape[0]):
-            for j in range(2):
-                spin_densities[i,j] = np.sum(abs(state.full[i,j,...])**2)*s.dx**(s.count - 1) * s.count
+            for k in range(2):
+                spin_densities[i,k] = np.sum(abs(state.full[i,k,...])**2)*s.dx**(s.count - 1) * s.count
         up_n = spin_densities[:,0]
         down_n = spin_densities[:,1]
         n = up_n + down_n
@@ -120,23 +124,45 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
             return n
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
-        up_n = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
+        up_n = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]))
         for i, I in enumerate(evolution.up.occupied):
             for j, ti in enumerate(evolution.t):
                 up_n[j,:] += abs(evolution.up.td_orbitals[j,:,i])**2*evolution.up.occupations[I]
-        down_n = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]), dtype=complex)
+        down_n = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]))
         for i, I in enumerate(evolution.down.occupied):
             for j, ti in enumerate(evolution.t):
                 down_n[j,:] += abs(evolution.down.td_orbitals[j,:,i])**2*evolution.down.occupations[I]
         n = up_n + down_n
         if return_spins:
-            return n.real, up_n.real, down_n.real
+            return n, up_n, down_n
         else:
-            return n.real
+            return n
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
-        raise NotImplementedError() # TODO
-
+        spin_densities = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], 2))
+        for j, ti in enumerate(evolution.t):
+            l = string.ascii_lowercase[:s.count]
+            L = string.ascii_uppercase[:s.count]
+            st = l + ',' + L + '->' + ''.join([i for sub in list(zip(l,L)) for i in sub])
+            full = np.einsum(st, evolution.td_space[j,...], evolution.spin)
+            L = list(zip(list(range(0, s.count*2, 2)), list(range(1, s.count*2, 2))))
+            perms = itertools.permutations(list(range(s.count)))
+            full_copy = copy.deepcopy(full)
+            full = np.zeros_like(full_copy)
+            for p in perms:
+                indices = list(itertools.chain(*[L[e] for e in p]))
+                full += iDEA.methods.interacting._permutation_parity(p) * np.moveaxis(full_copy, list(range(s.count*2)), indices)
+            full = full / np.sqrt(np.sum(abs(full)**2)*s.dx**s.count)
+            for i in range(s.x.shape[0]):
+                for k in range(2):
+                    spin_densities[j,i,k] = np.sum(abs(full[i,k,...])**2)*s.dx**(s.count - 1) * s.count
+        up_n = spin_densities[:,:,0]
+        down_n = spin_densities[:,:,1]
+        n = up_n + down_n
+        if return_spins:
+            return n, up_n, down_n
+        else:
+            return n
     else:
         raise AttributeError(f"State or Evolution must be provided.")
 
