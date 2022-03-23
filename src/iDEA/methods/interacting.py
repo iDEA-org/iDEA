@@ -175,8 +175,6 @@ def antisymmetrize(s, spaces, spins, energies):
         fulls += _permutation_parity(p) * np.moveaxis(fulls_copy, list(range(s.count*2)), indices)
 
     # Filter out zeros.
-    print('----------------------')
-    print(fulls.shape, spaces.shape, spins.shape, energies.shape)
     allowed_fulls = []
     allowed_energies = []
     allowed_spaces = []
@@ -213,8 +211,6 @@ def antisymmetrize(s, spaces, spins, energies):
     spaces = spaces[...,:fulls.shape[-1]]
     spins = spins[...,:fulls.shape[-1]]
     energies = np.array(allowed_energies)
-    print(fulls.shape, spaces.shape, spins.shape, energies.shape)
-    print('----------------------')
 
     return fulls, spaces, spins, energies
 
