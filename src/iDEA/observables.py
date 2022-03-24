@@ -214,7 +214,7 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
         s: iDEA.system.System, System object.
         state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
         evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-        return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
+        return_spins: bool, True to also return the spin density matrices: total, up, down. (default = False)
 
     Returns:
         p: float or np.ndarray, Charge density matrix, or evolution of charge density matrix.
@@ -233,7 +233,15 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
             return p
 
     if state is not None and type(state) == iDEA.state.ManyBodyState:
-        raise NotImplementedError() # TODO
+        tosum = [2,3,4,5]
+        spin_p = np.tensordot(state.full, state.full.conj(), axes=(tosum,tosum)).diagonal(axis1=1, axis2=3)*s.dx**(s.count - 1) * s.count
+        up_p = spin_p[:,:,0]
+        down_p = spin_p[:,:,1]
+        p = up_p + down_p
+        if return_spins:
+            return p, up_p, down_p
+        else:
+            return p
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
         up_p = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
