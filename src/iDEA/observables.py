@@ -259,7 +259,19 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
             return p
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
-        raise NotImplementedError() # TODO
+        up_p = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+        for i, I in enumerate(evolution.up.occupied):
+            for j, ti in enumerate(evolution.t):
+                up_p[j,:] += np.tensordot(evolution.up.td_orbitals[j,:,i].conj(), evolution.up.td_orbitals[j,:,i], axes=0) * evolution.up.occupations[I]
+        down_p = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+        for i, I in enumerate(evolution.down.occupied):
+            for j, ti in enumerate(evolution.t):
+                down_p[j,:] += np.tensordot(evolution.down.td_orbitals[j,:,i].conj(), evolution.down.td_orbitals[j,:,i], axes=0) * evolution.down.occupations[I]
+        p = up_p + down_p
+        if return_spins:
+            return p, up_p, down_p
+        else:
+            return p
 
     else:
         raise AttributeError(f"State or Evolution must be provided.")
