@@ -5,16 +5,13 @@ import copy
 import string
 import itertools
 import functools
-from typing import Union
+from tqdm import tqdm
 import numpy as np
 import scipy as sp
 import scipy.sparse as sps
-import numpy.linalg as npla
-import scipy.linalg as spla
 import scipy.sparse.linalg as spsla
 import iDEA.system
 import iDEA.state
-import iDEA.observables
 import iDEA.methods.non_interacting
 
 
@@ -104,24 +101,18 @@ def hamiltonian(s: iDEA.system.System) -> sps.dia_matrix:
     return H
 
 
-def total_energy(s: iDEA.system.System, state: iDEA.state.ManyBodyState = None, evolution: iDEA.state.ManyBodyEvolution = None) -> Union[float, np.ndarray]:
+def total_energy(s: iDEA.system.System, state: iDEA.state.ManyBodyState) -> float:
     """
-    Compute the total energy of a interacting state.
+    Compute the total energy of an interacting state.
 
     Args:
         s: iDEA.system.System, System object.
-        state: iDEA.state.ManyBodyState, State. (default = None)
-        evolution: iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        state: iDEA.state.ManyBodyState, State.
 
     Returns:
-        E: float or np.ndarray, Total energy, or evolution of total energy.
+        E: float, Total energy.
     """
-    if state is not None:
-        return state.energy
-    elif evolution is not None:
-        raise NotImplementedError() # TODO
-    else:
-        raise AttributeError(f"State or Evolution must be provided.")
+    return state.energy
 
 
 def _permutation_parity(p):
@@ -242,6 +233,9 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level = None)
     Returns:
         state: iDEA.state.ManyBodyState, Solved state.
     """
+    # Construct the many-body state.
+    state = iDEA.state.ManyBodyState()
+
     # Construct the Hamiltonian.
     if H is None:
         H = hamiltonian(s)
@@ -271,8 +265,7 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level = None)
     # Antisymmetrize.
     fulls, spaces, spins, energies = antisymmetrize(s, spaces, spins, energies)
 
-    # Construct the many-body state.
-    state = iDEA.state.ManyBodyState()
+    # Populate the state.
     state.space = spaces[...,k]
     state.spin = spins[...,k]
     state.full = fulls[...,k]
@@ -281,53 +274,25 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level = None)
     return state
 
 
-def propagate(s: iDEA.system.System, state: iDEA.state.ManyBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: sps.dia_matrix = None) -> iDEA.state.ManyBodyEvolution:
+def propagate_step(s: iDEA.system.System, evolution: iDEA.state.ManyBodyEvolution, H: sps.dia_matrix, v_ptrb: np.ndarray, j: int, dt: float, objs: tuple) -> iDEA.state.ManyBodyEvolution:
     """
-    Propagate a many body state forward in time due to a local pertubation.
+    Propagate a many body state forward in time, one time-step, due to a local pertubation.
 
     Args: 
         s: iDEA.system.System, System object.
-        state: iDEA.state.ManyBodyState, State to be propigated.
-        v_ptrb: np.ndarray, Local perturbing potential [static or dynamic].
-        t: np.ndarray, Grid of time values.
+        evolution: iDEA.state.ManyBodyEvolution, time-dependent evolution.
         H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
+        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+        j: int, Time index.
+        dt: float, Time-step.
+        objs: tuple. Tuple of objects needed to construct many-body operator (I, generate_terms).
 
     Returns:
-        evolution: iDEA.state.ManyBodyEvolution, Solved time-dependent evolution.
+        evolution: iDEA.state.ManyBodyEvolution, time-dependent evolution one time-step evolved.
     """
-    if len(v_ptrb.shape) == 1:
-        return _propagate_static(s, state, v_ptrb, t, H)
-    elif len(v_ptrb.shape) == 2:
-        return _propagate_dynamic(s, state, v_ptrb, t, H)
-    else:
-        raise AttributeError(f"v_ptrb must have shape 1 or 2, got {v_ptrb.shape} instead.")
-
-
-def _propagate_static(s: iDEA.system.System, state: iDEA.state.ManyBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.ManyBodyEvolution:
-    """
-    Propagate a many body state forward in time due to a local pertubation.
-
-    Args: 
-        s: iDEA.system.System, System object.
-        state: iDEA.state.ManyBodyState, State to be propigated.
-        v_ptrb: np.ndarray, Local perturbing potential on the grid of x values, indexed as v_ptrb[space].
-        t: np.ndarray, Grid of time values.
-        H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
-
-    Returns:
-        evolution: iDEA.state.ManyBodyEvolution, Solved time-dependent evolution.
-    """
-    # Construct the unperturbed Hamiltonian.
-    if H is None:
-        H = hamiltonian(s)
-
     # Construct the pertubation potential.
-    vptrb = sps.dia_matrix(np.diag(v_ptrb))
-    I = sps.identity(s.x.shape[0], format='dia')
-    partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
-    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format='dia'), po)
-    generate_terms = lambda f, A, B, n: (fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n))
-    terms = generate_terms(sps.kron, vptrb, I, s.count)
+    vptrb = sps.dia_matrix(np.diag(v_ptrb[j,:]))
+    terms = objs[1](sps.kron, vptrb, objs[0], s.count)
     Vptrb = sps.dia_matrix((s.x.shape[0]**s.count,)*2, dtype=float)
     for term in terms:
         Vptrb += term
@@ -335,31 +300,15 @@ def _propagate_static(s: iDEA.system.System, state: iDEA.state.ManyBodyState, v_
     # Contruct the perturbed Hamiltonian.
     Hp = H + Vptrb
 
-    # Compute timestep.
-    dt = t[1] - t[0]
-
-    # Initilise time-dependent wavefunction.
-    evolution = iDEA.state.ManyBodyEvolution(initial_state=state)
-    evolution.td_space = np.zeros(shape=t.shape+state.space.shape, dtype=complex)
-    evolution.td_space[0,...] = copy.deepcopy(evolution.space)
-
-    # Propagate.
-    for j, ti in enumerate(t):
-        if j != 0:
-            print("iDEA.methods.interacting.propagate: propagating state, time = {0:.3f}/{1:.3f}".format(ti, np.max(t)), end="\r")
-            wavefunction = evolution.td_space[j-1,...].reshape((s.x.shape[0]**s.count))
-            wavefunction = spsla.expm_multiply(-1.0j*dt*Hp, wavefunction)
-            evolution.td_space[j,...] = wavefunction.reshape((s.x.shape[0],)*s.count)
-    print()
-
-    # Construct the many-body time-dependent evolution.
-    evolution.v_ptrb = v_ptrb
-    evolution.t = t
+    # Evolve.
+    wavefunction = evolution.td_space[j-1,...].reshape((s.x.shape[0]**s.count))
+    wavefunction = spsla.expm_multiply(-1.0j*dt*Hp, wavefunction)
+    evolution.td_space[j,...] = wavefunction.reshape((s.x.shape[0],)*s.count)
 
     return evolution
 
 
-def _propagate_dynamic(s: iDEA.system.System, state: iDEA.state.ManyBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: np.ndarray = None) -> iDEA.state.ManyBodyEvolution:
+def propagate(s: iDEA.system.System, state: iDEA.state.ManyBodyState, v_ptrb: np.ndarray, t: np.ndarray, H: sps.dia_matrix = None) -> iDEA.state.ManyBodyEvolution:
     """
     Propagate a many body state forward in time due to a local pertubation.
 
@@ -390,29 +339,14 @@ def _propagate_dynamic(s: iDEA.system.System, state: iDEA.state.ManyBodyState, v
     partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
     fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format='dia'), po)
     generate_terms = lambda f, A, B, n: (fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n))
+    objs = (I, generate_terms)
 
     # Propagate.
-    for j, ti in enumerate(t):
+    for j, ti in enumerate(tqdm(t, desc="iDEA.methods.interacting.propagate: propagating state")):
         if j != 0:
-            print("iDEA.methods.interacting.propagate: propagating state, time = {0:.3f}/{1:.3f}".format(ti, np.max(t)), end="\r")
+            propagate_step(s, evolution, H, v_ptrb, j, dt, objs)
 
-            # Construct the pertubation potential.
-            vptrb = sps.dia_matrix(np.diag(v_ptrb[j,:]))
-            terms = generate_terms(sps.kron, vptrb, I, s.count)
-            Vptrb = sps.dia_matrix((s.x.shape[0]**s.count,)*2, dtype=float)
-            for term in terms:
-                Vptrb += term
-
-            # Contruct the perturbed Hamiltonian.
-            Hp = H + Vptrb
-
-            # Evolve.
-            wavefunction = evolution.td_space[j-1,...].reshape((s.x.shape[0]**s.count))
-            wavefunction = spsla.expm_multiply(-1.0j*dt*Hp, wavefunction)
-            evolution.td_space[j,...] = wavefunction.reshape((s.x.shape[0],)*s.count)
-    print()
-
-    # Construct the many-body time-dependent evolution.
+    # Populate the many-body time-dependent evolution.
     evolution.v_ptrb = v_ptrb
     evolution.t = t
 
