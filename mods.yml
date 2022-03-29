@@ -1,14 +1,14 @@
 iDEA:
     utilities: Container, ArrayPlaceholder, Experiment, save_experiment, load_experiment.
-    system: System, save_system, load_system, systems.
     interactions: softened_interaction, softened_interaction_alternative, raw_interaction.
+    system: System, save_system, load_system, systems.
     state: State, ManyBodyState, SingleBodyState, Evolution, ManyBodyEvolution, SingleBodyEvolution.
-    observables: observable, density, external_energy, hartree_potential, hartree_energy, density_matrix, exchange_potential, exchange_energy, kinetic_energy, single_particle_energy.
+    observables: observable, density, external_potential, external_energy, hartree_potential, hartree_energy, density_matrix, exchange_potential, exchange_energy, kinetic_energy, single_particle_energy.
     methods:
         interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, antisymmetrize, solve, p_step, propigate.
-        non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, add_occupations, solve, p_step, propigate.
-        hartree: hartree_potential_operator, hamiltionian, total_energy, sc_step, solve, p_step, propigate.
-        hartree_fock: exchange_potential_operator, hamiltionian, total_energy, sc_step, solve, p_step, propigate.
-        lda: xc_potential_operator, hamiltionian, total_energy, xc_energy, sc_step, solve, p_step, propigate.
-        hybrid: hamiltionian, total_energy, sc_step, solve, p_step, propigate.
+        non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
+        hartree: hartree_potential_operator, hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
+        hartree_fock: exchange_potential_operator, hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
+        lda: xc_potential_operator, hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
+        hybrid: hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
     reverse_engineering: reverse, reverse_propigation.
