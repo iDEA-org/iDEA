@@ -3,7 +3,7 @@ iDEA:
     interactions: softened_interaction, softened_interaction_alternative, raw_interaction.
     system: System, save_system, load_system, systems.
     state: State, ManyBodyState, SingleBodyState, Evolution, ManyBodyEvolution, SingleBodyEvolution.
-    observables: observable, density, density_matrix, kinetic_energy, external_potential, external_energy, hartree_potential, hartree_energy, exchange_potential, exchange_energy, single_particle_energy.
+    observables: observable, density, density_matrix, kinetic_energy, external_potential, external_energy, hartree_potential, hartree_energy, exchange_potential, exchange_energy, single_particle_energy, ionisation_potential, electron_affinity, single_particle_gap.
     methods:
         interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, antisymmetrize, solve, p_step, propigate.
         non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
