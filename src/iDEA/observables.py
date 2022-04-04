@@ -350,7 +350,7 @@ def hartree_energy(s: iDEA.system.System, n: np.ndarray, v_h: np.ndarray) -> Uni
 
 
     Returns:
-        v_h: float or np.ndarray, Hartree potential, or evolution of Hartree energy.
+        E_h: float or np.ndarray, Hartree energy, or evolution of Hartree energy.
     """
     if len(n.shape) == 1:
         E_h = np.dot(n, v_h) * s.dx
@@ -366,128 +366,76 @@ def hartree_energy(s: iDEA.system.System, n: np.ndarray, v_h: np.ndarray) -> Uni
         raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
 
 
+def exchange_potential(s: iDEA.system.System, p: np.ndarray) -> np.ndarray:
+    """
+    Compute the exchange potential from a density matrix.
+
+    Args:
+        s: iDEA.system.System, System object.
+        p: np.ndarray, Density matrix of the system.
+
+    Returns:
+        v_x: np.ndarray, Exchange potential, or evolution of exchange potential.
+    """
+    if len(p.shape) == 2:
+        v_x = -p * s.v_int
+        return v_x
+        
+    elif len(p.shape) == 3:
+        v_x = np.zeros_like(p)
+        for j in range(v_x.shape[0]):
+            v_x[j,:,:] = -p[j,:,:] * s.v_int[:,:]
+        return v_x
+
+    else:
+        raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
 
 
+def exchange_energy(s: iDEA.system.System, p: np.ndarray, v_x: np.ndarray) -> Union[float, np.ndarray]:
+    """
+    Compute the exchange energy from a density matrix and exchange potential.
+
+    Args:
+        s: iDEA.system.System, System object.
+        p: np.ndarray, Density matrix of the system.
+        v_x: np.ndarray, Exchange potential of the system.
+
+    Returns:
+        E_x: float or np.ndarray, Exchange energy, or evolution of exchange energy.
+    """
+    if len(p.shape) == 2:
+        E_x = np.tensordot(p, v_x, axes=2) * s.dx * s.dx
+        return E_x
+        
+    elif len(p.shape) == 3:
+        E_h = np.zeros(shape=n.shape[0])
+        for j in range(E_h.shape[0]):
+            E_h[j] = np.dot(n[j,:], E_h[j,:]) * s.dx
+        return E_h
+
+    else:
+        raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
 
 
-
-
-
-
-# def external_energy(s: iDEA.system.System, n: np.ndarray, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None) -> Union[float, np.ndarray]:
+# def single_particle_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None, evolution: iDEA.state.SingleBodyEvolution = None) -> Union[float, np.ndarray]:
 #     """
-#     Compute the charge density matrix of a non_interacting state.
+#     Compute the total energy of a non_interacting state.
 
 #     Args:
 #         s: iDEA.system.System, System object.
-#         n, Charge density of the system [If None this will be computed]. (default = None)
-#         state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
-#         evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+#         state: iDEA.state.SingleBodyState, State. (default = None)
+#         evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
 
 #     Returns:
-#         e_ext: float or np.ndarray, External energy, or evolution of external energy.
+#         E: float or np.ndarray, Total energy, or evolution of total energy.
 #     """
-#     if n is not None:
-#         pass
-
-#     elif n is None and state is not None:
-#         n = density(state=state)
-
-#     elif n is None and evolution is not None:
-#         n = density(evolution=evoluation)
-
+#     if state is not None:
+#         return np.sum(state.up.energies[:] * state.up.occupations[:]) + np.sum(state.down.energies[:] * state.down.occupations[:])
+#     elif evolution is not None:
+#         H = hamiltonian(s)
+#         return iDEA.observables.observable(s, H, evolution=evolution)
 #     else:
-#         raise AttributeError(f"Density, State or Evolution must be provided.")
-
-#     if len(n.shape) == 1:
-#         e_ext = np.dot(n, s.v_ext) * s.dx
-#         return e_ext
-        
-#     elif len(n.shape) == 2:
-#         e_ext = np.zeros(shape=n.shape[0])
-#         for j in range(n.shape[0]):
-#             e_ext[j] = np.dot(n[j,:], s.v_ext) * s.dx
-#         return e_ext
-
-#     else:
-#         raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
-
-
-
-
-# def external_energy(s: iDEA.system.System, n: np.ndarray, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None) -> Union[float, np.ndarray]:
-#     """
-#     Compute the charge density matrix of a non_interacting state.
-
-#     Args:
-#         s: iDEA.system.System, System object.
-#         n, Charge density of the system [If None this will be computed]. (default = None)
-#         state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
-#         evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-
-#     Returns:
-#         e_ext: float or np.ndarray, External energy, or evolution of external energy.
-#     """
-#     if n is not None:
-#         pass
-
-#     elif n is None and state is not None:
-#         n = density(state=state)
-
-#     elif n is None and evolution is not None:
-#         n = density(evolution=evoluation)
-
-#     else:
-#         raise AttributeError(f"Density, State or Evolution must be provided.")
-
-#     if len(n.shape) == 1:
-#         e_ext = np.dot(n, s.v_ext) * s.dx
-#         return e_ext
-        
-#     elif len(n.shape) == 2:
-#         e_ext = np.zeros(shape=n.shape[0])
-#         for j in range(n.shape[0]):
-#             e_ext[j] = np.dot(n[j,:], s.v_ext) * s.dx
-#         return e_ext
-
-#     else:
-#         raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
-
-
-# def one_body_reduced_density_matrix(s, orbitals):
-#     r"""Constructs the one-body reduced density matrix from single-particle orbitals.
-
-#     .. math:: \rho(x,x') = \sum^N_{n=1}\phi_n(x)\phi^*_n(x')
-
-#     s: System
-#         System object.
-#     orbitals: np.ndarray
-#         Array of normalised orbitals, indexed as orbitals[space,orbital_number].
-
-#     returns:
-#     n: np.ndarray
-#         One body reduced density matrix.
-#     """
-#     p = np.zeros(shape=(s.x.shape[0], s.x.shape[0]), dtype=np.complex)
-#     for i in range(s.NE):
-#         p += np.tensordot(orbitals[:, i].conj(), orbitals[:, i], axes=0)
-#     return p
-
-
-# def total_energy(s, energies):
-#     """Calculates the total energy from single particle energies.
-
-#     s: System
-#         System object.
-#     energies: np.ndarray
-#         Array of single particle energies.
-
-#     returns:
-#     E: float
-#         Total energy.
-#     """
-#     E = np.sum(energies[: s.NE])
-#     return E
+#         raise AttributeError(f"State or Evolution must be provided.")
 
 
 # def ionisation_potential(s, energies):
