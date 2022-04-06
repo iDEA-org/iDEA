@@ -8,6 +8,3 @@ import iDEA.methods.non_interacting
 
 
 __all__ = ["iDEA.utilities", "iDEA.system", "iDEA.interactions", "iDEA.state", "iDEA.observables" ,"iDEA.methods.interacting" ,"iDEA.methods.non_interacting"]
-
-
-del iDEA
