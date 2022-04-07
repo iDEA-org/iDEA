@@ -9,57 +9,56 @@ import iDEA.methods.non_interacting
 import iDEA.methods.interacting
 
 
-# def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> Union[float, np.ndarray]:
+def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> Union[float, np.ndarray]:
+    """
+    Compute an observable based on a given operator and state or evolution.
 
-#     """
-#     Placeholer function. Use this as a template when constructing observable methods.
+    Args:
+        s: iDEA.system.System, System object.
+        observable_operator: np.ndarray, Obserbable operator.
+        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        return_spins: bool, True to also return the spin observables: total, up, down. (default = False)
 
-#     Args:
-#         s: iDEA.system.System, System object.
-#         observable_operator: np.ndarray, Obserbable operator.
-#         state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
-#         evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-#         return_spins: bool, True to also return the spin observables: total, up, down. (default = False)
+    Returns:
+        observable: float or np.ndarray, Observable.
+    """
+    if state is not None and type(state) == iDEA.state.ManyBodyState:
+        raise NotImplementedError() 
 
-#     Returns:
-#         observable: float or np.ndarray, Observable.
-#     """
-#     if state is not None and type(state) == iDEA.state.ManyBodyState:
-#         raise NotImplementedError() 
+    if state is not None and type(state) == iDEA.state.SingleBodyState:
+        up_O = 0.0
+        for i in range(state.up.orbitals.shape[1]):
+            up_O += np.vdot(state.up.orbitals[:,i], np.dot(observable_operator, state.up.orbitals[:,i])) * state.up.occupations[i] * s.dx
+        down_O = 0.0
+        for i in range(state.down.orbitals.shape[1]):
+            down_O += np.vdot(state.down.orbitals[:,i], np.dot(observable_operator, state.down.orbitals[:,i])) * state.down.occupations[i] * s.dx
+        O = up_O + down_O
+        if return_spins:
+            return  O, up_O, down_O
+        else:
+            return O
 
-#     if state is not None and type(state) == iDEA.state.SingleBodyState:
-#         up_O = 0.0
-#         for i in range(state.up.orbitals.shape[1]):
-#             up_O += np.vdot(state.up.orbitals[:,i], np.dot(observable_operator, state.up.orbitals[:,i])) * state.up.occupations[i] * s.dx
-#         down_O = 0.0
-#         for i in range(state.down.orbitals.shape[1]):
-#             down_O += np.vdot(state.down.orbitals[:,i], np.dot(observable_operator, state.down.orbitals[:,i])) * state.down.occupations[i] * s.dx
-#         O = up_O + down_O
-#         if return_spins:
-#             return  O, up_O, down_O
-#         else:
-#             return O
+    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+        raise NotImplementedError()
 
-#     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
-#         raise NotImplementedError()
+    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+        up_O = np.zeros(shape=evolution.t.shape, dtype=complex)
+        for i, I in enumerate(evolution.up.occupied):
+            for j, ti in enumerate(evolution.t):
+                up_O[j] += np.vdot(evolution.up.td_orbitals[j,:,i], np.dot(observable_operator, evolution.up.td_orbitals[j,:,i])) * evolution.up.occupations[I] * s.dx
+        down_O = np.zeros(shape=evolution.t.shape, dtype=complex)
+        for i, I in enumerate(evolution.down.occupied):
+            for j, ti in enumerate(evolution.t):
+                down_O[j] += np.vdot(evolution.down.td_orbitals[j,:,i], np.dot(observable_operator, evolution.down.td_orbitals[j,:,i])) * evolution.down.occupations[I] * s.dx
+        O = up_O + down_O
+        if return_spins:
+            return  O.real, up_O.real, down_O.real
+        else:
+            return O.real
 
-#     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
-#         up_O = np.zeros(shape=evolution.t.shape, dtype=complex)
-#         for i, I in enumerate(evolution.up.occupied):
-#             for j, ti in enumerate(evolution.t):
-#                 up_O[j] += np.vdot(evolution.up.td_orbitals[j,:,i], np.dot(observable_operator, evolution.up.td_orbitals[j,:,i])) * evolution.up.occupations[I] * s.dx
-#         down_O = np.zeros(shape=evolution.t.shape, dtype=complex)
-#         for i, I in enumerate(evolution.down.occupied):
-#             for j, ti in enumerate(evolution.t):
-#                 down_O[j] += np.vdot(evolution.down.td_orbitals[j,:,i], np.dot(observable_operator, evolution.down.td_orbitals[j,:,i])) * evolution.down.occupations[I] * s.dx
-#         O = up_O + down_O
-#         if return_spins:
-#             return  O.real, up_O.real, down_O.real
-#         else:
-#             return O.real
-
-#     else:
-#         raise AttributeError(f"State or Evolution must be provided.")
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
 
 
 def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
@@ -227,52 +226,36 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
         raise AttributeError(f"State or Evolution must be provided.")
 
 
-def _placeholder(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> Union[float, np.ndarray]:
-
+def kinetic_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None, evolution: iDEA.state.SingleBodyEvolution = None) -> Union[float, np.ndarray]:
     """
-    Placeholer function. Use this as a template when constructing observable methods.
+    Compute the kinetic energy of a non_interacting state.
 
     Args:
         s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
-        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-        return_spins: bool, True to also return the spin placeholer: total, up, down. (default = False)
+        state: iDEA.state.SingleBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
 
     Returns:
-        observable: float or np.ndarray, Placeholer.
+        E_k: float or np.ndarray, Kinetic energy, or evolution of kinetic energy.
     """
-    if state is not None and type(state) == iDEA.state.SingleBodyState:
-        raise NotImplementedError() 
     if state is not None and type(state) == iDEA.state.ManyBodyState:
-        raise NotImplementedError() 
-    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
-        raise NotImplementedError()
+        K = iDEA.methods.interacting.kinetic_energy_operator(s)
+        return observable(s, K, state=state)
+
+    if state is not None and type(state) == iDEA.state.SingleBodyState:
+        K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
+        return observable(s, K, state=state)
+
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
-        raise NotImplementedError()
+        K = iDEA.methods.interacting.kinetic_energy_operator(s)
+        return observable(s, K, evolution=evolution)
+
+    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+        K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
+        return observable(s, K, evolution=evolution)
+
     else:
         raise AttributeError(f"State or Evolution must be provided.")
-
-
-# def kinetic_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None, evolution: iDEA.state.SingleBodyEvolution = None) -> Union[float, np.ndarray]:
-#     """
-#     Compute the kinetic energy of a non_interacting state.
-
-#     Args:
-#         s: iDEA.system.System, System object.
-#         state: iDEA.state.SingleBodyState, State. (default = None)
-#         evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
-
-#     Returns:
-#         energy_kin: float or np.ndarray, Total energy, or evolution of total energy.
-#     """
-#     if state is not None:
-#         K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
-#         return iDEA.observables.observable(s, K, state=state)
-#     elif evolution is not None:
-#         K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
-#         return iDEA.observables.observable(s, K, evolution=evolution)
-#     else:
-#         raise AttributeError(f"State or Evolution must be provided.")
 
 
 def external_potential(s: iDEA.system.System) -> np.ndarray:
@@ -417,70 +400,41 @@ def exchange_energy(s: iDEA.system.System, p: np.ndarray, v_x: np.ndarray) -> Un
         raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
 
 
-# def single_particle_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None, evolution: iDEA.state.SingleBodyEvolution = None) -> Union[float, np.ndarray]:
-#     """
-#     Compute the total energy of a non_interacting state.
+def single_particle_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> float:
+    """
+    Compute the single particle energy of a single particle state.
 
-#     Args:
-#         s: iDEA.system.System, System object.
-#         state: iDEA.state.SingleBodyState, State. (default = None)
-#         evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState, State.
 
-#     Returns:
-#         E: float or np.ndarray, Total energy, or evolution of total energy.
-#     """
-#     if state is not None:
-#         return np.sum(state.up.energies[:] * state.up.occupations[:]) + np.sum(state.down.energies[:] * state.down.occupations[:])
-#     elif evolution is not None:
-#         H = hamiltonian(s)
-#         return iDEA.observables.observable(s, H, evolution=evolution)
-#     else:
-#         raise AttributeError(f"State or Evolution must be provided.")
+    Returns:
+        E: float, Single particle energy.
+    """
+    return np.sum(state.up.energies[:] * state.up.occupations[:]) + np.sum(state.down.energies[:] * state.down.occupations[:])
 
 
-# def ionisation_potential(s, energies):
-#     """Calculates the ionisation potential from single particle energies.
+def _placeholder(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> Union[float, np.ndarray]:
 
-#     s: System
-#         System object.
-#     energies: np.ndarray
-#         Array of single particle energies.
+    """
+    Placeholer function. Use this as a template when constructing observable methods.
 
-#     returns:
-#     ip: float
-#         Ionisation potential.
-#     """
-#     ip = -energies[s.NE - 1]
-#     return ip
+    Args:
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        return_spins: bool, True to also return the spin placeholer: total, up, down. (default = False)
 
-
-# def electron_affinity(s, energies):
-#     """Calculates the electron affinity from single particle energies.
-
-#     s: System
-#         System object.
-#     energies: np.ndarray
-#         Array of single particle energies.
-
-#     returns:
-#     ea: float
-#         Electron affinity.
-#     """
-#     ea = -energies[s.NE]
-#     return ea
-
-
-# def single_particle_gap(s, energies):
-#     """Calculates the single particle gap from single particle energies.
-
-#     s: System
-#         System object.
-#     energies: np.ndarray
-#         Array of single particle energies.
-
-#     returns:
-#     gap: float
-#         Single particle gap.
-#     """
-#     gap = energies[s.NE] - energies[s.NE - 1]
-#     return gap
+    Returns:
+        observable: float or np.ndarray, Placeholer.
+    """
+    if state is not None and type(state) == iDEA.state.SingleBodyState:
+        raise NotImplementedError() 
+    if state is not None and type(state) == iDEA.state.ManyBodyState:
+        raise NotImplementedError() 
+    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+        raise NotImplementedError()
+    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+        raise NotImplementedError()
+    else:
+        raise AttributeError(f"State or Evolution must be provided.")
