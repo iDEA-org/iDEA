@@ -173,9 +173,9 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
         up_p = np.zeros(shape=s.x.shape*2)
         down_p = np.zeros(shape=s.x.shape*2)
         for i in range(state.up.orbitals.shape[1]):
-            up_p += np.tensordot(state.up.orbitals[:,i].conj(), state.up.orbitals[:,i], axes=0) * state.up.occupations[i]
+            up_p += np.tensordot(state.up.orbitals[:,i], state.up.orbitals[:,i].conj(), axes=0) * state.up.occupations[i]
         for i in range(state.down.orbitals.shape[1]):
-            down_p += np.tensordot(state.down.orbitals[:,i].conj(), state.down.orbitals[:,i], axes=0) * state.down.occupations[i]
+            down_p += np.tensordot(state.down.orbitals[:,i], state.down.orbitals[:,i].conj(), axes=0) * state.down.occupations[i]
         p = up_p + down_p
         if return_spins:
             return p, up_p, down_p
@@ -184,7 +184,7 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         tosum = list(range(2, s.count*2))
-        spin_density_matrices = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0], 2))
+        spin_density_matrices = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0], 2), dtype=complex)
         for j, ti in enumerate(evolution.t):
             l = string.ascii_lowercase[:s.count]
             L = string.ascii_uppercase[:s.count]
@@ -211,11 +211,11 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
         up_p = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.up.occupied):
             for j, ti in enumerate(evolution.t):
-                up_p[j,:] += np.tensordot(evolution.up.td_orbitals[j,:,i].conj(), evolution.up.td_orbitals[j,:,i], axes=0) * evolution.up.occupations[I]
+                up_p[j,:] += np.tensordot(evolution.up.td_orbitals[j,:,i], evolution.up.td_orbitals[j,:,i].conj(), axes=0) * evolution.up.occupations[I]
         down_p = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.down.occupied):
             for j, ti in enumerate(evolution.t):
-                down_p[j,:] += np.tensordot(evolution.down.td_orbitals[j,:,i].conj(), evolution.down.td_orbitals[j,:,i], axes=0) * evolution.down.occupations[I]
+                down_p[j,:] += np.tensordot(evolution.down.td_orbitals[j,:,i], evolution.down.td_orbitals[j,:,i].conj(), axes=0) * evolution.down.occupations[I]
         p = up_p + down_p
         if return_spins:
             return p, up_p, down_p
@@ -342,7 +342,7 @@ def hartree_energy(s: iDEA.system.System, n: np.ndarray, v_h: np.ndarray) -> Uni
     elif len(n.shape) == 2:
         E_h = np.zeros(shape=n.shape[0])
         for j in range(E_h.shape[0]):
-            E_h[j] = np.dot(n[j,:], E_h[j,:]) * s.dx
+            E_h[j] = np.dot(n[j,:], v_h[j,:]) * s.dx
         return E_h
 
     else:
@@ -391,10 +391,10 @@ def exchange_energy(s: iDEA.system.System, p: np.ndarray, v_x: np.ndarray) -> Un
         return E_x
         
     elif len(p.shape) == 3:
-        E_h = np.zeros(shape=n.shape[0])
-        for j in range(E_h.shape[0]):
-            E_h[j] = np.dot(n[j,:], E_h[j,:]) * s.dx
-        return E_h
+        E_x = np.zeros(shape=p.shape[0], dtype=complex)
+        for j in range(E_x.shape[0]):
+            E_x[j] = np.tensordot(p[j,:,:], v_x[j,:,:], axes=2) * s.dx * s.dx
+        return E_x.real
 
     else:
         raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
