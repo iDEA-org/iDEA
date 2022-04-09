@@ -6,9 +6,9 @@ iDEA:
     observables: observable, density, density_matrix, kinetic_energy, external_potential, external_energy, hartree_potential, hartree_energy, exchange_potential, exchange_energy, single_particle_energy.
     methods:
         interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, antisymmetrize, solve, p_step, propigate.
-        non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
-        hartree: hartree_potential_operator, hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
-        hartree_fock: exchange_potential_operator, hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
-        lda: xc_potential_operator, hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
-        hybrid: hamiltionian, total_energy, add_occupations, solve, sc_step, p_step, propigate.
+        non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, add_occupations, sc_step, solve, p_step, propigate.
+        hartree: hartree_potential_operator, hamiltionian, total_energy, solve, p_step, propigate.
+        hartree_fock: exchange_potential_operator, hamiltionian, total_energy, solve, p_step, propigate.
+        lda: xc_potential_operator, hamiltionian, total_energy, add_occupations, solve, p_step, propigate.
+        hybrid: hamiltionian, total_energy, add_occupations, solve, p_step, propigate.
     reverse_engineering: reverse, reverse_propigation.
