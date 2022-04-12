@@ -15,6 +15,10 @@ import iDEA.state
 import iDEA.methods.non_interacting
 
 
+# Method name.
+name = "interacting"
+
+
 def kinetic_energy_operator(s: iDEA.system.System) -> sps.dia_matrix:
     """
     Compute many-particle kinetic energy operator as a matrix.
@@ -75,7 +79,7 @@ def hamiltonian(s: iDEA.system.System) -> sps.dia_matrix:
         H: sps.dia_matrix, Hamiltonian.
     """
     # Construct the non-interacting part of the many-body Hamiltonian
-    h = iDEA.methods.non_interacting.hamiltonian(s)
+    h = iDEA.methods.non_interacting.hamiltonian(s)[0]
     h = sps.dia_matrix(h)
     I = sps.identity(s.x.shape[0], format='dia')
     partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
