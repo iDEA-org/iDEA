@@ -72,7 +72,7 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
         return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
 
     Returns:
-        n: float or np.ndarray, Charge density, or evolution of charge density.
+        n: np.ndarray, Charge density, or evolution of charge density.
     """
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         spin_densities = np.zeros(shape=(s.x.shape[0], 2))
@@ -156,7 +156,7 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
         return_spins: bool, True to also return the spin density matrices: total, up, down. (default = False)
 
     Returns:
-        p: float or np.ndarray, Charge density matrix, or evolution of charge density matrix.
+        p: np.ndarray, Charge density matrix, or evolution of charge density matrix.
     """
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         tosum = list(range(2, s.count*2))
@@ -336,13 +336,13 @@ def hartree_energy(s: iDEA.system.System, n: np.ndarray, v_h: np.ndarray) -> Uni
         E_h: float or np.ndarray, Hartree energy, or evolution of Hartree energy.
     """
     if len(n.shape) == 1:
-        E_h = np.dot(n, v_h) * s.dx
+        E_h = 0.5 * np.dot(n, v_h) * s.dx
         return E_h
         
     elif len(n.shape) == 2:
         E_h = np.zeros(shape=n.shape[0])
         for j in range(E_h.shape[0]):
-            E_h[j] = np.dot(n[j,:], v_h[j,:]) * s.dx
+            E_h[j] = 0.5 * np.dot(n[j,:], v_h[j,:]) * s.dx
         return E_h
 
     else:
@@ -387,13 +387,13 @@ def exchange_energy(s: iDEA.system.System, p: np.ndarray, v_x: np.ndarray) -> Un
         E_x: float or np.ndarray, Exchange energy, or evolution of exchange energy.
     """
     if len(p.shape) == 2:
-        E_x = np.tensordot(p, v_x, axes=2) * s.dx * s.dx
+        E_x = 0.5 * np.tensordot(p, v_x, axes=2) * s.dx * s.dx
         return E_x
         
     elif len(p.shape) == 3:
         E_x = np.zeros(shape=p.shape[0], dtype=complex)
         for j in range(E_x.shape[0]):
-            E_x[j] = np.tensordot(p[j,:,:], v_x[j,:,:], axes=2) * s.dx * s.dx
+            E_x[j] = 0.5 * np.tensordot(p[j,:,:], v_x[j,:,:], axes=2) * s.dx * s.dx
         return E_x.real
 
     else:
