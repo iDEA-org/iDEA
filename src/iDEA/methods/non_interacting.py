@@ -2,8 +2,10 @@
 
 
 import copy
+import time
 import itertools
 from typing import Union
+from collections.abc import Callable
 import numpy as np
 import scipy as sp
 import scipy.sparse as sps
@@ -13,6 +15,10 @@ import scipy.sparse.linalg as spsla
 import iDEA.system
 import iDEA.state
 import iDEA.observables
+
+
+# Method name.
+name = "non_interacting"
 
 
 def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
@@ -67,45 +73,42 @@ def external_potential_operator(s: iDEA.system.System) -> np.ndarray:
     return Vext
 
 
-def hamiltonian(s: iDEA.system.System, K: np.ndarray = None, V: np.ndarray = None) -> np.ndarray:
+def hamiltonian(s: iDEA.system.System, up_n: np.ndarray = None, down_n: np.ndarray = None, up_p: np.ndarray = None, down_p: np.ndarray = None, K: np.ndarray = None, V: np.ndarray = None) -> np.ndarray:
     """
     Compute the Hamiltonian from the kinetic and potential terms.
 
     Args:
         s: iDEA.system.System, System object.
+        up_n: np.ndarray, Charge density of up electrons.
+        down_n: np.ndarray, Charge density of down electrons.
+        up_p: np.ndarray, Charge density matrix of up electrons.
+        down_p: np.ndarray, Charge density matrix of down electrons.
         K: np.ndarray, Single-particle kinetic energy operator [If None this will be computed from s]. (default = None)
         V: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)
 
     Returns:
-        H: np.ndarray, Hamiltonian.
+        H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.
     """
     if K is None:
         K = kinetic_energy_operator(s)
     if V is None:
         V = external_potential_operator(s)
     H = K + V
-    return H
+    return H, H, H
 
 
-def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState = None, evolution: iDEA.state.SingleBodyEvolution = None) -> Union[float, np.ndarray]:
+def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> float:
     """
     Compute the total energy of a non_interacting state.
 
     Args:
         s: iDEA.system.System, System object.
         state: iDEA.state.SingleBodyState, State. (default = None)
-        evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
 
     Returns:
-        E: float or np.ndarray, Total energy, or evolution of total energy.
+        E: float, Total energy.
     """
-    if state is not None:
-        return np.sum(state.up.energies[:] * state.up.occupations[:]) + np.sum(state.down.energies[:] * state.down.occupations[:])
-    elif evolution is not None:
-        H = hamiltonian(s)
-        return iDEA.observables.observable(s, H, evolution=evolution)
-    else:
-        raise AttributeError(f"State or Evolution must be provided.")
+    return iDEA.observables.single_particle_energy(s, state)
 
 
 def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k: int) -> iDEA.state.SingleBodyState:
@@ -150,7 +153,7 @@ def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k:
         state_copy.up.occupations[:max_level] = occupation[0]
         state_copy.down.occupations = np.zeros(shape=state_copy.down.energies.shape)
         state_copy.down.occupations[:max_level] = occupation[1]
-        E = total_energy(s, state=state_copy)
+        E = iDEA.observables.single_particle_energy(s, state_copy)
         energies.append(E)
     
     # Choose the correct energy index.
@@ -167,35 +170,108 @@ def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k:
     return state
 
 
-def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0) -> iDEA.state.SingleBodyState:
+def sc_step(s: iDEA.system.System, state: iDEA.state.SingleBodyState, up_H: np.ndarray, down_H: np.ndarray):
     """
-    Solves the non-interacting Schrodinger equation of the given system.
+    Performs a single step of the self-consistent cycle.
 
     Args:
         s: iDEA.system.System, System object.
-        H: np.ndarray, Hamiltonian [If None this will be computed from s]. (default = None)
+        state: iDEA.state.SingleBodyState, Previous state.
+        up_H: np.ndarray, Hamiltonian for up electrons.
+        down_H: np.ndarray, Hamiltonian for down electrons.
+
+    Returns:
+        state: iDEA.state.SingleBodyState, New state.
+    """
+    # Solve the non-interacting Schrodinger equation.
+    state.up.energies, state.up.orbitals = spla.eigh(up_H)
+    state.down.energies, state.down.orbitals = spla.eigh(down_H)
+
+    # Normalise orbitals.
+    state.up.orbitals = state.up.orbitals / np.sqrt(s.dx) 
+    state.down.orbitals = state.down.orbitals / np.sqrt(s.dx) 
+
+    return state
+
+
+def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10) -> iDEA.state.SingleBodyState:
+    """
+    Solves the Schrodinger equation for the given system.
+
+    Args:
+        s: iDEA.system.System, System object.
+        hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
         k: int, Energy state to solve for. (default = 0, the ground-state)
+        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+        mixing: float, Mixing parameter. (default = 0.5)
+        tol: float, Tollerance of convergence. (default = 1e-10)
 
     Returns:
         state: iDEA.state.SingleBodyState, Solved state.
     """
-    # Construct the Hamiltonian.
-    if H is None:
-        H = hamiltonian(s)
-
-    # Solve the non-interacting Schrodinger equation.
-    energies, orbitals = spla.eigh(H)
-
-    # Normalise orbitals.
-    orbitals = orbitals / np.sqrt(s.dx) 
-
     # Construct the single-body state.
     state = iDEA.state.SingleBodyState()
-    state.up.energies = copy.deepcopy(energies)
-    state.down.energies = copy.deepcopy(energies)
-    state.up.orbitals = copy.deepcopy(orbitals)
-    state.down.orbitals = copy.deepcopy(orbitals)
+    state.up.occupations = np.zeros(shape=s.x.shape)
+    state.up.occupations[:s.up_count] = 1.0
+    state.down.occupations = np.zeros(shape=s.x.shape)
+    state.down.occupations[:s.down_count] = 1.0
+
+    # Determine the Hamiltonian function.
+    if hamiltonian_function is None:
+        hamiltonian_function = hamiltonian
+
+    # Construct the initial values.
+    n_old = np.zeros(shape=s.x.shape)
+    up_n_old = np.zeros(shape=s.x.shape)
+    down_n_old = np.zeros(shape=s.x.shape)
+    p_old = np.zeros(shape=s.x.shape*2)
+    up_p_old = np.zeros(shape=s.x.shape*2)
+    down_p_old = np.zeros(shape=s.x.shape*2)
+
+    # Construct the initial Hamiltonian.
+    H, up_H, down_H = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old)
+
+    # Apply restriction.
+    if restricted:
+        up_H = H
+        down_H = H
+
+    # Run self-consitent algorithm.
+    convergence = 1.0
+    while convergence > tol:
+    
+        # Perform single self-consistent step.
+        state = sc_step(s, state, up_H, down_H)
+
+        # Update values.
+        n, up_n, down_n = iDEA.observables.density(s, state, return_spins=True)
+        p, up_p, down_p = iDEA.observables.density_matrix(s, state, return_spins=True)
+
+        # Construct the new Hamiltonian.
+        H, up_H, down_H = hamiltonian_function(s, up_n, down_n, up_p, down_p)
+
+        # Apply restriction.
+        if restricted:
+            up_H = H
+            down_H = H
+
+        # Test for convergence.
+        convergence = np.sum(abs(n - n_old)) * s.dx
+
+        # Update old values.
+        n_old = n
+        up_n_old = up_n
+        down_n_old = down_n
+        p_old = p
+        up_p_old = up_p
+        down_p_old = down_p
+
+        # Update terminal.
+        print(r"iDEA.methods.method.solve: convergence = {0:.5}, tollerance = {1:.5}".format(convergence, tol), end="\r")
+    
+    # Compute state occupations.
     state = add_occupations(s, state, k)
+    print()
 
     return state
 
