@@ -1,6 +1,7 @@
 """Contains all hartree functionality and solvers."""
 
 
+from collections.abc import Callable
 import numpy as np
 import scipy as sp
 import iDEA.system
@@ -77,7 +78,7 @@ def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> fl
     return E
 
 
-def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, tol: float = 1e-10) -> iDEA.state.SingleBodyState:
+def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10) -> iDEA.state.SingleBodyState:
     """
     Solves the Schrodinger equation for the given system.
 
@@ -85,9 +86,28 @@ def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, tol: floa
         s: iDEA.system.System, System object.
         k: int, Energy state to solve for. (default = 0, the ground-state)
         restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+        mixing: float, Mixing parameter. (default = 0.5)
         tol: float, Tollerance of convergence. (default = 1e-10)
 
     Returns:
         state: iDEA.state.SingleBodyState, Solved state.
     """
-    return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, tol)
+    return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol)
+
+
+def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False) -> iDEA.state.SingleBodyEvolution:
+    """
+    Propagate a set of orbitals forward in time due to a dynamic local pertubation.
+
+    Args: 
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState, State to be propigated.
+        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+        t: np.ndarray, Grid of time values.
+        hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
+        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+
+    Returns:
+        evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
+    """
+    return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted) 
