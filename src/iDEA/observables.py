@@ -61,7 +61,7 @@ def observable(s: iDEA.system.System, observable_operator: np.ndarray, state: Un
         raise AttributeError(f"State or Evolution must be provided.")
 
 
-def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
+def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, time_indices: np.ndarray = None, return_spins: bool = False) -> np.ndarray:
     """
     Compute the charge density of a non_interacting state.
 
@@ -69,6 +69,7 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
         s: iDEA.system.System, System object.
         state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
         evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        time_indices: np.ndarray, Time indices to compute observable if given evolution. If None will perform for all time indices. (default = None)
         return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
 
     Returns:
@@ -101,8 +102,12 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
             return n
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
-        spin_densities = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], 2))
-        for j, ti in enumerate(evolution.t):
+        if time_indices is None:
+            times = evolution.t
+        else:
+            times = np.array(evolution.t[time_indices]) 
+        spin_densities = np.zeros(shape=(times.shape[0], s.x.shape[0], 2))
+        for j, ti in enumerate(times):
             l = string.ascii_lowercase[:s.count]
             L = string.ascii_uppercase[:s.count]
             st = l + ',' + L + '->' + ''.join([i for sub in list(zip(l,L)) for i in sub])
@@ -127,13 +132,17 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
             return n
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
-        up_n = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]))
+        if time_indices is None:
+            times = evolution.t
+        else:
+            times = np.array(evolution.t[time_indices]) 
+        up_n = np.zeros(shape=(times.shape[0], s.x.shape[0]))
         for i, I in enumerate(evolution.up.occupied):
-            for j, ti in enumerate(evolution.t):
+            for j, ti in enumerate(times):
                 up_n[j,:] += abs(evolution.up.td_orbitals[j,:,i])**2*evolution.up.occupations[I]
-        down_n = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0]))
+        down_n = np.zeros(shape=(times.shape[0], s.x.shape[0]))
         for i, I in enumerate(evolution.down.occupied):
-            for j, ti in enumerate(evolution.t):
+            for j, ti in enumerate(times):
                 down_n[j,:] += abs(evolution.down.td_orbitals[j,:,i])**2*evolution.down.occupations[I]
         n = up_n + down_n
         if return_spins:
@@ -145,7 +154,7 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
         raise AttributeError(f"State or Evolution must be provided.")
 
 
-def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, return_spins: bool = False) -> np.ndarray:
+def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None, evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None, time_indices: np.ndarray = None, return_spins: bool = False) -> np.ndarray:
     """
     Compute the charge density matrix of a non_interacting state.
 
@@ -153,6 +162,7 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
         s: iDEA.system.System, System object.
         state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
         evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+        time_indices: np.ndarray, Time indices to compute observable if given evolution. If None will perform for all time indices. (default = None)
         return_spins: bool, True to also return the spin density matrices: total, up, down. (default = False)
 
     Returns:
@@ -183,9 +193,13 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
             return p
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+        if time_indices is None:
+            times = evolution.t
+        else:
+            times = np.array(evolution.t[time_indices]) 
         tosum = list(range(2, s.count*2))
-        spin_density_matrices = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0], 2), dtype=complex)
-        for j, ti in enumerate(evolution.t):
+        spin_density_matrices = np.zeros(shape=(times.shape[0], s.x.shape[0], s.x.shape[0], 2), dtype=complex)
+        for j, ti in enumerate(times):
             l = string.ascii_lowercase[:s.count]
             L = string.ascii_uppercase[:s.count]
             st = l + ',' + L + '->' + ''.join([i for sub in list(zip(l,L)) for i in sub])
@@ -208,13 +222,17 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
             return p
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
-        up_p = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+        if time_indices is None:
+            times = evolution.t
+        else:
+            times = np.array(evolution.t[time_indices]) 
+        up_p = np.zeros(shape=(times.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.up.occupied):
-            for j, ti in enumerate(evolution.t):
+            for j, ti in enumerate(times):
                 up_p[j,:] += np.tensordot(evolution.up.td_orbitals[j,:,i], evolution.up.td_orbitals[j,:,i].conj(), axes=0) * evolution.up.occupations[I]
-        down_p = np.zeros(shape=(evolution.t.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+        down_p = np.zeros(shape=(times.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.down.occupied):
-            for j, ti in enumerate(evolution.t):
+            for j, ti in enumerate(times):
                 down_p[j,:] += np.tensordot(evolution.down.td_orbitals[j,:,i], evolution.down.td_orbitals[j,:,i].conj(), axes=0) * evolution.down.occupations[I]
         p = up_p + down_p
         if return_spins:

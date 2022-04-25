@@ -230,10 +230,13 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
     down_p_old = np.zeros(shape=s.x.shape*2)
 
     # Construct the initial Hamiltonian.
+    H_old, up_H_old, down_H_old = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old)
     H, up_H, down_H = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old)
 
     # Apply restriction.
     if restricted:
+        up_H_old = H_old
+        down_H_old = H_old
         up_H = H
         down_H = H
 
@@ -248,11 +251,21 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
         n, up_n, down_n = iDEA.observables.density(s, state, return_spins=True)
         p, up_p, down_p = iDEA.observables.density_matrix(s, state, return_spins=True)
 
+        # Perform mixing.
+        n = mixing*n + (1.0 - mixing)*n_old
+        up_n = mixing*up_n + (1.0 - mixing)*up_n_old
+        down_n = mixing*down_n + (1.0 - mixing)*down_n_old
+        p = mixing*p + (1.0 - mixing)*p_old
+        up_p = mixing*up_p + (1.0 - mixing)*up_p_old
+        down_p = mixing*down_p + (1.0 - mixing)*down_p_old
+
         # Construct the new Hamiltonian.
         H, up_H, down_H = hamiltonian_function(s, up_n, down_n, up_p, down_p)
 
         # Apply restriction.
         if restricted:
+            up_H_old = H_old
+            down_H_old = H_old
             up_H = H
             down_H = H
 
@@ -297,8 +310,12 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
         hamiltonian_function = hamiltonian
 
     # Construct the unperturbed Hamiltonian.
-    H, up_H, down_H = hamiltonian_function(s)
+    n, up_n, down_n = iDEA.observables.density(s, state=state, return_spins=True)
+    p, up_p, down_p = iDEA.observables.density_matrix(s, state=state, return_spins=True)
+    H, up_H, down_H = hamiltonian_function(s, up_n, down_n, up_p, down_p)
     H = sps.csc_matrix(H)
+    up_H = sps.csc_matrix(up_H)
+    down_H = sps.csc_matrix(down_H)
 
     # Apply restriction.
     if restricted:
@@ -320,25 +337,29 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
     # Propagate.
     for j, ti in enumerate(tqdm(t, desc="iDEA.methods.method.propagate: propagating state")):
         if j != 0:
-            # n, up_n, down_n = iDEA.observables.density(s, evolution=evolution, return_spins=True)
-            # p, up_p, down_p = iDEA.observables.density_matrix(s, evolution=evolution, return_spins=True)
-            
-            H, up_H, down_H = hamiltonian_function(s)
+            n, up_n, down_n = iDEA.observables.density(s, evolution=evolution, time_indices=[j-1], return_spins=True)
+            p, up_p, down_p = iDEA.observables.density_matrix(s, evolution=evolution, time_indices=[j-1], return_spins=True)
+            H, up_H, down_H = hamiltonian_function(s, up_n[0,...], down_n[0,...], up_p[0,...], down_p[0,...])
             H = sps.csc_matrix(H)
             up_H = sps.csc_matrix(up_H)
             down_H = sps.csc_matrix(down_H)
             Vptrb = sps.diags(v_ptrb[j,:]).tocsc()
 
+            # Apply restriction.
+            if restricted:
+                up_H = H
+                down_H = H
+
             for i in range(state.up.occupied.shape[0]):
                 up_O = -1.0j * (up_H + Vptrb) * dt
-                evolution.up.td_orbitals[j, :, i] = spsla.expm_multiply(up_O, evolution.up.td_orbitals[j-1, :, i])
-                norm = npla.norm(evolution.up.td_orbitals[j, :, i]) * np.sqrt(s.dx)
-                evolution.up.td_orbitals[j, :, i] /= norm
+                evolution.up.td_orbitals[j,:,i] = spsla.expm_multiply(up_O, evolution.up.td_orbitals[j-1,:,i])
+                norm = npla.norm(evolution.up.td_orbitals[j,:,i]) * np.sqrt(s.dx)
+                evolution.up.td_orbitals[j,:,i] /= norm
             for i in range(state.down.occupied.shape[0]):
 
                 down_O = -1.0j * (down_H + Vptrb) * dt
-                evolution.down.td_orbitals[j, :, i] = spsla.expm_multiply(down_O, evolution.down.td_orbitals[j-1, :, i])
-                norm = npla.norm(evolution.down.td_orbitals[j, :, i]) * np.sqrt(s.dx)
-                evolution.down.td_orbitals[j, :, i] /= norm
+                evolution.down.td_orbitals[j,:,i] = spsla.expm_multiply(down_O, evolution.down.td_orbitals[j-1,:,i])
+                norm = npla.norm(evolution.down.td_orbitals[j,:,i]) * np.sqrt(s.dx)
+                evolution.down.td_orbitals[j,:,i] /= norm
 
     return evolution
