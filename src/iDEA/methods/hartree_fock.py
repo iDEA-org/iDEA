@@ -56,14 +56,14 @@ def hamiltonian(s: iDEA.system.System, up_n: np.ndarray, down_n: np.ndarray, up_
     if K is None:
         K = kinetic_energy_operator(s)
     if V is None:
-        V = external_potential_operator(s)
+        Vext = external_potential_operator(s)
     Vh = hartree_potential_operator(s, up_n + down_n)
     Vx = exchange_potential_operator(s, up_p + down_p)
     up_Vx = exchange_potential_operator(s, up_p)
     down_Vx = exchange_potential_operator(s, down_p)
-    H = K + V + Vh + Vx
-    up_H = K + V + Vh + up_Vx
-    down_H = K + V + Vh + down_Vx
+    H = K + Vext + Vh + Vx
+    up_H = K + Vext + Vh + up_Vx
+    down_H = K + Vext + Vh + down_Vx
     return H, up_H, down_H
 
 
