@@ -93,8 +93,8 @@ def hamiltonian(s: iDEA.system.System, up_n: np.ndarray = None, down_n: np.ndarr
     if K is None:
         K = kinetic_energy_operator(s)
     if V is None:
-        V = external_potential_operator(s)
-    H = K + V
+        Vext = external_potential_operator(s)
+    H = K + Vext
     return H, H, H
 
 
@@ -229,9 +229,10 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
     up_p_old = np.zeros(shape=s.x.shape*2)
     down_p_old = np.zeros(shape=s.x.shape*2)
 
-    # Construct the initial Hamiltonian.
+    # Construct the initial Hamiltonian. (And break the symmetry.)
     H_old, up_H_old, down_H_old = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old)
     H, up_H, down_H = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old)
+    down_H += sps.spdiags(1e-12*s.x, np.array([0]), s.x.shape[0], s.x.shape[0]).toarray()
 
     # Apply restriction.
     if restricted:
@@ -316,6 +317,7 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
     H = sps.csc_matrix(H)
     up_H = sps.csc_matrix(up_H)
     down_H = sps.csc_matrix(down_H)
+    down_H += sps.spdiags(1e-12*s.x, np.array([0]), s.x.shape[0], s.x.shape[0])
 
     # Apply restriction.
     if restricted:
@@ -337,8 +339,8 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
     # Propagate.
     for j, ti in enumerate(tqdm(t, desc="iDEA.methods.method.propagate: propagating state")):
         if j != 0:
-            n, up_n, down_n = iDEA.observables.density(s, evolution=evolution, time_indices=[j-1], return_spins=True)
-            p, up_p, down_p = iDEA.observables.density_matrix(s, evolution=evolution, time_indices=[j-1], return_spins=True)
+            n, up_n, down_n = iDEA.observables.density(s, evolution=evolution, time_indices=np.array([j-1]), return_spins=True)
+            p, up_p, down_p = iDEA.observables.density_matrix(s, evolution=evolution, time_indices=np.array([j-1]), return_spins=True)
             H, up_H, down_H = hamiltonian_function(s, up_n[0,...], down_n[0,...], up_p[0,...], down_p[0,...])
             H = sps.csc_matrix(H)
             up_H = sps.csc_matrix(up_H)
@@ -356,7 +358,6 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
                 norm = npla.norm(evolution.up.td_orbitals[j,:,i]) * np.sqrt(s.dx)
                 evolution.up.td_orbitals[j,:,i] /= norm
             for i in range(state.down.occupied.shape[0]):
-
                 down_O = -1.0j * (down_H + Vptrb) * dt
                 evolution.down.td_orbitals[j,:,i] = spsla.expm_multiply(down_O, evolution.down.td_orbitals[j-1,:,i])
                 norm = npla.norm(evolution.down.td_orbitals[j,:,i]) * np.sqrt(s.dx)
