@@ -103,15 +103,13 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         if time_indices is None:
-            times = evolution.t
-        else:
-            times = np.array(evolution.t[time_indices]) 
-        spin_densities = np.zeros(shape=(times.shape[0], s.x.shape[0], 2))
-        for j, ti in enumerate(times):
+            time_indices = np.array(range(evolution.t.shape[0]))
+        spin_densities = np.zeros(shape=(time_indices.shape[0], s.x.shape[0], 2))
+        for j, ti in enumerate(time_indices):
             l = string.ascii_lowercase[:s.count]
             L = string.ascii_uppercase[:s.count]
             st = l + ',' + L + '->' + ''.join([i for sub in list(zip(l,L)) for i in sub])
-            full = np.einsum(st, evolution.td_space[j,...], evolution.spin)
+            full = np.einsum(st, evolution.td_space[ti,...], evolution.spin)
             L = list(zip(list(range(0, s.count*2, 2)), list(range(1, s.count*2, 2))))
             perms = itertools.permutations(list(range(s.count)))
             full_copy = copy.deepcopy(full)
@@ -133,17 +131,15 @@ def density(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyState, iDEA
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
         if time_indices is None:
-            times = evolution.t
-        else:
-            times = np.array(evolution.t[time_indices]) 
-        up_n = np.zeros(shape=(times.shape[0], s.x.shape[0]))
+            time_indices = np.array(range(evolution.t.shape[0]))
+        up_n = np.zeros(shape=(time_indices.shape[0], s.x.shape[0]))
         for i, I in enumerate(evolution.up.occupied):
-            for j, ti in enumerate(times):
-                up_n[j,:] += abs(evolution.up.td_orbitals[j,:,i])**2*evolution.up.occupations[I]
-        down_n = np.zeros(shape=(times.shape[0], s.x.shape[0]))
+            for j, ti in enumerate(time_indices):
+                up_n[j,:] += abs(evolution.up.td_orbitals[ti,:,i])**2*evolution.up.occupations[I]
+        down_n = np.zeros(shape=(time_indices.shape[0], s.x.shape[0]))
         for i, I in enumerate(evolution.down.occupied):
-            for j, ti in enumerate(times):
-                down_n[j,:] += abs(evolution.down.td_orbitals[j,:,i])**2*evolution.down.occupations[I]
+            for j, ti in enumerate(time_indices):
+                down_n[j,:] += abs(evolution.down.td_orbitals[ti,:,i])**2*evolution.down.occupations[I]
         n = up_n + down_n
         if return_spins:
             return n, up_n, down_n
@@ -194,16 +190,14 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
 
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         if time_indices is None:
-            times = evolution.t
-        else:
-            times = np.array(evolution.t[time_indices]) 
+            time_indices = np.array(range(evolution.t.shape[0]))
         tosum = list(range(2, s.count*2))
-        spin_density_matrices = np.zeros(shape=(times.shape[0], s.x.shape[0], s.x.shape[0], 2), dtype=complex)
-        for j, ti in enumerate(times):
+        spin_density_matrices = np.zeros(shape=(time_indices.shape[0], s.x.shape[0], s.x.shape[0], 2), dtype=complex)
+        for j, ti in enumerate(time_indices):
             l = string.ascii_lowercase[:s.count]
             L = string.ascii_uppercase[:s.count]
             st = l + ',' + L + '->' + ''.join([i for sub in list(zip(l,L)) for i in sub])
-            full = np.einsum(st, evolution.td_space[j,...], evolution.spin)
+            full = np.einsum(st, evolution.td_space[ti,...], evolution.spin)
             L = list(zip(list(range(0, s.count*2, 2)), list(range(1, s.count*2, 2))))
             perms = itertools.permutations(list(range(s.count)))
             full_copy = copy.deepcopy(full)
@@ -223,17 +217,15 @@ def density_matrix(s: iDEA.system.System, state: Union[iDEA.state.SingleBodyStat
 
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
         if time_indices is None:
-            times = evolution.t
-        else:
-            times = np.array(evolution.t[time_indices]) 
-        up_p = np.zeros(shape=(times.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+            time_indices = np.array(range(evolution.t.shape[0]))
+        up_p = np.zeros(shape=(time_indices.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.up.occupied):
-            for j, ti in enumerate(times):
-                up_p[j,:] += np.tensordot(evolution.up.td_orbitals[j,:,i], evolution.up.td_orbitals[j,:,i].conj(), axes=0) * evolution.up.occupations[I]
-        down_p = np.zeros(shape=(times.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
+            for j, ti in enumerate(time_indices):
+                up_p[j,:] += np.tensordot(evolution.up.td_orbitals[ti,:,i], evolution.up.td_orbitals[ti,:,i].conj(), axes=0) * evolution.up.occupations[I]
+        down_p = np.zeros(shape=(time_indices.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
         for i, I in enumerate(evolution.down.occupied):
-            for j, ti in enumerate(times):
-                down_p[j,:] += np.tensordot(evolution.down.td_orbitals[j,:,i], evolution.down.td_orbitals[j,:,i].conj(), axes=0) * evolution.down.occupations[I]
+            for j, ti in enumerate(time_indices):
+                down_p[j,:] += np.tensordot(evolution.down.td_orbitals[ti,:,i], evolution.down.td_orbitals[ti,:,i].conj(), axes=0) * evolution.down.occupations[I]
         p = up_p + down_p
         if return_spins:
             return p, up_p, down_p
