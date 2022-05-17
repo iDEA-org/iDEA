@@ -1,4 +1,4 @@
-"""Contains all hartree functionality and solvers."""
+"""Contains all Hartree functionality and solvers."""
 
 
 from collections.abc import Callable
