@@ -234,6 +234,8 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
     H, up_H, down_H = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old)
     down_H += sps.spdiags(1e-12*s.x, np.array([0]), s.x.shape[0], s.x.shape[0]).toarray()
 
+
+
     # Apply restriction.
     if restricted:
         up_H_old = H_old
@@ -243,6 +245,7 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
 
     # Run self-consitent algorithm.
     convergence = 1.0
+    count = 0
     while convergence > tol:
     
         # Perform single self-consistent step.
@@ -253,12 +256,13 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
         p, up_p, down_p = iDEA.observables.density_matrix(s, state, return_spins=True)
 
         # Perform mixing.
-        n = mixing*n + (1.0 - mixing)*n_old
-        up_n = mixing*up_n + (1.0 - mixing)*up_n_old
-        down_n = mixing*down_n + (1.0 - mixing)*down_n_old
-        p = mixing*p + (1.0 - mixing)*p_old
-        up_p = mixing*up_p + (1.0 - mixing)*up_p_old
-        down_p = mixing*down_p + (1.0 - mixing)*down_p_old
+        if count != 0:
+            n = mixing*n + (1.0 - mixing)*n_old
+            up_n = mixing*up_n + (1.0 - mixing)*up_n_old
+            down_n = mixing*down_n + (1.0 - mixing)*down_n_old
+            p = mixing*p + (1.0 - mixing)*p_old
+            up_p = mixing*up_p + (1.0 - mixing)*up_p_old
+            down_p = mixing*down_p + (1.0 - mixing)*down_p_old
 
         # Construct the new Hamiltonian.
         H, up_H, down_H = hamiltonian_function(s, up_n, down_n, up_p, down_p)
@@ -282,6 +286,7 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
         down_p_old = down_p
 
         # Update terminal.
+        count += 1
         print(r"iDEA.methods.method.solve: convergence = {0:.5}, tollerance = {1:.5}".format(convergence, tol), end="\r")
     
     # Compute state occupations.
