@@ -115,6 +115,37 @@ def hamiltonian(s: iDEA.system.System, up_n: np.ndarray, down_n: np.ndarray, up_
     return H, H, H
 
 
+def exchange_correlation_energy(s: iDEA.system.System, n: np.ndarray, separate: bool = False) -> np.ndarray:
+    """
+    Compute the LDA exchange-correlation energy from a density.
+
+    Args:
+        s: iDEA.system.System, System object.
+        n: np.ndarray, Charge density of the system.
+        seperate: bool, Set to True to return E_xc, E_x, E_c.
+
+    Returns:
+        E_xc: np.ndarray, Exchange correlation energy, or evolution of exchange correlation energy.
+    """
+    p = HEG.ex_lda['spin_polerised']
+    q = HEG.ec_lda['spin_polerised']
+    e_x = np.zeros(shape=s.x.shape[0])
+    e_c = np.copy(e_x)
+    for j in range(s.x.shape[0]):
+        if(n[j] != 0.0):
+            e_x[j] = (p['a'] + p['b']*n[j] + p['c']*n[j]**2 + p['d']*n[j]**3 + p['e']*n[j]**4 + p['f']*n[j]**5)*n[j]**p['g']
+            r_s = 0.5 / n[j]
+            e_c[j] = -((q['a']*r_s + q['e']*r_s**2)/(1.0 + q['b']*r_s + q['c']*r_s**2 + q['d']*r_s**3))*np.log(1.0 + q['f']*r_s + q['g']*r_s**2)/q['f']
+    e_xc = e_x + e_c
+    E_xc = np.dot(e_xc, n)*s.dx
+    E_x = np.dot(e_x, n)*s.dx
+    E_c = np.dot(e_c, n)*s.dx
+    if separate == True:
+        return E_xc, E_x, E_c
+    else:
+        return E_xc
+
+
 def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> float:
     """
     Compute the total energy.
@@ -126,17 +157,14 @@ def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> fl
     Returns:
         E: float, Total energy.
     """
-    # E = iDEA.observables.single_particle_energy(s, state)
-    # n = iDEA.observables.density(s, state)
-    # v_h = iDEA.observables.hartree_potential(s, n)
-    # E -= iDEA.observables.hartree_energy(s, n, v_h)
-    # p, up_p, down_p = iDEA.observables.density_matrix(s, state, return_spins=True)
-    # up_v_x = iDEA.observables.exchange_potential(s, up_p)
-    # down_v_x = iDEA.observables.exchange_potential(s, down_p)
-    # E -= iDEA.observables.exchange_energy(s, up_p, up_v_x)
-    # E -= iDEA.observables.exchange_energy(s, down_p, down_v_x)
-    # return E
-    return 0.0
+    E = iDEA.observables.single_particle_energy(s, state)
+    n = iDEA.observables.density(s, state)
+    v_h = iDEA.observables.hartree_potential(s, n)
+    E -= iDEA.observables.hartree_energy(s, n, v_h)
+    v_xc = exchange_correlation_potential(s, n)
+    E -= np.dot(n, v_xc)*s.dx
+    E += exchange_correlation_energy(s, n)
+    return E.real
 
 
 def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10) -> iDEA.state.SingleBodyState:
@@ -156,19 +184,19 @@ def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: f
     return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol)
 
 
-def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False) -> iDEA.state.SingleBodyEvolution:
-    """
-    Propagate a set of orbitals forward in time due to a dynamic local pertubation.
+# def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False) -> iDEA.state.SingleBodyEvolution:
+#     """
+#     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
-    Args: 
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState, State to be propigated.
-        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
-        t: np.ndarray, Grid of time values.
-        hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
-        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+#     Args: 
+#         s: iDEA.system.System, System object.
+#         state: iDEA.state.SingleBodyState, State to be propigated.
+#         v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+#         t: np.ndarray, Grid of time values.
+#         hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
+#         restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
 
-    Returns:
-        evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
-    """
-    return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted) 
+#     Returns:
+#         evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
+#     """
+#     return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted) 
