@@ -184,19 +184,19 @@ def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: f
     return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol)
 
 
-# def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False) -> iDEA.state.SingleBodyEvolution:
-#     """
-#     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
+def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False) -> iDEA.state.SingleBodyEvolution:
+    """
+    Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
-#     Args: 
-#         s: iDEA.system.System, System object.
-#         state: iDEA.state.SingleBodyState, State to be propigated.
-#         v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
-#         t: np.ndarray, Grid of time values.
-#         hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
-#         restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    Args: 
+        s: iDEA.system.System, System object.
+        state: iDEA.state.SingleBodyState, State to be propigated.
+        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+        t: np.ndarray, Grid of time values.
+        hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
+        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
 
-#     Returns:
-#         evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
-#     """
-#     return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted) 
+    Returns:
+        evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
+    """
+    return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted) 
