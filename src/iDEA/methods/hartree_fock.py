@@ -104,7 +104,7 @@ def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: f
     Returns:
         state: iDEA.state.SingleBodyState, Solved state.
     """
-    return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol)
+    return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol, name)
 
 
 def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False) -> iDEA.state.SingleBodyEvolution:
