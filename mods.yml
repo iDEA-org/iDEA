@@ -9,6 +9,6 @@ iDEA:
         non_interacting: kinetic_energy_operator, external_potential_operator, hamiltionian, total_energy, add_occupations, sc_step, solve, p_step, propigate.
         hartree: hartree_potential_operator, hamiltionian, total_energy, solve, p_step, propigate.
         hartree_fock: exchange_potential_operator, hamiltionian, total_energy, solve, p_step, propigate.
-        lda: xc_potential_operator, hamiltionian, total_energy, add_occupations, solve, p_step, propigate.
-        hybrid: hamiltionian, total_energy, add_occupations, solve, p_step, propigate.
+        lda: xc_potential_operator, hamiltionian, total_energy, solve, p_step, propigate.
+        hybrid: hamiltionian, total_energy, solve, p_step, propigate.
     reverse_engineering: reverse, reverse_propigation.
