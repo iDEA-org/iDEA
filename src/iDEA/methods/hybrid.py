@@ -109,4 +109,4 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
     Returns:
         evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
-    return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted, alpha=alpha) 
+    return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted, name, alpha=alpha) 
