@@ -297,7 +297,7 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
     return state
 
 
-def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False, **kwargs) -> iDEA.state.SingleBodyEvolution:
+def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False, name: str = "non_interacting", **kwargs) -> iDEA.state.SingleBodyEvolution:
     """
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
@@ -308,6 +308,7 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
         t: np.ndarray, Grid of time values.
         hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
         restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+        name: str, Name of method. (default = "non_interacting")
 
     Returns:
         evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
@@ -343,7 +344,7 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
     evolution.t = t
 
     # Propagate.
-    for j, ti in enumerate(tqdm(t, desc="iDEA.methods.method.propagate: propagating state")):
+    for j, ti in enumerate(tqdm(t, desc="iDEA.methods.{}.propagate: propagating state".format(name))):
         if j != 0:
             n, up_n, down_n = iDEA.observables.density(s, evolution=evolution, time_indices=np.array([j-1]), return_spins=True)
             p, up_p, down_p = iDEA.observables.density_matrix(s, evolution=evolution, time_indices=np.array([j-1]), return_spins=True)
