@@ -75,7 +75,7 @@ def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState, alpha
     return E
 
 
-def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10, alpha: float = 0.8) -> iDEA.state.SingleBodyState:
+def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10, silent: bool = False, alpha: float = 0.8) -> iDEA.state.SingleBodyState:
     """
     Solves the Schrodinger equation for the given system.
 
@@ -85,12 +85,14 @@ def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: f
         restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
         mixing: float, Mixing parameter. (default = 0.5)
         tol: float, Tollerance of convergence. (default = 1e-10)
+        initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)
+        silent: bool, Set to true to prevent printing. (default = False)
         alpha: float, Value used to mix the Hartree and LDA potentials. (default = 0.8)
 
     Returns:
         state: iDEA.state.SingleBodyState, Solved state.
     """
-    return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol, name, alpha=alpha)
+    return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol, initial, name, silent, alpha=alpha)
 
 
 def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False, alpha: float = 0.8) -> iDEA.state.SingleBodyEvolution:
