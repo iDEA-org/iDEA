@@ -195,7 +195,7 @@ def sc_step(s: iDEA.system.System, state: iDEA.state.SingleBodyState, up_H: np.n
     return state
 
 
-def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10, name: str = "non_interacting", **kwargs) -> iDEA.state.SingleBodyState:
+def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10, initial: tuple = None, name: str = "non_interacting", silent: bool = False, **kwargs) -> iDEA.state.SingleBodyState:
     """
     Solves the Schrodinger equation for the given system.
 
@@ -206,7 +206,10 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
         restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
         mixing: float, Mixing parameter. (default = 0.5)
         tol: float, Tollerance of convergence. (default = 1e-10)
+        initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)
         name: str, Name of method. (default = "non_interacting")
+        silent: bool, Set to true to prevent printing. (default = False)
+
 
     Returns:
         state: iDEA.state.SingleBodyState, Solved state.
@@ -223,19 +226,25 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
         hamiltonian_function = hamiltonian
 
     # Construct the initial values.
-    n_old = np.zeros(shape=s.x.shape)
-    up_n_old = np.zeros(shape=s.x.shape)
-    down_n_old = np.zeros(shape=s.x.shape)
-    p_old = np.zeros(shape=s.x.shape*2)
-    up_p_old = np.zeros(shape=s.x.shape*2)
-    down_p_old = np.zeros(shape=s.x.shape*2)
+    if initial is None:
+        n_old = np.zeros(shape=s.x.shape)
+        up_n_old = np.zeros(shape=s.x.shape)
+        down_n_old = np.zeros(shape=s.x.shape)
+        p_old = np.zeros(shape=s.x.shape*2)
+        up_p_old = np.zeros(shape=s.x.shape*2)
+        down_p_old = np.zeros(shape=s.x.shape*2)
+    else:
+        n_old = initial[0]
+        up_n_old = initial[1]
+        down_n_old = initial[2]
+        p_old = initial[3]
+        up_p_old = initial[4]
+        down_p_old = initial[5]
 
     # Construct the initial Hamiltonian. (And break the symmetry.)
     H_old, up_H_old, down_H_old = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
     H, up_H, down_H = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
     down_H += sps.spdiags(1e-12*s.x, np.array([0]), s.x.shape[0], s.x.shape[0]).toarray()
-
-
 
     # Apply restriction.
     if restricted:
@@ -288,11 +297,13 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
 
         # Update terminal.
         count += 1
-        print(r"iDEA.methods.{0}.solve: convergence = {1:.5}, tollerance = {2:.5}".format(name, convergence, tol), end="\r")
+        if silent is False:
+            print(r"iDEA.methods.{0}.solve: convergence = {1:.5}, tollerance = {2:.5}".format(name, convergence, tol), end="\r")
     
     # Compute state occupations.
     state = add_occupations(s, state, k)
-    print()
+    if silent is False:
+        print()
 
     return state
 
