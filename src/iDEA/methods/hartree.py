@@ -3,7 +3,6 @@
 
 from collections.abc import Callable
 import numpy as np
-import scipy as sp
 import iDEA.system
 import iDEA.state
 import iDEA.observables
@@ -78,7 +77,7 @@ def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> fl
     return E
 
 
-def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10, silent: bool = False) -> iDEA.state.SingleBodyState:
+def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10, initial: tuple = None, silent: bool = False) -> iDEA.state.SingleBodyState:
     """
     Solves the Schrodinger equation for the given system.
 
