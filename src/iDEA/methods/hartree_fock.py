@@ -3,7 +3,6 @@
 
 from collections.abc import Callable
 import numpy as np
-import scipy as sp
 import iDEA.system
 import iDEA.state
 import iDEA.observables
