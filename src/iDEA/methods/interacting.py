@@ -7,7 +7,6 @@ import itertools
 import functools
 from tqdm import tqdm
 import numpy as np
-import scipy as sp
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
 import iDEA.system
