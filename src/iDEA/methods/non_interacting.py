@@ -2,13 +2,10 @@
 
 
 import copy
-import time
 import itertools
 from tqdm import tqdm
-from typing import Union
 from collections.abc import Callable
 import numpy as np
-import scipy as sp
 import scipy.sparse as sps
 import numpy.linalg as npla
 import scipy.linalg as spla
