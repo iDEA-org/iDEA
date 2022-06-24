@@ -2,21 +2,11 @@
 
 
 import copy
-import time
-import itertools
-from tqdm import tqdm
-from typing import Union
-from collections.abc import Callable, Container
+from collections.abc import Container
 import numpy as np
-import scipy as sp
-import scipy.sparse as sps
-import numpy.linalg as npla
-import scipy.linalg as spla
-import scipy.sparse.linalg as spsla
 import iDEA.system
 import iDEA.state
 import iDEA.observables
-import matplotlib.pyplot as plt
 
 
 def reverse(s: iDEA.state.State, target_n: np.ndarray, method: Container, v_guess: np.ndarray = None, mu: float = 1.0, pe: float = 0.1, tol: float = 1e-12, silent: bool = False, **kwargs):
