@@ -12,12 +12,10 @@ __all__ = ["State", "ManyBodyState", "SingleBodyState", "Evolution", "ManyBodyEv
 
 class State(Interface):
     """Interface class representing a static state."""
-    pass
 
 
 class Evolution(Interface):
     """Interface class representing a time-dependent evolution of a state."""
-    pass
 
 
 class ManyBodyState(State):
