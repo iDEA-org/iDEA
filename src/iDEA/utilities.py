@@ -9,17 +9,14 @@ __all__ = ["Container", "ArrayPlaceholder", "Experiment", "save_experiment", "lo
 
 class Container:
     """Empty container."""
-    pass
 
 
 class ArrayPlaceholder:
     """Array Placeholder."""
-    pass
 
 
 class Experiment(Container):
     """Container to hold all results, quantities and definitions for an experiment."""
-    pass
 
 
 def save_experiment(experiment: Experiment, file_name: str) -> None:
