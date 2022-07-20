@@ -304,6 +304,49 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
     return state
 
 
+def propagate_step(s: iDEA.system.System, evolution: iDEA.state.SingleBodyEvolution, j: int, hamiltonian_function: Callable, v_ptrb: np.ndarray, dt: float, restricted: bool, kwargs):
+    """
+    Propagate a set of orbitals forward in time due to a dynamic local pertubation.
+
+    Args: 
+        s: iDEA.system.System, System object.
+        evolution: iDEA.state.SingleBodyEvolution, Time-dependent evolution.
+        j: int, Time index to step to.
+        hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
+        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+        dt: float, Timestep.
+        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+
+    Returns:
+        evolution: iDEA.state.SingleBodyEvolution, Time-dependent evolution solved at time index j from j-1.
+    """
+    n, up_n, down_n = iDEA.observables.density(s, evolution=evolution, time_indices=np.array([j-1]), return_spins=True)
+    p, up_p, down_p = iDEA.observables.density_matrix(s, evolution=evolution, time_indices=np.array([j-1]), return_spins=True)
+    H, up_H, down_H = hamiltonian_function(s, up_n[0,...], down_n[0,...], up_p[0,...], down_p[0,...], **kwargs)
+    H = sps.csc_matrix(H)
+    up_H = sps.csc_matrix(up_H)
+    down_H = sps.csc_matrix(down_H)
+    Vptrb = sps.diags(v_ptrb[j,:]).tocsc()
+
+    # Apply restriction.
+    if restricted:
+        up_H = H
+        down_H = H
+
+    for i in range(evolution.up.occupied.shape[0]):
+        up_O = -1.0j * (up_H + Vptrb) * dt
+        evolution.up.td_orbitals[j,:,i] = spsla.expm_multiply(up_O, evolution.up.td_orbitals[j-1,:,i])
+        norm = npla.norm(evolution.up.td_orbitals[j,:,i]) * np.sqrt(s.dx)
+        evolution.up.td_orbitals[j,:,i] /= norm
+    for i in range(evolution.down.occupied.shape[0]):
+        down_O = -1.0j * (down_H + Vptrb) * dt
+        evolution.down.td_orbitals[j,:,i] = spsla.expm_multiply(down_O, evolution.down.td_orbitals[j-1,:,i])
+        norm = npla.norm(evolution.down.td_orbitals[j,:,i]) * np.sqrt(s.dx)
+        evolution.down.td_orbitals[j,:,i] /= norm
+
+    return evolution
+
+
 def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False, name: str = "non_interacting", **kwargs) -> iDEA.state.SingleBodyEvolution:
     """
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
@@ -353,28 +396,6 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
     # Propagate.
     for j, ti in enumerate(tqdm(t, desc="iDEA.methods.{}.propagate: propagating state".format(name))):
         if j != 0:
-            n, up_n, down_n = iDEA.observables.density(s, evolution=evolution, time_indices=np.array([j-1]), return_spins=True)
-            p, up_p, down_p = iDEA.observables.density_matrix(s, evolution=evolution, time_indices=np.array([j-1]), return_spins=True)
-            H, up_H, down_H = hamiltonian_function(s, up_n[0,...], down_n[0,...], up_p[0,...], down_p[0,...], **kwargs)
-            H = sps.csc_matrix(H)
-            up_H = sps.csc_matrix(up_H)
-            down_H = sps.csc_matrix(down_H)
-            Vptrb = sps.diags(v_ptrb[j,:]).tocsc()
-
-            # Apply restriction.
-            if restricted:
-                up_H = H
-                down_H = H
-
-            for i in range(state.up.occupied.shape[0]):
-                up_O = -1.0j * (up_H + Vptrb) * dt
-                evolution.up.td_orbitals[j,:,i] = spsla.expm_multiply(up_O, evolution.up.td_orbitals[j-1,:,i])
-                norm = npla.norm(evolution.up.td_orbitals[j,:,i]) * np.sqrt(s.dx)
-                evolution.up.td_orbitals[j,:,i] /= norm
-            for i in range(state.down.occupied.shape[0]):
-                down_O = -1.0j * (down_H + Vptrb) * dt
-                evolution.down.td_orbitals[j,:,i] = spsla.expm_multiply(down_O, evolution.down.td_orbitals[j-1,:,i])
-                norm = npla.norm(evolution.down.td_orbitals[j,:,i]) * np.sqrt(s.dx)
-                evolution.down.td_orbitals[j,:,i] /= norm
+            evolution = propagate_step(s, evolution, j, hamiltonian_function, v_ptrb, dt, restricted, kwargs)
 
     return evolution
