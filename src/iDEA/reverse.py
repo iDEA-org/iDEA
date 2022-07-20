@@ -9,7 +9,7 @@ import iDEA.state
 import iDEA.observables
 
 
-def reverse(s: iDEA.state.State, target_n: np.ndarray, method: Container, v_guess: np.ndarray = None, mu: float = 1.0, pe: float = 0.1, tol: float = 1e-12, silent: bool = False, **kwargs):
+def reverse(s: iDEA.state.State, target_n: np.ndarray, method: Container, v_guess: np.ndarray = None, mu: float = 1.0, pe: float = 0.1, tol: float = 1e-12, silent: bool = False, **kwargs) -> np.ndarray:
     r"""
     Determines what ficticious external potential is needed for a given method, when solving the system, to produce a given target density.
     If the given target density is from solving the interacting electron problem (iDEA.methods.interacting), and the method is the non-interacting electron solver (iDEA.methods.non_interacting)

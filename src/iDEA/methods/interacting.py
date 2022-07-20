@@ -1,6 +1,7 @@
 """Contains all interacting functionality and solvers."""
 
 
+import os
 import copy
 import string
 import itertools
@@ -12,6 +13,12 @@ import scipy.sparse.linalg as spsla
 import iDEA.system
 import iDEA.state
 import iDEA.methods.non_interacting
+
+
+if os.environ.get('iDEA_GPU') == "True":
+    import cupy as cnp
+    import cupyx.scipy.sparse as csps
+    import cupyx.scipy.sparse.linalg as cspsla
 
 
 name = "interacting"
@@ -208,7 +215,7 @@ def antisymmetrize(s, spaces, spins, energies):
     return fulls, spaces, spins, energies
 
 
-def _estimate_level(s, k):
+def _estimate_level(s: iDEA.system.System, k: int) -> int:
     """
     Estimate the solution to the Schrodinger equation needed to eachive given antisymetric energy state.
 
@@ -220,6 +227,33 @@ def _estimate_level(s, k):
         level: int, Extimate of level of excitement.
     """
     return (abs(s.up_count - s.down_count) + 1)**2 * s.count * (k + 1)
+
+
+def _solve_on_gpu(H: np.ndarray, k: int) -> tuple:
+    """
+    Solves the eigenproblem on the GPU.
+
+    Args:
+        H: np.ndarray, Hamiltonian.
+        k: int, Eigenstate to solve for. 
+
+    Returns:
+        eigenvalues_gpu, eigenstates_gpu: tuple, Solved eigenvalues and eigenstates.
+    """
+    sigma = 0
+    which = "LA"
+    H_gpu_shifted = csps.csr_matrix(H - sigma * csps.csr_matrix(sps.eye(H.shape[0])))
+    H_gpu_LU = cspsla.splu(H_gpu_shifted)
+    H_gpu_LO = cspsla.LinearOperator(H_gpu_shifted.shape, H_gpu_LU.solve)
+    eigenvalues_gpu, eigenstates_gpu = cspsla.eigsh(H_gpu_LO, k=k, which=which)
+    eigenvalues_gpu = eigenvalues_gpu
+    eigenstates_gpu = eigenstates_gpu
+    eigenvalues_gpu = (1 + eigenvalues_gpu * sigma) / eigenvalues_gpu
+    idx = np.argsort(eigenvalues_gpu)
+    eigenstates_gpu = cnp.transpose(eigenstates_gpu)
+    eigenvalues_gpu = eigenvalues_gpu[idx]
+    eigenstates_gpu = cnp.transpose(eigenstates_gpu[idx])
+    return eigenvalues_gpu, eigenstates_gpu
 
 
 def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level = None) -> iDEA.state.ManyBodyState:
@@ -247,7 +281,13 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level = None)
         level = _estimate_level(s, k)
 
     # Solve the many-body Schrodinger equation.
-    energies, spaces = spsla.eigsh(H.tocsr(), k=level, which='SA')
+    if os.environ.get('iDEA_GPU') == "True":
+        H_gpu = csps.csr_matrix(H)
+        energies, spaces = _solve_on_gpu(H_gpu, level)
+        energies = energies.get()
+        spaces = spaces.get()
+    else:
+        energies, spaces = spsla.eigsh(H.tocsr(), k=level, which='SA')
 
     # Reshape and normalise the solutions.
     spaces = spaces.reshape((s.x.shape[0],)*s.count + (spaces.shape[-1],))
@@ -275,7 +315,7 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level = None)
 
     return state
 
-
+    
 def propagate_step(s: iDEA.system.System, evolution: iDEA.state.ManyBodyEvolution, H: sps.dia_matrix, v_ptrb: np.ndarray, j: int, dt: float, objs: tuple) -> iDEA.state.ManyBodyEvolution:
     """
     Propagate a many body state forward in time, one time-step, due to a local pertubation.
