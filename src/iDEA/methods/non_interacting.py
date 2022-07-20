@@ -15,7 +15,6 @@ import iDEA.state
 import iDEA.observables
 
 
-# Method name.
 name = "non_interacting"
 
 

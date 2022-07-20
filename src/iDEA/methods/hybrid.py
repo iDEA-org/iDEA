@@ -11,11 +11,9 @@ import iDEA.methods.hartree
 import iDEA.methods.hartree_fock
 
 
-# Method name.
 name = "hybrid"
 
 
-# Inherit functions.
 kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator
 hartree_potential_operator = iDEA.methods.hartree.hartree_potential_operator

@@ -14,7 +14,6 @@ import iDEA.state
 import iDEA.methods.non_interacting
 
 
-# Method name.
 name = "interacting"
 
 

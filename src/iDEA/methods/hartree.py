@@ -9,11 +9,9 @@ import iDEA.observables
 import iDEA.methods.non_interacting
 
 
-# Method name.
 name = "hartree"
 
 
-# Inherit functions.
 kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator
 

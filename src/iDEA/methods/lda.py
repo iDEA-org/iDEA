@@ -10,11 +10,9 @@ import iDEA.methods.non_interacting
 import iDEA.methods.hartree
 
 
-# Method name.
 name = "lda"
 
 
-# Inherit functions.
 kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator
 hartree_potential_operator = iDEA.methods.hartree.hartree_potential_operator
