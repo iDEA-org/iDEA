@@ -12,7 +12,7 @@ import iDEA.methods.hybrid
 import iDEA.reverse 
 
 
-__all__ = ["iDEA.utilities", "iDEA.system", "iDEA.interactions", "iDEA.state", "iDEA.observables", "iDEA.methods.interacting" ,"iDEA.methods.non_interacting", "iDEA.methods.hartree", "iDEA.methods.hartree_fock", "iDEA.methods.lda", "iDEA.methods.hybrid", "iDEA.reverse"]
+__all__ = ["iDEA.utilities", "iDEA.system", "iDEA.interactions", "iDEA.state", "iDEA.observables", "iDEA.methods.interacting" ,"iDEA.methods.non_interacting", "iDEA.methods.hartree", "iDEA.methods.hartree_fock", "iDEA.methods.lda", "iDEA.methods.hybrid", "iDEA.reverse", "iterate_methods", "iterate_mb_methods", "iterate_sb_methods"]
 
 
 iterate_methods = [iDEA.methods.interacting, iDEA.methods.non_interacting, iDEA.methods.hartree, iDEA.methods.hartree_fock, iDEA.methods.lda, iDEA.methods.hybrid]

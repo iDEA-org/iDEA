@@ -70,7 +70,7 @@ def external_potential_operator(s: iDEA.system.System) -> np.ndarray:
     return Vext
 
 
-def hamiltonian(s: iDEA.system.System, up_n: np.ndarray = None, down_n: np.ndarray = None, up_p: np.ndarray = None, down_p: np.ndarray = None, K: np.ndarray = None, V: np.ndarray = None) -> np.ndarray:
+def hamiltonian(s: iDEA.system.System, up_n: np.ndarray = None, down_n: np.ndarray = None, up_p: np.ndarray = None, down_p: np.ndarray = None, K: np.ndarray = None, Vext: np.ndarray = None) -> np.ndarray:
     """
     Compute the Hamiltonian from the kinetic and potential terms.
 
@@ -81,14 +81,14 @@ def hamiltonian(s: iDEA.system.System, up_n: np.ndarray = None, down_n: np.ndarr
         up_p: np.ndarray, Charge density matrix of up electrons.
         down_p: np.ndarray, Charge density matrix of down electrons.
         K: np.ndarray, Single-particle kinetic energy operator [If None this will be computed from s]. (default = None)
-        V: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)
+        Vext: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)
 
     Returns:
         H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.
     """
     if K is None:
         K = kinetic_energy_operator(s)
-    if V is None:
+    if Vext is None:
         Vext = external_potential_operator(s)
     H = K + Vext
     return H, H, H
@@ -304,7 +304,7 @@ def solve(s: iDEA.system.System, hamiltonian_function: Callable = None, k: int =
     return state
 
 
-def propagate_step(s: iDEA.system.System, evolution: iDEA.state.SingleBodyEvolution, j: int, hamiltonian_function: Callable, v_ptrb: np.ndarray, dt: float, restricted: bool, kwargs):
+def propagate_step(s: iDEA.system.System, evolution: iDEA.state.SingleBodyEvolution, j: int, hamiltonian_function: Callable, v_ptrb: np.ndarray, dt: float, restricted: bool, **kwargs):
     """
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
@@ -396,6 +396,6 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
     # Propagate.
     for j, ti in enumerate(tqdm(t, desc="iDEA.methods.{}.propagate: propagating state".format(name))):
         if j != 0:
-            evolution = propagate_step(s, evolution, j, hamiltonian_function, v_ptrb, dt, restricted, kwargs)
+            evolution = propagate_step(s, evolution, j, hamiltonian_function, v_ptrb, dt, restricted, **kwargs)
 
     return evolution

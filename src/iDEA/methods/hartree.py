@@ -32,7 +32,7 @@ def hartree_potential_operator(s: iDEA.system.System, n: np.ndarray) -> np.ndarr
     return Vh
 
 
-def hamiltonian(s: iDEA.system.System, up_n: np.ndarray, down_n: np.ndarray, up_p: np.ndarray, down_p: np.ndarray, K: np.ndarray = None, V: np.ndarray = None) -> np.ndarray:
+def hamiltonian(s: iDEA.system.System, up_n: np.ndarray, down_n: np.ndarray, up_p: np.ndarray, down_p: np.ndarray, K: np.ndarray = None, Vext: np.ndarray = None) -> np.ndarray:
     """
     Compute the Hamiltonian from the kinetic and potential terms.
 
@@ -43,14 +43,14 @@ def hamiltonian(s: iDEA.system.System, up_n: np.ndarray, down_n: np.ndarray, up_
         up_p: np.ndarray, Charge density matrix of up electrons.
         down_p: np.ndarray, Charge density matrix of down electrons.
         K: np.ndarray, Single-particle kinetic energy operator [If None this will be computed from s]. (default = None)
-        V: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)
+        Vext: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)
 
     Returns:
         H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.
     """
     if K is None:
         K = kinetic_energy_operator(s)
-    if V is None:
+    if Vext is None:
         Vext = external_potential_operator(s)
     Vh = hartree_potential_operator(s, up_n + down_n)
     H = K + Vext + Vh
