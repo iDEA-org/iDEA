@@ -18,10 +18,21 @@ kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator
 hartree_potential_operator = iDEA.methods.hartree.hartree_potential_operator
 exchange_potential_operator = iDEA.methods.hartree_fock.exchange_potential_operator
-exchange_correlation_potential_operator = iDEA.methods.lda.exchange_correlation_potential_operator
+exchange_correlation_potential_operator = (
+    iDEA.methods.lda.exchange_correlation_potential_operator
+)
 
 
-def hamiltonian(s: iDEA.system.System, up_n: np.ndarray, down_n: np.ndarray, up_p: np.ndarray, down_p: np.ndarray, K: np.ndarray = None, Vext: np.ndarray = None, **kwargs) -> np.ndarray:
+def hamiltonian(
+    s: iDEA.system.System,
+    up_n: np.ndarray,
+    down_n: np.ndarray,
+    up_p: np.ndarray,
+    down_p: np.ndarray,
+    K: np.ndarray = None,
+    Vext: np.ndarray = None,
+    **kwargs
+) -> np.ndarray:
     """
     Compute the Hamiltonian from the kinetic and potential terms.
 
@@ -38,7 +49,7 @@ def hamiltonian(s: iDEA.system.System, up_n: np.ndarray, down_n: np.ndarray, up_
     Returns:
         H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.
     """
-    alpha = kwargs['alpha']
+    alpha = kwargs["alpha"]
     if K is None:
         K = kinetic_energy_operator(s)
     if Vext is None:
@@ -48,13 +59,15 @@ def hamiltonian(s: iDEA.system.System, up_n: np.ndarray, down_n: np.ndarray, up_
     up_Vx = exchange_potential_operator(s, up_p)
     down_Vx = exchange_potential_operator(s, down_p)
     Vxc = exchange_correlation_potential_operator(s, up_n + down_n)
-    H = K + Vext + Vh + alpha*Vx + (1.0 - alpha)*Vxc
-    up_H = K + Vext + Vh + alpha*up_Vx + (1.0 - alpha)*Vxc
-    down_H = K + Vext + Vh + alpha*down_Vx + (1.0 - alpha)*Vxc
+    H = K + Vext + Vh + alpha * Vx + (1.0 - alpha) * Vxc
+    up_H = K + Vext + Vh + alpha * up_Vx + (1.0 - alpha) * Vxc
+    down_H = K + Vext + Vh + alpha * down_Vx + (1.0 - alpha) * Vxc
     return H, up_H, down_H
 
 
-def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState, alpha: float = 0.8) -> float:
+def total_energy(
+    s: iDEA.system.System, state: iDEA.state.SingleBodyState, alpha: float = 0.8
+) -> float:
     """
     Compute the total energy.
 
@@ -68,11 +81,20 @@ def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState, alpha
     """
     E_hf = iDEA.methods.hartree_fock.total_energy(s, state)
     E_lda = iDEA.methods.lda.total_energy(s, state)
-    E = alpha*E_hf + (1.0 - alpha)*E_lda
+    E = alpha * E_hf + (1.0 - alpha) * E_lda
     return E
 
 
-def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: float = 0.5, tol: float = 1e-10, initial: tuple = None, silent: bool = False, alpha: float = 0.8) -> iDEA.state.SingleBodyState:
+def solve(
+    s: iDEA.system.System,
+    k: int = 0,
+    restricted: bool = False,
+    mixing: float = 0.5,
+    tol: float = 1e-10,
+    initial: tuple = None,
+    silent: bool = False,
+    alpha: float = 0.8,
+) -> iDEA.state.SingleBodyState:
     """
     Solves the Schrodinger equation for the given system.
 
@@ -89,14 +111,24 @@ def solve(s: iDEA.system.System, k: int = 0, restricted: bool = False, mixing: f
     Returns:
         state: iDEA.state.SingleBodyState, Solved state.
     """
-    return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol, initial, name, silent, alpha=alpha)
+    return iDEA.methods.non_interacting.solve(
+        s, hamiltonian, k, restricted, mixing, tol, initial, name, silent, alpha=alpha
+    )
 
 
-def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: np.ndarray, t: np.ndarray, hamiltonian_function: Callable = None, restricted: bool = False, alpha: float = 0.8) -> iDEA.state.SingleBodyEvolution:
+def propagate(
+    s: iDEA.system.System,
+    state: iDEA.state.SingleBodyState,
+    v_ptrb: np.ndarray,
+    t: np.ndarray,
+    hamiltonian_function: Callable = None,
+    restricted: bool = False,
+    alpha: float = 0.8,
+) -> iDEA.state.SingleBodyEvolution:
     """
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
-    Args: 
+    Args:
         s: iDEA.system.System, System object.
         state: iDEA.state.SingleBodyState, State to be propigated.
         v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
@@ -108,4 +140,6 @@ def propagate(s: iDEA.system.System, state: iDEA.state.SingleBodyState, v_ptrb: 
     Returns:
         evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
-    return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted, name, alpha=alpha) 
+    return iDEA.methods.non_interacting.propagate(
+        s, state, v_ptrb, t, hamiltonian, restricted, name, alpha=alpha
+    )

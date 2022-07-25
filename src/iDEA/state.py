@@ -7,7 +7,14 @@ import numpy as np
 import iDEA.utilities
 
 
-__all__ = ["State", "ManyBodyState", "SingleBodyState", "Evolution", "ManyBodyEvolution", "SingleBodyEvolution"]
+__all__ = [
+    "State",
+    "ManyBodyState",
+    "SingleBodyState",
+    "Evolution",
+    "ManyBodyEvolution",
+    "SingleBodyEvolution",
+]
 
 
 class State(Interface):
@@ -21,13 +28,15 @@ class Evolution(Interface):
 class ManyBodyState(State):
     """State of interacting particles."""
 
-    def __init__(self, space: np.ndarray = None, spin: np.ndarray = None, full = None, energy = None):
+    def __init__(
+        self, space: np.ndarray = None, spin: np.ndarray = None, full=None, energy=None
+    ):
         r"""
         State of particles in a many-body state.
 
         This is described by a spatial part \psi(x_1,x_2,\dots,x_N) on the spatial grid, and a spin
         part on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). These are NOT necessarily antisymmetric states,
-        they can be combined using the antisymmetrisation operaration to produce the full 
+        they can be combined using the antisymmetrisation operaration to produce the full
         wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N).
 
         Args:
@@ -57,9 +66,9 @@ class ManyBodyState(State):
 class SingleBodyState(State):
     """
     State of particles in a single-body state.
-    
-    This is described by three arrays for each spin channel: 
-    
+
+    This is described by three arrays for each spin channel:
+
     up.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].
     up.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
     up.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
@@ -70,15 +79,16 @@ class SingleBodyState(State):
     down.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
     down.occupied: np.ndarray, Indices of down.occupations that are non-zero, to indicate occupied orbitals.
     """
+
     def __init__(self):
         self.up = iDEA.utilities.Container()
         self.down = iDEA.utilities.Container()
-        
+
         self.up.energies = iDEA.utilities.ArrayPlaceholder()
         self.up.orbitals = iDEA.utilities.ArrayPlaceholder()
         self.up.occupations = iDEA.utilities.ArrayPlaceholder()
         self.up.occupied = iDEA.utilities.ArrayPlaceholder()
-        
+
         self.down.energies = iDEA.utilities.ArrayPlaceholder()
         self.down.orbitals = iDEA.utilities.ArrayPlaceholder()
         self.down.occupations = iDEA.utilities.ArrayPlaceholder()
@@ -95,6 +105,7 @@ class ManyBodyEvolution(Evolution):
     v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.
     t: np.ndarray, Time grid used during evolution.
     """
+
     def __init__(self, initial_state: ManyBodyState):
         self.space = copy.deepcopy(initial_state.space)
         self.spin = copy.deepcopy(initial_state.spin)
@@ -110,13 +121,14 @@ class SingleBodyEvolution(Evolution):
 
     In addition to the arrays defined within the initial SingleBodyState, this state is described by four additional arrays:
 
-    up.td_orbitals: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number]. 
+    up.td_orbitals: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].
     down.td_orbital: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].
     v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.
     t: np.ndarray, Time grid used during evolution.
 
     In this case, only the occupied time-dependent orbitals are stored, as only these are propigated.
     """
+
     def __init__(self, initial_state: SingleBodyState):
         self.up = copy.deepcopy(initial_state.up)
         self.down = copy.deepcopy(initial_state.down)

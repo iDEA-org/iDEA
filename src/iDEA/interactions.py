@@ -4,10 +4,16 @@
 import numpy as np
 
 
-__all__ = ["softened_interaction", "softened_interaction_alternative", "raw_interaction"]
+__all__ = [
+    "softened_interaction",
+    "softened_interaction_alternative",
+    "raw_interaction",
+]
 
 
-def softened_interaction(x: np.ndarray, strength: float = 1.0, softening: float = 1.0) -> np.ndarray:
+def softened_interaction(
+    x: np.ndarray, strength: float = 1.0, softening: float = 1.0
+) -> np.ndarray:
     r"""
     Constructs the softened interaction potential.
 
@@ -25,11 +31,13 @@ def softened_interaction(x: np.ndarray, strength: float = 1.0, softening: float 
     v_int = np.zeros((x.shape[0], x.shape[0]), dtype="float")
     for i in range(x.shape[0]):
         for j in range(x.shape[0]):
-            v_int[i,j] = strength / (abs(x[i] - x[j]) + softening)
+            v_int[i, j] = strength / (abs(x[i] - x[j]) + softening)
     return v_int
 
 
-def softened_interaction_alternative(x: np.ndarray, strength: float = 1.0, softening: float = 1.0) -> np.ndarray:
+def softened_interaction_alternative(
+    x: np.ndarray, strength: float = 1.0, softening: float = 1.0
+) -> np.ndarray:
     r"""
     Constructs the alternative softened interaction potential.
 
@@ -46,7 +54,7 @@ def softened_interaction_alternative(x: np.ndarray, strength: float = 1.0, softe
     v_int = np.zeros((x.shape[0], x.shape[0]), dtype="float")
     for i in range(x.shape[0]):
         for j in range(x.shape[0]):
-            v_int[i,j] = strength / np.sqrt(((x[i] - x[j])**2 + softening))
+            v_int[i, j] = strength / np.sqrt(((x[i] - x[j]) ** 2 + softening))
     return v_int
 
 
