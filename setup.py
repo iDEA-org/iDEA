@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="iDEA-latest",
-    version="0.1.3",
+    version="0.1.5",
     author="Jack Wetherell",
     author_email="jack.wetherell@gmail.com",
     description="interacting Dynamic Electrons Approach (iDEA)",
@@ -22,8 +22,8 @@ setuptools.setup(
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Operating System :: OS Independent",
     ],
-    package_dir={"": "iDEA"},
-    packages=setuptools.find_packages(where="iDEA"),
+    package_dir={"": "."},
+    packages=setuptools.find_packages(where="."),
     python_requires=">=3.8",
     install_requires=[
         'numpy>=1.22.3',
