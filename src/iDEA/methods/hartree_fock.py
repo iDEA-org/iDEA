@@ -22,7 +22,7 @@ def exchange_potential_operator(s: iDEA.system.System, p: np.ndarray) -> np.ndar
     """
     Compute the exchange potential operator.
 
-    Args;
+    Args:
         s: iDEA.system.System, System object.
         p: np.ndarray, Charge density matrix.
 
