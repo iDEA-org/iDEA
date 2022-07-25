@@ -26,7 +26,7 @@ setuptools.setup(
     packages=setuptools.find_packages(where="."),
     python_requires=">=3.8",
     install_requires=[
-        'numpy>=1.20.0',
+        'numpy>=1.22.3',
         'scipy>=1.8.0',
         'matplotlib>=3.5.1',
         'jupyterlab>=3.3.2',
