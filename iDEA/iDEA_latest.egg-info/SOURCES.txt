@@ -1,0 +1,17 @@
+COPYING.txt
+LICENSE
+README.md
+pyproject.toml
+setup.py
+iDEA/iDEA_latest.egg-info/PKG-INFO
+iDEA/iDEA_latest.egg-info/SOURCES.txt
+iDEA/iDEA_latest.egg-info/dependency_links.txt
+iDEA/iDEA_latest.egg-info/requires.txt
+iDEA/iDEA_latest.egg-info/top_level.txt
+iDEA/methods/__init__.py
+iDEA/methods/hartree.py
+iDEA/methods/hartree_fock.py
+iDEA/methods/hybrid.py
+iDEA/methods/interacting.py
+iDEA/methods/lda.py
+iDEA/methods/non_interacting.py
