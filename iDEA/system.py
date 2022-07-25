@@ -11,7 +11,7 @@ __all__ = ["System", "save_system", "load_system", "systems"]
 
 
 class System:
-    """Model system, containing all defining properties."""
+    r"""Model system, containing all defining properties."""
 
     def __init__(
         self,
@@ -21,18 +21,18 @@ class System:
         electrons: str,
         stencil: int = 13,
     ):
-        """
+        r"""
         Model system, containing all defining properties.
 
-        Args:
-            x: np.ndarray, Grid of x values in 1D space.
-            v_ext: np.ndarray, External potential on the grid of x values.
-            v_int: np.ndarray, Interaction potential on the grid of x values.
-            electrons: string, Electrons contained in the system.
-            stencil: int, Stencil to use for derivatives on the grid of x values. (default = 13)
+        | Args:
+        |     x: np.ndarray, Grid of x values in 1D space.
+        |     v_ext: np.ndarray, External potential on the grid of x values.
+        |     v_int: np.ndarray, Interaction potential on the grid of x values.
+        |     electrons: string, Electrons contained in the system.
+        |     stencil: int, Stencil to use for derivatives on the grid of x values. (default = 13)
 
-        Raises:
-            AssertionError.
+        | Raises:
+        |     AssertionError.
         """
         self.__x = x
         self.__dx = self.x[1] - self.x[0]
@@ -46,7 +46,7 @@ class System:
         self.check()
 
     def check(self):
-        """Performs checks on system properties. Raises AssertionError if any check fails."""
+        r"""Performs checks on system properties. Raises AssertionError if any check fails."""
         assert (
             type(self.x) == np.ndarray
         ), f"x grid is not of type np.ndarray, got {type(self.x)} instead."
@@ -141,25 +141,25 @@ class System:
 
 
 def save_system(s: System, file_name: str) -> None:
-    """
+    r"""
     Save a system to an system file.
 
-    Args:
-        system: iDEA.system.System, System object to save.
-        file_name: str, file name.
+    | Args:
+    |     system: iDEA.system.System, System object to save.
+    |     file_name: str, file name.
     """
     pickle.dump(s, open(file_name, "wb"))
 
 
 def load_system(file_name: str) -> System:
-    """
+    r"""
     Load a system from an system file.
 
-    Args:
-        file_name: str, file name.
+    | Args:
+    |     file_name: str, file name.
 
-    Returns
-        system: iDEA.system.System, Loaded System object.
+    | Returns
+    |     system: iDEA.system.System, Loaded System object.
     """
     return pickle.load(open(file_name, "rb"))
 

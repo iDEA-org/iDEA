@@ -33,21 +33,21 @@ def hamiltonian(
     Vext: np.ndarray = None,
     **kwargs
 ) -> np.ndarray:
-    """
+    r"""
     Compute the Hamiltonian from the kinetic and potential terms.
 
-    Args:
-        s: iDEA.system.System, System object.
-        up_n: np.ndarray, Charge density of up electrons.
-        down_n: np.ndarray, Charge density of down electrons.
-        up_p: np.ndarray, Charge density matrix of up electrons.
-        down_p: np.ndarray, Charge density matrix of down electrons.
-        K: np.ndarray, Single-particle kinetic energy operator [If None this will be computed from s]. (default = None)
-        Vext: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)
-        alpha: float, Value used to mix the Hartree and LDA potentials.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     up_n: np.ndarray, Charge density of up electrons.
+    |     down_n: np.ndarray, Charge density of down electrons.
+    |     up_p: np.ndarray, Charge density matrix of up electrons.
+    |     down_p: np.ndarray, Charge density matrix of down electrons.
+    |     K: np.ndarray, Single-particle kinetic energy operator [If None this will be computed from s]. (default = None)
+    |     Vext: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)
+    |     alpha: float, Value used to mix the Hartree and LDA potentials.
 
-    Returns:
-        H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.
+    | Returns:
+    |     H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.
     """
     alpha = kwargs["alpha"]
     if K is None:
@@ -68,16 +68,16 @@ def hamiltonian(
 def total_energy(
     s: iDEA.system.System, state: iDEA.state.SingleBodyState, alpha: float = 0.8
 ) -> float:
-    """
+    r"""
     Compute the total energy.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState, State. (default = None)
-        alpha: float, Value used to mix the Hartree and LDA potentials. (default = 0.8)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState, State. (default = None)
+    |     alpha: float, Value used to mix the Hartree and LDA potentials. (default = 0.8)
 
-    Returns:
-        E: float, Total energy.
+    | Returns:
+    |     E: float, Total energy.
     """
     E_hf = iDEA.methods.hartree_fock.total_energy(s, state)
     E_lda = iDEA.methods.lda.total_energy(s, state)
@@ -95,21 +95,21 @@ def solve(
     silent: bool = False,
     alpha: float = 0.8,
 ) -> iDEA.state.SingleBodyState:
-    """
+    r"""
     Solves the Schrodinger equation for the given system.
 
-    Args:
-        s: iDEA.system.System, System object.
-        k: int, Energy state to solve for. (default = 0, the ground-state)
-        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
-        mixing: float, Mixing parameter. (default = 0.5)
-        tol: float, Tollerance of convergence. (default = 1e-10)
-        initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)
-        silent: bool, Set to true to prevent printing. (default = False)
-        alpha: float, Value used to mix the Hartree and LDA potentials. (default = 0.8)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     k: int, Energy state to solve for. (default = 0, the ground-state)
+    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    |     mixing: float, Mixing parameter. (default = 0.5)
+    |     tol: float, Tollerance of convergence. (default = 1e-10)
+    |     initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)
+    |     silent: bool, Set to true to prevent printing. (default = False)
+    |     alpha: float, Value used to mix the Hartree and LDA potentials. (default = 0.8)
 
-    Returns:
-        state: iDEA.state.SingleBodyState, Solved state.
+    | Returns:
+    |     state: iDEA.state.SingleBodyState, Solved state.
     """
     return iDEA.methods.non_interacting.solve(
         s, hamiltonian, k, restricted, mixing, tol, initial, name, silent, alpha=alpha
@@ -125,20 +125,20 @@ def propagate(
     restricted: bool = False,
     alpha: float = 0.8,
 ) -> iDEA.state.SingleBodyEvolution:
-    """
+    r"""
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState, State to be propigated.
-        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
-        t: np.ndarray, Grid of time values.
-        hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
-        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
-        alpha: float, Value used to mix the Hartree and LDA potentials. (default = 0.8)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState, State to be propigated.
+    |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+    |     t: np.ndarray, Grid of time values.
+    |     hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
+    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    |     alpha: float, Value used to mix the Hartree and LDA potentials. (default = 0.8)
 
-    Returns:
-        evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
+    | Returns:
+    |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
     return iDEA.methods.non_interacting.propagate(
         s, state, v_ptrb, t, hamiltonian, restricted, name, alpha=alpha

@@ -1,0 +1,429 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iDEA.non_interacting &#8212; iDEA 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">iDEA 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">iDEA.non_interacting</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for iDEA.non_interacting</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Contains all non-interacting functionality and solvers.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npla</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="k">as</span> <span class="nn">spla</span>
+
+
+<div class="viewcode-block" id="kinetic_operator"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.kinetic_operator">[docs]</a><span class="k">def</span> <span class="nf">kinetic_operator</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute single-particle kinetic energy operator as a matrix.</span>
+
+<span class="sd">    This is built using a given number of finite differences to represent the second derivative.</span>
+<span class="sd">    The number of differences taken is defined in s.stencil.</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    K: np.ndarray</span>
+<span class="sd">        Kintetic energy operator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">1.0</span>
+            <span class="o">/</span> <span class="mf">180.0</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">27</span><span class="p">,</span> <span class="mi">270</span><span class="p">,</span> <span class="o">-</span><span class="mi">490</span><span class="p">,</span> <span class="mi">270</span><span class="p">,</span> <span class="o">-</span><span class="mi">27</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+            <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">1.0</span>
+            <span class="o">/</span> <span class="mf">5040.0</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">1008</span><span class="p">,</span> <span class="mi">8064</span><span class="p">,</span> <span class="o">-</span><span class="mi">14350</span><span class="p">,</span> <span class="mi">8064</span><span class="p">,</span> <span class="o">-</span><span class="mi">1008</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">11</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">1.0</span>
+            <span class="o">/</span> <span class="mf">25200.0</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="o">-</span><span class="mi">125</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="o">-</span><span class="mi">6000</span><span class="p">,</span> <span class="mi">42000</span><span class="p">,</span> <span class="o">-</span><span class="mi">73766</span><span class="p">,</span> <span class="mi">42000</span><span class="p">,</span> <span class="o">-</span><span class="mi">6000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="o">-</span><span class="mi">125</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">13</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">1.0</span>
+            <span class="o">/</span> <span class="mf">831600.0</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="o">-</span><span class="mi">50</span><span class="p">,</span>
+                    <span class="mi">864</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">7425</span><span class="p">,</span>
+                    <span class="mi">44000</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">222750</span><span class="p">,</span>
+                    <span class="mi">1425600</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">2480478</span><span class="p">,</span>
+                    <span class="mi">1425600</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">222750</span><span class="p">,</span>
+                    <span class="mi">44000</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">7425</span><span class="p">,</span>
+                    <span class="mi">864</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">50</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">second_derivative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sdi</span><span class="p">)):</span>
+        <span class="n">second_derivative</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="n">k</span><span class="o">=</span><span class="n">sdi</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">sd</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="p">),</span>
+            <span class="n">k</span><span class="o">=</span><span class="n">sdi</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+        <span class="p">)</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">second_derivative</span>
+    <span class="k">return</span> <span class="n">K</span></div>
+
+
+<div class="viewcode-block" id="external_potential_operator"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.external_potential_operator">[docs]</a><span class="k">def</span> <span class="nf">external_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute single-particle external potential energy operator as a matrix.</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    Vext: np.ndarray</span>
+<span class="sd">        External potential energy operator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Vext</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">v_ext</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Vext</span></div>
+
+
+<div class="viewcode-block" id="hamiltonian"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.hamiltonian">[docs]</a><span class="k">def</span> <span class="nf">hamiltonian</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">V</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the Hamiltonian from the kinetic and potential terms.</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    K: np.ndarray</span>
+<span class="sd">        Single-particle kinetic energy operator.</span>
+<span class="sd">    V: np.ndarray</span>
+<span class="sd">        Potential energy operator energy operator (local terms only).</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    H: np.ndarray</span>
+<span class="sd">        Hamiltonian.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">K</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">kinetic_operator</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">V</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">external_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">K</span> <span class="o">+</span> <span class="n">V</span>
+    <span class="k">return</span> <span class="n">H</span></div>
+
+
+<div class="viewcode-block" id="solve_states"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.solve_states">[docs]</a><span class="k">def</span> <span class="nf">solve_states</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">empty</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Solves for the non-interacting eigenstates of the given system.</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    H: np.ndarray</span>
+<span class="sd">        Hamiltonian. If None this will be computed from s. (default = None)</span>
+<span class="sd">    empty: int</span>
+<span class="sd">        Number of empty states to inclue in solution. (default = 5)</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    orbitals: np.ndarray</span>
+<span class="sd">        Array of normalised orbitals, indexed as orbitals[space,orbital_number].</span>
+<span class="sd">    energies: np.ndarray</span>
+<span class="sd">        Array of single particle energies.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">H</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">hamiltonian</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">energies</span><span class="p">,</span> <span class="n">orbitals</span> <span class="o">=</span> <span class="n">spla</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">orbitals</span> <span class="o">=</span> <span class="n">orbitals</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">orbitals</span><span class="p">[:,</span> <span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">NE</span> <span class="o">+</span> <span class="n">empty</span><span class="p">],</span> <span class="n">energies</span><span class="p">[:</span> <span class="n">s</span><span class="o">.</span><span class="n">NE</span> <span class="o">+</span> <span class="n">empty</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="charge_density"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.charge_density">[docs]</a><span class="k">def</span> <span class="nf">charge_density</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">orbitals</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute charge density from given non-interacting orbitals.</span>
+
+<span class="sd">    .. math:: n(x) = \sum_j^\mathrm{occ} = \phi_j^*(x)\phi_j(x)</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    orbitals: np.ndarray</span>
+<span class="sd">        Array of normalised orbitals, indexed as orbitals[space,orbital_number] or [time,space,orbital_number].</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    n: np.ndarray</span>
+<span class="sd">        Charge density. indexed as [space] or [time,space]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orbitals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">orbitals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">orbitals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">orbitals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">n</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">charge_density</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">orbitals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:])</span>
+        <span class="k">return</span> <span class="n">n</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">orbitals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">occupied</span> <span class="o">=</span> <span class="n">orbitals</span><span class="p">[:,</span> <span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">NE</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">occupied</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span> <span class="o">*</span> <span class="n">occupied</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="k">return</span> <span class="n">n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">pass</span>  <span class="c1"># TODO</span></div>
+
+
+<div class="viewcode-block" id="probability_density"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.probability_density">[docs]</a><span class="k">def</span> <span class="nf">probability_density</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">orbitals</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute probability density from given non-interacting orbitals.</span>
+
+<span class="sd">    .. math:: n(x) =\frac{1}{N} \sum_j^\mathrm{occ} \phi_j^*(x)\phi_j(x)</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    orbitals: np.ndarray</span>
+<span class="sd">        Array of normalised orbitals, indexed as orbitals[space,orbital_number].</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    n: np.ndarray</span>
+<span class="sd">        Charge density.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">occupied</span> <span class="o">=</span> <span class="n">orbitals</span><span class="p">[:,</span> <span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">NE</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">occupied</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span> <span class="o">*</span> <span class="n">occupied</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">NE</span>
+    <span class="k">return</span> <span class="n">n</span></div>
+
+
+<div class="viewcode-block" id="orbital_density"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.orbital_density">[docs]</a><span class="k">def</span> <span class="nf">orbital_density</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">orbital</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute charge density for a given non-interacting orbital.</span>
+
+<span class="sd">    .. math:: n(x) = \phi^*(x)\phi(x)</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    orbital: np.ndarray</span>
+<span class="sd">        Normalised orbital.</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    n: np.ndarray</span>
+<span class="sd">        Orbital density.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="n">orbital</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span> <span class="o">*</span> <span class="n">orbital</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+    <span class="k">return</span> <span class="n">n</span></div>
+
+
+<div class="viewcode-block" id="one_body_reduced_density_matrix"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.one_body_reduced_density_matrix">[docs]</a><span class="k">def</span> <span class="nf">one_body_reduced_density_matrix</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">orbitals</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Constructs the one-body reduced density matrix from single-particle orbitals.</span>
+
+<span class="sd">    .. math:: \rho(x,x&#39;) = \sum^N_{n=1}\phi_n(x)\phi^*_n(x&#39;)</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    orbitals: np.ndarray</span>
+<span class="sd">        Array of normalised orbitals, indexed as orbitals[space,orbital_number].</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    n: np.ndarray</span>
+<span class="sd">        One body reduced density matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">NE</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">orbitals</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">orbitals</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">axes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">p</span></div>
+
+
+<div class="viewcode-block" id="total_energy"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.total_energy">[docs]</a><span class="k">def</span> <span class="nf">total_energy</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">energies</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates the total energy from single particle energies.</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    energies: np.ndarray</span>
+<span class="sd">        Array of single particle energies.</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    E: float</span>
+<span class="sd">        Total energy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">energies</span><span class="p">[:</span> <span class="n">s</span><span class="o">.</span><span class="n">NE</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">E</span></div>
+
+
+<div class="viewcode-block" id="ionisation_potential"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.ionisation_potential">[docs]</a><span class="k">def</span> <span class="nf">ionisation_potential</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">energies</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates the ionisation potential from single particle energies.</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    energies: np.ndarray</span>
+<span class="sd">        Array of single particle energies.</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    ip: float</span>
+<span class="sd">        Ionisation potential.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ip</span> <span class="o">=</span> <span class="o">-</span><span class="n">energies</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">NE</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ip</span></div>
+
+
+<div class="viewcode-block" id="electron_affinity"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.electron_affinity">[docs]</a><span class="k">def</span> <span class="nf">electron_affinity</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">energies</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates the electron affinity from single particle energies.</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    energies: np.ndarray</span>
+<span class="sd">        Array of single particle energies.</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    ea: float</span>
+<span class="sd">        Electron affinity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ea</span> <span class="o">=</span> <span class="o">-</span><span class="n">energies</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">NE</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ea</span></div>
+
+
+<div class="viewcode-block" id="single_particle_gap"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.single_particle_gap">[docs]</a><span class="k">def</span> <span class="nf">single_particle_gap</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">energies</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates the single particle gap from single particle energies.</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    energies: np.ndarray</span>
+<span class="sd">        Array of single particle energies.</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    gap: float</span>
+<span class="sd">        Single particle gap.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gap</span> <span class="o">=</span> <span class="n">energies</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">NE</span><span class="p">]</span> <span class="o">-</span> <span class="n">energies</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">NE</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">gap</span></div>
+
+
+<div class="viewcode-block" id="propagate"><a class="viewcode-back" href="../../iDEA.html#iDEA.non_interacting.propagate">[docs]</a><span class="k">def</span> <span class="nf">propagate</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">orbitals</span><span class="p">,</span> <span class="n">v_ptrb</span><span class="p">,</span> <span class="n">times</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Propigate a set of orbitals forward in time due to a local pertubation</span>
+
+<span class="sd">    s: System</span>
+<span class="sd">        System object.</span>
+<span class="sd">    orbitals: np.ndarray</span>
+<span class="sd">        Array of normalised orbitals, indexed as orbitals[space,orbital_number].</span>
+<span class="sd">    v_ptrb: np.ndarray</span>
+<span class="sd">        Local perturbing potential on the grid of x values.</span>
+<span class="sd">    times: np.ndarray</span>
+<span class="sd">        Grid of time values.</span>
+
+<span class="sd">    returns:</span>
+<span class="sd">    td_oribtals: nparray</span>
+<span class="sd">        Array of time dependent orbitals, indexed as orbitals[time,space,orbital_number]</span>
+<span class="sd">        Note: Returned orbitals is only the occupied orbitals, and so td_orbitals.shape[2] = s.NE.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">kinetic_operator</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">external_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">v_ptrb</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">hamiltonian</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">spla</span><span class="o">.</span><span class="n">expm</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">H</span><span class="p">)</span>
+
+    <span class="n">td_oribtals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">times</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">orbitals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">orbitals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span>
+    <span class="p">)</span>
+    <span class="n">td_oribtals</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">orbitals</span><span class="p">[:,</span> <span class="p">:]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">orbitals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">times</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;iDEA.non_interacting.propagate: propagating orbital </span><span class="si">{0}</span><span class="s2">/</span><span class="si">{1}</span><span class="s2">, time = </span><span class="si">{2:.3f}</span><span class="s2">/</span><span class="si">{3:.3f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">orbitals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+                    <span class="p">),</span>
+                    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">td_oribtals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">td_oribtals</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">])</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">npla</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">td_oribtals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
+                <span class="n">td_oribtals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/=</span> <span class="n">norm</span>
+        <span class="nb">print</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">td_oribtals</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">iDEA 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">iDEA.non_interacting</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, iDEA Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.3.1.
+    </div>
+  </body>
+</html>

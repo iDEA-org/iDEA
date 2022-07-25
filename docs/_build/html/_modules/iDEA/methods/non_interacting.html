@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iDEA.methods.non_interacting &mdash; iDEA 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> iDEA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">iDEA</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">iDEA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../methods.html">iDEA.methods</a> &raquo;</li>
+      <li>iDEA.methods.non_interacting</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for iDEA.methods.non_interacting</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Contains all non-interacting functionality and solvers.&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sps</span>
+<span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npla</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="k">as</span> <span class="nn">spla</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse.linalg</span> <span class="k">as</span> <span class="nn">spsla</span>
+<span class="kn">import</span> <span class="nn">iDEA.system</span>
+<span class="kn">import</span> <span class="nn">iDEA.state</span>
+<span class="kn">import</span> <span class="nn">iDEA.observables</span>
+
+
+<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;non_interacting&quot;</span>
+
+
+<div class="viewcode-block" id="kinetic_energy_operator"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.non_interacting.kinetic_energy_operator">[docs]</a><span class="k">def</span> <span class="nf">kinetic_energy_operator</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute single-particle kinetic energy operator as a matrix.</span>
+
+<span class="sd">    This is built using a given number of finite differences to represent the second derivative.</span>
+<span class="sd">    The number of differences taken is defined in s.stencil.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     K: np.ndarray, Kintetic energy operator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">1.0</span>
+            <span class="o">/</span> <span class="mf">180.0</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">27</span><span class="p">,</span> <span class="mi">270</span><span class="p">,</span> <span class="o">-</span><span class="mi">490</span><span class="p">,</span> <span class="mi">270</span><span class="p">,</span> <span class="o">-</span><span class="mi">27</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+            <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">1.0</span>
+            <span class="o">/</span> <span class="mf">5040.0</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">1008</span><span class="p">,</span> <span class="mi">8064</span><span class="p">,</span> <span class="o">-</span><span class="mi">14350</span><span class="p">,</span> <span class="mi">8064</span><span class="p">,</span> <span class="o">-</span><span class="mi">1008</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">11</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">1.0</span>
+            <span class="o">/</span> <span class="mf">25200.0</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="o">-</span><span class="mi">125</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="o">-</span><span class="mi">6000</span><span class="p">,</span> <span class="mi">42000</span><span class="p">,</span> <span class="o">-</span><span class="mi">73766</span><span class="p">,</span> <span class="mi">42000</span><span class="p">,</span> <span class="o">-</span><span class="mi">6000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="o">-</span><span class="mi">125</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">s</span><span class="o">.</span><span class="n">stencil</span> <span class="o">==</span> <span class="mi">13</span><span class="p">:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">1.0</span>
+            <span class="o">/</span> <span class="mf">831600.0</span>
+            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="o">-</span><span class="mi">50</span><span class="p">,</span>
+                    <span class="mi">864</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">7425</span><span class="p">,</span>
+                    <span class="mi">44000</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">222750</span><span class="p">,</span>
+                    <span class="mi">1425600</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">2480478</span><span class="p">,</span>
+                    <span class="mi">1425600</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">222750</span><span class="p">,</span>
+                    <span class="mi">44000</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">7425</span><span class="p">,</span>
+                    <span class="mi">864</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mi">50</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">sdi</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">second_derivative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sdi</span><span class="p">)):</span>
+        <span class="n">second_derivative</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="n">k</span><span class="o">=</span><span class="n">sdi</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">sd</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="p">),</span>
+            <span class="n">k</span><span class="o">=</span><span class="n">sdi</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+        <span class="p">)</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">second_derivative</span>
+    <span class="k">return</span> <span class="n">K</span></div>
+
+
+<div class="viewcode-block" id="external_potential_operator"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.non_interacting.external_potential_operator">[docs]</a><span class="k">def</span> <span class="nf">external_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the external potential operator.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     Vext: np.ndarray, External potential energy operator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Vext</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">v_ext</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Vext</span></div>
+
+
+<div class="viewcode-block" id="hamiltonian"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.non_interacting.hamiltonian">[docs]</a><span class="k">def</span> <span class="nf">hamiltonian</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span>
+    <span class="n">up_n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">down_n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">up_p</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">down_p</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">K</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">Vext</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Hamiltonian from the kinetic and potential terms.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     up_n: np.ndarray, Charge density of up electrons.</span>
+<span class="sd">    |     down_n: np.ndarray, Charge density of down electrons.</span>
+<span class="sd">    |     up_p: np.ndarray, Charge density matrix of up electrons.</span>
+<span class="sd">    |     down_p: np.ndarray, Charge density matrix of down electrons.</span>
+<span class="sd">    |     K: np.ndarray, Single-particle kinetic energy operator [If None this will be computed from s]. (default = None)</span>
+<span class="sd">    |     Vext: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">K</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">kinetic_energy_operator</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Vext</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Vext</span> <span class="o">=</span> <span class="n">external_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">K</span> <span class="o">+</span> <span class="n">Vext</span>
+    <span class="k">return</span> <span class="n">H</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">H</span></div>
+
+
+<div class="viewcode-block" id="total_energy"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.non_interacting.total_energy">[docs]</a><span class="k">def</span> <span class="nf">total_energy</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the total energy of a non_interacting state.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     state: iDEA.state.SingleBodyState, State. (default = None)</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     E: float, Total energy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">single_particle_energy</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="add_occupations"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.non_interacting.add_occupations">[docs]</a><span class="k">def</span> <span class="nf">add_occupations</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the occpuations of a state in a given energy excitation.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     state: iDEA.state.SingleBodyState, State.</span>
+<span class="sd">    |     k: int, Excitation state [k = 0 is the ground-state].</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     state: iDEA.state.SingleBodyState, State with occupations added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate the max level or orbitals needed to achieve required state and only use these.</span>
+    <span class="n">max_level</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">count</span><span class="p">))</span>
+    <span class="n">up_energies</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">energies</span><span class="p">[:</span><span class="n">max_level</span><span class="p">]</span>
+    <span class="n">down_energies</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">energies</span><span class="p">[:</span><span class="n">max_level</span><span class="p">]</span>
+
+    <span class="c1"># Calculate all possible combinations of spin indices.</span>
+    <span class="n">up_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">max_level</span><span class="p">),</span> <span class="n">s</span><span class="o">.</span><span class="n">up_count</span><span class="p">))</span>
+    <span class="n">down_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">max_level</span><span class="p">),</span> <span class="n">s</span><span class="o">.</span><span class="n">down_count</span><span class="p">))</span>
+
+    <span class="c1"># Construct all possible occupations.</span>
+    <span class="n">up_occupations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">up_index</span> <span class="ow">in</span> <span class="n">up_indices</span><span class="p">:</span>
+        <span class="n">up_occupation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">up_energies</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">up_occupation</span><span class="p">,</span> <span class="n">up_index</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">s</span><span class="o">.</span><span class="n">up_count</span><span class="p">)</span>
+        <span class="n">up_occupations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">up_occupation</span><span class="p">)</span>
+    <span class="n">down_occupations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">down_index</span> <span class="ow">in</span> <span class="n">down_indices</span><span class="p">:</span>
+        <span class="n">down_occupation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">down_energies</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">down_occupation</span><span class="p">,</span> <span class="n">down_index</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">s</span><span class="o">.</span><span class="n">down_count</span><span class="p">)</span>
+        <span class="n">down_occupations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">down_occupation</span><span class="p">)</span>
+    <span class="n">occupations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">up_occupations</span><span class="p">,</span> <span class="n">down_occupations</span><span class="p">))</span>
+
+    <span class="c1"># Calculate the energies of all possible occpuations.</span>
+    <span class="n">energies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">occupation</span> <span class="ow">in</span> <span class="n">occupations</span><span class="p">:</span>
+        <span class="n">state_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">state_copy</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">state_copy</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">energies</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">state_copy</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupations</span><span class="p">[:</span><span class="n">max_level</span><span class="p">]</span> <span class="o">=</span> <span class="n">occupation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">state_copy</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">state_copy</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">energies</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">state_copy</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupations</span><span class="p">[:</span><span class="n">max_level</span><span class="p">]</span> <span class="o">=</span> <span class="n">occupation</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">single_particle_energy</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state_copy</span><span class="p">)</span>
+        <span class="n">energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+
+    <span class="c1"># Choose the correct energy index.</span>
+    <span class="n">energy_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">energies</span><span class="p">)[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="c1"># Construct correct occupations.</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">state_copy</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">energies</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupations</span><span class="p">[:</span><span class="n">max_level</span><span class="p">]</span> <span class="o">=</span> <span class="n">occupations</span><span class="p">[</span><span class="n">energy_index</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupied</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupations</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">state_copy</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">energies</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupations</span><span class="p">[:</span><span class="n">max_level</span><span class="p">]</span> <span class="o">=</span> <span class="n">occupations</span><span class="p">[</span><span class="n">energy_index</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupied</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupations</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">state</span></div>
+
+
+<div class="viewcode-block" id="sc_step"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.non_interacting.sc_step">[docs]</a><span class="k">def</span> <span class="nf">sc_step</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">,</span>
+    <span class="n">up_H</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">down_H</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs a single step of the self-consistent cycle.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     state: iDEA.state.SingleBodyState, Previous state.</span>
+<span class="sd">    |     up_H: np.ndarray, Hamiltonian for up electrons.</span>
+<span class="sd">    |     down_H: np.ndarray, Hamiltonian for down electrons.</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     state: iDEA.state.SingleBodyState, New state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Solve the non-interacting Schrodinger equation.</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">energies</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">orbitals</span> <span class="o">=</span> <span class="n">spla</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">up_H</span><span class="p">)</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">energies</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">orbitals</span> <span class="o">=</span> <span class="n">spla</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">down_H</span><span class="p">)</span>
+
+    <span class="c1"># Normalise orbitals.</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">orbitals</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">orbitals</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">orbitals</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">orbitals</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">state</span></div>
+
+
+<div class="viewcode-block" id="solve"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.non_interacting.solve">[docs]</a><span class="k">def</span> <span class="nf">solve</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span>
+    <span class="n">hamiltonian_function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">restricted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">mixing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">initial</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;non_interacting&quot;</span><span class="p">,</span>
+    <span class="n">silent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solves the Schrodinger equation for the given system.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)</span>
+<span class="sd">    |     k: int, Energy state to solve for. (default = 0, the ground-state)</span>
+<span class="sd">    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)</span>
+<span class="sd">    |     mixing: float, Mixing parameter. (default = 0.5)</span>
+<span class="sd">    |     tol: float, Tollerance of convergence. (default = 1e-10)</span>
+<span class="sd">    |     initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)</span>
+<span class="sd">    |     name: str, Name of method. (default = &quot;non_interacting&quot;)</span>
+<span class="sd">    |     silent: bool, Set to true to prevent printing. (default = False)</span>
+
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     state: iDEA.state.SingleBodyState, Solved state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Construct the single-body state.</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">()</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupations</span><span class="p">[:</span> <span class="n">s</span><span class="o">.</span><span class="n">up_count</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupations</span><span class="p">[:</span> <span class="n">s</span><span class="o">.</span><span class="n">down_count</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="c1"># Determine the Hamiltonian function.</span>
+    <span class="k">if</span> <span class="n">hamiltonian_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hamiltonian_function</span> <span class="o">=</span> <span class="n">hamiltonian</span>
+
+    <span class="c1"># Construct the initial values.</span>
+    <span class="k">if</span> <span class="n">initial</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">n_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">up_n_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">down_n_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">p_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">up_p_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">down_p_old</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n_old</span> <span class="o">=</span> <span class="n">initial</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">up_n_old</span> <span class="o">=</span> <span class="n">initial</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">down_n_old</span> <span class="o">=</span> <span class="n">initial</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">p_old</span> <span class="o">=</span> <span class="n">initial</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">up_p_old</span> <span class="o">=</span> <span class="n">initial</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">down_p_old</span> <span class="o">=</span> <span class="n">initial</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+    <span class="c1"># Construct the initial Hamiltonian. (And break the symmetry.)</span>
+    <span class="n">H_old</span><span class="p">,</span> <span class="n">up_H_old</span><span class="p">,</span> <span class="n">down_H_old</span> <span class="o">=</span> <span class="n">hamiltonian_function</span><span class="p">(</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">up_n_old</span><span class="p">,</span> <span class="n">down_n_old</span><span class="p">,</span> <span class="n">up_p_old</span><span class="p">,</span> <span class="n">down_p_old</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span>
+    <span class="n">H</span><span class="p">,</span> <span class="n">up_H</span><span class="p">,</span> <span class="n">down_H</span> <span class="o">=</span> <span class="n">hamiltonian_function</span><span class="p">(</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">up_n_old</span><span class="p">,</span> <span class="n">down_n_old</span><span class="p">,</span> <span class="n">up_p_old</span><span class="p">,</span> <span class="n">down_p_old</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span>
+    <span class="n">down_H</span> <span class="o">+=</span> <span class="n">sps</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span>
+        <span class="mf">1e-12</span> <span class="o">*</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]),</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+
+    <span class="c1"># Apply restriction.</span>
+    <span class="k">if</span> <span class="n">restricted</span><span class="p">:</span>
+        <span class="n">up_H_old</span> <span class="o">=</span> <span class="n">H_old</span>
+        <span class="n">down_H_old</span> <span class="o">=</span> <span class="n">H_old</span>
+        <span class="n">up_H</span> <span class="o">=</span> <span class="n">H</span>
+        <span class="n">down_H</span> <span class="o">=</span> <span class="n">H</span>
+
+    <span class="c1"># Run self-consitent algorithm.</span>
+    <span class="n">convergence</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">convergence</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">:</span>
+
+        <span class="c1"># Perform single self-consistent step.</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">sc_step</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">up_H</span><span class="p">,</span> <span class="n">down_H</span><span class="p">)</span>
+
+        <span class="c1"># Update values.</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">up_n</span><span class="p">,</span> <span class="n">down_n</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">return_spins</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">up_p</span><span class="p">,</span> <span class="n">down_p</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">density_matrix</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">return_spins</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Perform mixing.</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_old</span>
+            <span class="n">up_n</span> <span class="o">=</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">up_n</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">up_n_old</span>
+            <span class="n">down_n</span> <span class="o">=</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">down_n</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">down_n_old</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">p</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">p_old</span>
+            <span class="n">up_p</span> <span class="o">=</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">up_p</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">up_p_old</span>
+            <span class="n">down_p</span> <span class="o">=</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">down_p</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">down_p_old</span>
+
+        <span class="c1"># Construct the new Hamiltonian.</span>
+        <span class="n">H</span><span class="p">,</span> <span class="n">up_H</span><span class="p">,</span> <span class="n">down_H</span> <span class="o">=</span> <span class="n">hamiltonian_function</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">up_n</span><span class="p">,</span> <span class="n">down_n</span><span class="p">,</span> <span class="n">up_p</span><span class="p">,</span> <span class="n">down_p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Apply restriction.</span>
+        <span class="k">if</span> <span class="n">restricted</span><span class="p">:</span>
+            <span class="n">up_H_old</span> <span class="o">=</span> <span class="n">H_old</span>
+            <span class="n">down_H_old</span> <span class="o">=</span> <span class="n">H_old</span>
+            <span class="n">up_H</span> <span class="o">=</span> <span class="n">H</span>
+            <span class="n">down_H</span> <span class="o">=</span> <span class="n">H</span>
+
+        <span class="c1"># Test for convergence.</span>
+        <span class="n">convergence</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">n_old</span><span class="p">))</span> <span class="o">*</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span>
+
+        <span class="c1"># Update old values.</span>
+        <span class="n">n_old</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="n">up_n_old</span> <span class="o">=</span> <span class="n">up_n</span>
+        <span class="n">down_n_old</span> <span class="o">=</span> <span class="n">down_n</span>
+        <span class="n">p_old</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="n">up_p_old</span> <span class="o">=</span> <span class="n">up_p</span>
+        <span class="n">down_p_old</span> <span class="o">=</span> <span class="n">down_p</span>
+
+        <span class="c1"># Update terminal.</span>
+        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;iDEA.methods.</span><span class="si">{0}</span><span class="s2">.solve: convergence = </span><span class="si">{1:.5}</span><span class="s2">, tollerance = </span><span class="si">{2:.5}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">name</span><span class="p">,</span> <span class="n">convergence</span><span class="p">,</span> <span class="n">tol</span>
+                <span class="p">),</span>
+                <span class="n">end</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Compute state occupations.</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">add_occupations</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">state</span></div>
+
+
+<div class="viewcode-block" id="propagate_step"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.non_interacting.propagate_step">[docs]</a><span class="k">def</span> <span class="nf">propagate_step</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span>
+    <span class="n">evolution</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyEvolution</span><span class="p">,</span>
+    <span class="n">j</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">hamiltonian_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">v_ptrb</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">restricted</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Propagate a set of orbitals forward in time due to a dynamic local pertubation.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     evolution: iDEA.state.SingleBodyEvolution, Time-dependent evolution.</span>
+<span class="sd">    |     j: int, Time index to step to.</span>
+<span class="sd">    |     hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)</span>
+<span class="sd">    |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].</span>
+<span class="sd">    |     dt: float, Timestep.</span>
+<span class="sd">    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     evolution: iDEA.state.SingleBodyEvolution, Time-dependent evolution solved at time index j from j-1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">up_n</span><span class="p">,</span> <span class="n">down_n</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">density</span><span class="p">(</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">evolution</span><span class="o">=</span><span class="n">evolution</span><span class="p">,</span> <span class="n">time_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">return_spins</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">up_p</span><span class="p">,</span> <span class="n">down_p</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">density_matrix</span><span class="p">(</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">evolution</span><span class="o">=</span><span class="n">evolution</span><span class="p">,</span> <span class="n">time_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">return_spins</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">H</span><span class="p">,</span> <span class="n">up_H</span><span class="p">,</span> <span class="n">down_H</span> <span class="o">=</span> <span class="n">hamiltonian_function</span><span class="p">(</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">up_n</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">down_n</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">up_p</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">down_p</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">up_H</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">up_H</span><span class="p">)</span>
+    <span class="n">down_H</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">down_H</span><span class="p">)</span>
+    <span class="n">Vptrb</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">diags</span><span class="p">(</span><span class="n">v_ptrb</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+
+    <span class="c1"># Apply restriction.</span>
+    <span class="k">if</span> <span class="n">restricted</span><span class="p">:</span>
+        <span class="n">up_H</span> <span class="o">=</span> <span class="n">H</span>
+        <span class="n">down_H</span> <span class="o">=</span> <span class="n">H</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">evolution</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupied</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">up_O</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">up_H</span> <span class="o">+</span> <span class="n">Vptrb</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="n">evolution</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">spsla</span><span class="o">.</span><span class="n">expm_multiply</span><span class="p">(</span>
+            <span class="n">up_O</span><span class="p">,</span> <span class="n">evolution</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">npla</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">evolution</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
+        <span class="n">evolution</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/=</span> <span class="n">norm</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">evolution</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupied</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">down_O</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">down_H</span> <span class="o">+</span> <span class="n">Vptrb</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="n">evolution</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">spsla</span><span class="o">.</span><span class="n">expm_multiply</span><span class="p">(</span>
+            <span class="n">down_O</span><span class="p">,</span> <span class="n">evolution</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">npla</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">evolution</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
+        <span class="n">evolution</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/=</span> <span class="n">norm</span>
+
+    <span class="k">return</span> <span class="n">evolution</span></div>
+
+
+<div class="viewcode-block" id="propagate"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.non_interacting.propagate">[docs]</a><span class="k">def</span> <span class="nf">propagate</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">,</span>
+    <span class="n">v_ptrb</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">hamiltonian_function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">restricted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;non_interacting&quot;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyEvolution</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Propagate a set of orbitals forward in time due to a dynamic local pertubation.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |    s: iDEA.system.System, System object.  </span>
+<span class="sd">    |    state: iDEA.state.SingleBodyState, State to be propigated. </span>
+<span class="sd">    |    v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space]. </span>
+<span class="sd">    |    t: np.ndarray, Grid of time values. \n</span>
+<span class="sd">    |    hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None) </span>
+<span class="sd">    |    restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False) </span>
+<span class="sd">    |    name: str, Name of method. (default = &quot;non_interacting&quot;) </span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |    evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Determine the Hamiltonian function.</span>
+    <span class="k">if</span> <span class="n">hamiltonian_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hamiltonian_function</span> <span class="o">=</span> <span class="n">hamiltonian</span>
+
+    <span class="c1"># Construct the unperturbed Hamiltonian.</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">up_n</span><span class="p">,</span> <span class="n">down_n</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">return_spins</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">up_p</span><span class="p">,</span> <span class="n">down_p</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">density_matrix</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">return_spins</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">H</span><span class="p">,</span> <span class="n">up_H</span><span class="p">,</span> <span class="n">down_H</span> <span class="o">=</span> <span class="n">hamiltonian_function</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">up_n</span><span class="p">,</span> <span class="n">down_n</span><span class="p">,</span> <span class="n">up_p</span><span class="p">,</span> <span class="n">down_p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">up_H</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">up_H</span><span class="p">)</span>
+    <span class="n">down_H</span> <span class="o">=</span> <span class="n">sps</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">down_H</span><span class="p">)</span>
+    <span class="n">down_H</span> <span class="o">+=</span> <span class="n">sps</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="mf">1e-12</span> <span class="o">*</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]),</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># Apply restriction.</span>
+    <span class="k">if</span> <span class="n">restricted</span><span class="p">:</span>
+        <span class="n">up_H</span> <span class="o">=</span> <span class="n">H</span>
+        <span class="n">down_H</span> <span class="o">=</span> <span class="n">H</span>
+
+    <span class="c1"># Compute timestep.</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Initilise the single-body time-dependent evolution.</span>
+    <span class="n">evolution</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyEvolution</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+    <span class="n">evolution</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">td_orbitals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupied</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span>
+    <span class="p">)</span>
+    <span class="n">evolution</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">td_orbitals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupied</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span>
+    <span class="p">)</span>
+    <span class="n">evolution</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">orbitals</span><span class="p">[:,</span> <span class="n">state</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupied</span><span class="p">]</span>
+    <span class="n">evolution</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">td_orbitals</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">orbitals</span><span class="p">[:,</span> <span class="n">state</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupied</span><span class="p">]</span>
+    <span class="n">evolution</span><span class="o">.</span><span class="n">v_ptrb</span> <span class="o">=</span> <span class="n">v_ptrb</span>
+    <span class="n">evolution</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t</span>
+
+    <span class="c1"># Propagate.</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">ti</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+        <span class="n">tqdm</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;iDEA.methods.</span><span class="si">{}</span><span class="s2">.propagate: propagating state&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">evolution</span> <span class="o">=</span> <span class="n">propagate_step</span><span class="p">(</span>
+                <span class="n">s</span><span class="p">,</span> <span class="n">evolution</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">hamiltonian_function</span><span class="p">,</span> <span class="n">v_ptrb</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">restricted</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">evolution</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, iDEA Developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

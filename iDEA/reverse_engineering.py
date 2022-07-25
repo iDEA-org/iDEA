@@ -30,21 +30,21 @@ def reverse(
     the output is the Kohn-Sham system.
 
     The iterative method used is defined by the following formula:
-    V_\mathrm{ext} \rightarrow \mu * (\mathrm{n}^p - \mathrm{target_n}^p)
+    .. math:: \mathrm{V}_\mathrm{ext} \rightarrow \mu * (\mathrm{n}^p - \mathrm{target_n}^p)
 
-    Args:
-        s: iDEA.system.System, System object.
-        target_n: np.ndarray, Target density to reverse engineer.
-        method: Container, The method used to solve the system.
-        v_guess: np.ndarray, The initial guess of the fictitious potential. (default = None)
-        mu: float = 1.0, Reverse engineering parameter mu. (default = 1.0)
-        pe: float = 0.1, Reverse engineering parameter p. (default = 0.1)
-        tol: float, Tollerance of convergence. (default = 1e-12)
-        silent: bool, Set to true to prevent printing. (default = False)
-        kwargs: Other arguments that will be given to the method's solve function.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     target_n: np.ndarray, Target density to reverse engineer.
+    |     method: Container, The method used to solve the system.
+    |     v_guess: np.ndarray, The initial guess of the fictitious potential. (default = None)
+    |     mu: float = 1.0, Reverse engineering parameter mu. (default = 1.0)
+    |     pe: float = 0.1, Reverse engineering parameter p. (default = 0.1)
+    |     tol: float, Tollerance of convergence. (default = 1e-12)
+    |     silent: bool, Set to true to prevent printing. (default = False)
+    |     kwargs: Other arguments that will be given to the method's solve function.
 
-    Returns:
-        s_fictitious: iDEA.system.System, fictitious system object.
+    | Returns:
+    |     s_fictitious: iDEA.system.System, fictitious system object.
     """
     s_fictitious = copy.deepcopy(s)
     if v_guess is not None:
@@ -97,19 +97,19 @@ def _residual(
     r"""
     The residual function used to optimise each time step of the time dependent reverse propagation.
 
-    Args:
-        v: iDEA.system.System, Potential adjusted during optimisation.
-        s_fictitious: iDEA.system.System, Fictitious system.
-        evolution_fictitious: iDEA.system.Evolution, Fictitious evolution.
-        j: int float = 1.0, Time index.
-        method: Container: float = 0.1, The method used to solve the system.
-        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
-        dt: float, bool, Timestep.
-        restricted: bool, Is the calculation restricted (r) on unrestricted (u).
-        target_n: np.ndarray, Target density.
+    | Args:
+    |     v: iDEA.system.System, Potential adjusted during optimisation.
+    |     s_fictitious: iDEA.system.System, Fictitious system.
+    |     evolution_fictitious: iDEA.system.Evolution, Fictitious evolution.
+    |     j: int float = 1.0, Time index.
+    |     method: Container: float = 0.1, The method used to solve the system.
+    |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+    |     dt: float, bool, Timestep.
+    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u).
+    |     target_n: np.ndarray, Target density.
 
-    Returns:
-        residual: np.ndarray, Error in propagation to be minimised.
+    | Returns:
+    |     residual: np.ndarray, Error in propagation to be minimised.
     """
     v_td = np.zeros_like(v_ptrb)
     v_td[j, :] = v[:]
@@ -142,19 +142,19 @@ def reverse_propagation(
     If the given target density is from solving the interacting electron problem (iDEA.methods.interacting), and the method is the non-interacting electron solver (iDEA.methods.non_interacting)
     the output is the Kohn-Sham system.
 
-    Args:
-        s_fictitious: iDEA.system.System, System object.
-        state_fictitious: iDEA.state.State, Fictitious initial state.
-        target_n: np.ndarray, Target density to reverse engineer.
-        method: Container, The method used to solve the system.
-        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
-        t: np.ndarray, Grid of time values.
-        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default = False)
-        tol: float, Tollerance of convergence. (default = 1e-10)
-        kwargs: Other arguments that will be given to the method's solve function.
+    | Args:
+    |     s_fictitious: iDEA.system.System, System object.
+    |     state_fictitious: iDEA.state.State, Fictitious initial state.
+    |     target_n: np.ndarray, Target density to reverse engineer.
+    |     method: Container, The method used to solve the system.
+    |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+    |     t: np.ndarray, Grid of time values.
+    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default = False)
+    |     tol: float, Tollerance of convergence. (default = 1e-10)
+    |     kwargs: Other arguments that will be given to the method's solve function.
 
-    Returns:
-        evolution_fictitious, error: iDEA.system.Evolution, fictitious evolution object along with time dependent error.
+    | Returns:
+    |     evolution_fictitious, error: iDEA.system.Evolution, fictitious evolution object along with time dependent error.
     """
     # Determine the Hamiltonian function.
     hamiltonian_function = method.hamiltonian

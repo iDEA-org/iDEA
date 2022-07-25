@@ -18,18 +18,18 @@ def observable(
     ] = None,
     return_spins: bool = False,
 ) -> Union[float, np.ndarray]:
-    """
+    r"""
     Compute an observable based on a given operator and state or evolution.
 
-    Args:
-        s: iDEA.system.System, System object.
-        observable_operator: np.ndarray, Obserbable operator.
-        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
-        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-        return_spins: bool, True to also return the spin observables: total, up, down. (default = False)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     observable_operator: np.ndarray, Obserbable operator.
+    |     state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+    |     evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+    |     return_spins: bool, True to also return the spin observables: total, up, down. (default = False)
 
-    Returns:
-        observable: float or np.ndarray, Observable.
+    | Returns:
+    |     observable: float or np.ndarray, Observable.
     """
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         raise NotImplementedError()
@@ -108,18 +108,18 @@ def density(
     time_indices: np.ndarray = None,
     return_spins: bool = False,
 ) -> np.ndarray:
-    """
+    r"""
     Compute the charge density of a non_interacting state.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
-        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-        time_indices: np.ndarray, Time indices to compute observable if given evolution. If None will perform for all time indices. (default = None)
-        return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+    |     evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+    |     time_indices: np.ndarray, Time indices to compute observable if given evolution. If None will perform for all time indices. (default = None)
+    |     return_spins: bool, True to also return the spin densities: total, up, down. (default = False)
 
-    Returns:
-        n: np.ndarray, Charge density, or evolution of charge density.
+    | Returns:
+    |     n: np.ndarray, Charge density, or evolution of charge density.
     """
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         spin_densities = np.zeros(shape=(s.x.shape[0], 2))
@@ -229,18 +229,18 @@ def density_matrix(
     time_indices: np.ndarray = None,
     return_spins: bool = False,
 ) -> np.ndarray:
-    """
+    r"""
     Compute the charge density matrix of a non_interacting state.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
-        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-        time_indices: np.ndarray, Time indices to compute observable if given evolution. If None will perform for all time indices. (default = None)
-        return_spins: bool, True to also return the spin density matrices: total, up, down. (default = False)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+    |     evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+    |     time_indices: np.ndarray, Time indices to compute observable if given evolution. If None will perform for all time indices. (default = None)
+    |     return_spins: bool, True to also return the spin density matrices: total, up, down. (default = False)
 
-    Returns:
-        p: np.ndarray, Charge density matrix, or evolution of charge density matrix.
+    | Returns:
+    |     p: np.ndarray, Charge density matrix, or evolution of charge density matrix.
     """
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         tosum = list(range(2, s.count * 2))
@@ -371,16 +371,16 @@ def kinetic_energy(
     state: iDEA.state.SingleBodyState = None,
     evolution: iDEA.state.SingleBodyEvolution = None,
 ) -> Union[float, np.ndarray]:
-    """
+    r"""
     Compute the kinetic energy of a non_interacting state.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState, State. (default = None)
-        evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState, State. (default = None)
+    |     evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
 
-    Returns:
-        E_k: float or np.ndarray, Kinetic energy, or evolution of kinetic energy.
+    | Returns:
+    |     E_k: float or np.ndarray, Kinetic energy, or evolution of kinetic energy.
     """
     if state is not None and type(state) == iDEA.state.ManyBodyState:
         K = iDEA.methods.interacting.kinetic_energy_operator(s)
@@ -403,14 +403,14 @@ def kinetic_energy(
 
 
 def external_potential(s: iDEA.system.System) -> np.ndarray:
-    """
+    r"""
     Compute the external potential.
 
-    Args:
-        s: iDEA.system.System, System object.
+    | Args:
+    |     s: iDEA.system.System, System object.
 
-    Returns:
-        v_ext: np.ndarray, External potential of the system.
+    | Returns:
+    |     v_ext: np.ndarray, External potential of the system.
     """
     return s.v_ext
 
@@ -418,16 +418,16 @@ def external_potential(s: iDEA.system.System) -> np.ndarray:
 def external_energy(
     s: iDEA.system.System, n: np.ndarray, v_ext: np.ndarray
 ) -> Union[float, np.ndarray]:
-    """
+    r"""
     Compute the external energy from a density and external potential.
 
     Args:
-        s: iDEA.system.System, System object.
-        n: np.ndarray, Charge density of the system.
-        v_ext: np.ndarray, External potential of the system.
+    |     s: iDEA.system.System, System object.
+    |     n: np.ndarray, Charge density of the system.
+    |     v_ext: np.ndarray, External potential of the system.
 
     Returns:
-        E_ext: float or np.ndarray, External energy, or evolution of external energy.
+    |     E_ext: float or np.ndarray, External energy, or evolution of external energy.
     """
     if len(n.shape) == 1:
         E_ext = np.dot(n, v_ext) * s.dx
@@ -444,15 +444,15 @@ def external_energy(
 
 
 def hartree_potential(s: iDEA.system.System, n: np.ndarray) -> np.ndarray:
-    """
+    r"""
     Compute the Hartree potential from a density.
 
-    Args:
-        s: iDEA.system.System, System object.
-        n: np.ndarray, Charge density of the system.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     n: np.ndarray, Charge density of the system.
 
-    Returns:
-        v_h: np.ndarray, Hartree potential, or evolution of Hartree potential.
+    | Returns:
+    |     v_h: np.ndarray, Hartree potential, or evolution of Hartree potential.
     """
     if len(n.shape) == 1:
         v_h = np.dot(n, s.v_int) * s.dx
@@ -471,17 +471,17 @@ def hartree_potential(s: iDEA.system.System, n: np.ndarray) -> np.ndarray:
 def hartree_energy(
     s: iDEA.system.System, n: np.ndarray, v_h: np.ndarray
 ) -> Union[float, np.ndarray]:
-    """
+    r"""
     Compute the Hartree energy from a density and Hartree potential.
 
-    Args:
-        s: iDEA.system.System, System object.
-        n: np.ndarray, Charge density of the system.
-        v_h: np.ndarray, Hartree potential of the system.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     n: np.ndarray, Charge density of the system.
+    |     v_h: np.ndarray, Hartree potential of the system.
 
 
-    Returns:
-        E_h: float or np.ndarray, Hartree energy, or evolution of Hartree energy.
+    | Returns:
+    |     E_h: float or np.ndarray, Hartree energy, or evolution of Hartree energy.
     """
     if len(n.shape) == 1:
         E_h = 0.5 * np.dot(n, v_h) * s.dx
@@ -498,15 +498,15 @@ def hartree_energy(
 
 
 def exchange_potential(s: iDEA.system.System, p: np.ndarray) -> np.ndarray:
-    """
+    r"""
     Compute the exchange potential from a density matrix.
 
-    Args:
-        s: iDEA.system.System, System object.
-        p: np.ndarray, Density matrix of the system.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     p: np.ndarray, Density matrix of the system.
 
-    Returns:
-        v_x: np.ndarray, Exchange potential, or evolution of exchange potential.
+    | Returns:
+    |     v_x: np.ndarray, Exchange potential, or evolution of exchange potential.
     """
     if len(p.shape) == 2:
         v_x = -p * s.v_int
@@ -525,16 +525,16 @@ def exchange_potential(s: iDEA.system.System, p: np.ndarray) -> np.ndarray:
 def exchange_energy(
     s: iDEA.system.System, p: np.ndarray, v_x: np.ndarray
 ) -> Union[float, np.ndarray]:
-    """
+    r"""
     Compute the exchange energy from a density matrix and exchange potential.
 
-    Args:
-        s: iDEA.system.System, System object.
-        p: np.ndarray, Density matrix of the system.
-        v_x: np.ndarray, Exchange potential of the system.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     p: np.ndarray, Density matrix of the system.
+    |     v_x: np.ndarray, Exchange potential of the system.
 
-    Returns:
-        E_x: float or np.ndarray, Exchange energy, or evolution of exchange energy.
+    | Returns:
+    |     E_x: float or np.ndarray, Exchange energy, or evolution of exchange energy.
     """
     if len(p.shape) == 2:
         E_x = 0.5 * np.tensordot(p, v_x, axes=2) * s.dx * s.dx
@@ -553,15 +553,15 @@ def exchange_energy(
 def single_particle_energy(
     s: iDEA.system.System, state: iDEA.state.SingleBodyState
 ) -> float:
-    """
+    r"""
     Compute the single particle energy of a single particle state.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState, State.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState, State.
 
-    Returns:
-        E: float, Single particle energy.
+    | Returns:
+    |     E: float, Single particle energy.
     """
     return np.sum(state.up.energies[:] * state.up.occupations[:]) + np.sum(
         state.down.energies[:] * state.down.occupations[:]
@@ -577,17 +577,17 @@ def _placeholder(
     return_spins: bool = False,
 ) -> Union[float, np.ndarray]:
 
-    """
+    r"""
     Placeholer function. Use this as a template when constructing observable methods.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
-        evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-        return_spins: bool, True to also return the spin placeholer: total, up, down. (default = False)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+    |     evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+    |     return_spins: bool, True to also return the spin placeholer: total, up, down. (default = False)
 
-    Returns:
-        observable: float or np.ndarray, Placeholer.
+    | Returns:
+    |     observable: float or np.ndarray, Placeholer.
     """
     if state is not None and type(state) == iDEA.state.SingleBodyState:
         raise NotImplementedError()

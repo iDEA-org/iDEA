@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iDEA.methods.hartree_fock &mdash; iDEA 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> iDEA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">iDEA</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">iDEA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../methods.html">iDEA.methods</a> &raquo;</li>
+      <li>iDEA.methods.hartree_fock</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for iDEA.methods.hartree_fock</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Contains all Hartree Fock functionality and solvers.&quot;&quot;&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">iDEA.system</span>
+<span class="kn">import</span> <span class="nn">iDEA.state</span>
+<span class="kn">import</span> <span class="nn">iDEA.observables</span>
+<span class="kn">import</span> <span class="nn">iDEA.methods.non_interacting</span>
+<span class="kn">import</span> <span class="nn">iDEA.methods.hartree</span>
+
+
+<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;hartree_fock&quot;</span>
+
+
+<span class="n">kinetic_energy_operator</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">methods</span><span class="o">.</span><span class="n">non_interacting</span><span class="o">.</span><span class="n">kinetic_energy_operator</span>
+<span class="n">external_potential_operator</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">methods</span><span class="o">.</span><span class="n">non_interacting</span><span class="o">.</span><span class="n">external_potential_operator</span>
+<span class="n">hartree_potential_operator</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">methods</span><span class="o">.</span><span class="n">hartree</span><span class="o">.</span><span class="n">hartree_potential_operator</span>
+
+
+<div class="viewcode-block" id="exchange_potential_operator"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.hartree_fock.exchange_potential_operator">[docs]</a><span class="k">def</span> <span class="nf">exchange_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the exchange potential operator.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     p: np.ndarray, Charge density matrix.</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     Vx: np.ndarray, Exchange potential energy operator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">v_x</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">exchange_potential</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">Vx</span> <span class="o">=</span> <span class="n">v_x</span> <span class="o">*</span> <span class="n">s</span><span class="o">.</span><span class="n">dx</span>
+    <span class="k">return</span> <span class="n">Vx</span></div>
+
+
+<div class="viewcode-block" id="hamiltonian"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.hartree_fock.hamiltonian">[docs]</a><span class="k">def</span> <span class="nf">hamiltonian</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span>
+    <span class="n">up_n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">down_n</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">up_p</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">down_p</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">K</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">Vext</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Hamiltonian from the kinetic and potential terms.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     up_n: np.ndarray, Charge density of up electrons.</span>
+<span class="sd">    |     down_n: np.ndarray, Charge density of down electrons.</span>
+<span class="sd">    |     up_p: np.ndarray, Charge density matrix of up electrons.</span>
+<span class="sd">    |     down_p: np.ndarray, Charge density matrix of down electrons.</span>
+<span class="sd">    |     K: np.ndarray, Single-particle kinetic energy operator [If None this will be computed from s]. (default = None)</span>
+<span class="sd">    |     Vext: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">K</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">kinetic_energy_operator</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Vext</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Vext</span> <span class="o">=</span> <span class="n">external_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">Vh</span> <span class="o">=</span> <span class="n">hartree_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">up_n</span> <span class="o">+</span> <span class="n">down_n</span><span class="p">)</span>
+    <span class="n">Vx</span> <span class="o">=</span> <span class="n">exchange_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">up_p</span> <span class="o">+</span> <span class="n">down_p</span><span class="p">)</span>
+    <span class="n">up_Vx</span> <span class="o">=</span> <span class="n">exchange_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">up_p</span><span class="p">)</span>
+    <span class="n">down_Vx</span> <span class="o">=</span> <span class="n">exchange_potential_operator</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">down_p</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">K</span> <span class="o">+</span> <span class="n">Vext</span> <span class="o">+</span> <span class="n">Vh</span> <span class="o">+</span> <span class="n">Vx</span>
+    <span class="n">up_H</span> <span class="o">=</span> <span class="n">K</span> <span class="o">+</span> <span class="n">Vext</span> <span class="o">+</span> <span class="n">Vh</span> <span class="o">+</span> <span class="n">up_Vx</span>
+    <span class="n">down_H</span> <span class="o">=</span> <span class="n">K</span> <span class="o">+</span> <span class="n">Vext</span> <span class="o">+</span> <span class="n">Vh</span> <span class="o">+</span> <span class="n">down_Vx</span>
+    <span class="k">return</span> <span class="n">H</span><span class="p">,</span> <span class="n">up_H</span><span class="p">,</span> <span class="n">down_H</span></div>
+
+
+<div class="viewcode-block" id="total_energy"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.hartree_fock.total_energy">[docs]</a><span class="k">def</span> <span class="nf">total_energy</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the total energy.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     state: iDEA.state.SingleBodyState, State. (default = None)</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     E: float, Total energy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">single_particle_energy</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+    <span class="n">v_h</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">hartree_potential</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">E</span> <span class="o">-=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">hartree_energy</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">v_h</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">up_p</span><span class="p">,</span> <span class="n">down_p</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">density_matrix</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">return_spins</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">up_v_x</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">exchange_potential</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">up_p</span><span class="p">)</span>
+    <span class="n">down_v_x</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">exchange_potential</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">down_p</span><span class="p">)</span>
+    <span class="n">E</span> <span class="o">-=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">exchange_energy</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">up_p</span><span class="p">,</span> <span class="n">up_v_x</span><span class="p">)</span>
+    <span class="n">E</span> <span class="o">-=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">exchange_energy</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">down_p</span><span class="p">,</span> <span class="n">down_v_x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">E</span></div>
+
+
+<div class="viewcode-block" id="solve"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.hartree_fock.solve">[docs]</a><span class="k">def</span> <span class="nf">solve</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span>
+    <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">restricted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">mixing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">initial</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">silent</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solves the Schrodinger equation for the given system.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     k: int, Energy state to solve for. (default = 0, the ground-state)</span>
+<span class="sd">    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)</span>
+<span class="sd">    |     mixing: float, Mixing parameter. (default = 0.5)</span>
+<span class="sd">    |     tol: float, Tollerance of convergence. (default = 1e-10)</span>
+<span class="sd">    |     initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)</span>
+<span class="sd">    |     silent: bool, Set to true to prevent printing. (default = False)</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     state: iDEA.state.SingleBodyState, Solved state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">methods</span><span class="o">.</span><span class="n">non_interacting</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">hamiltonian</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">restricted</span><span class="p">,</span> <span class="n">mixing</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">silent</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="propagate"><a class="viewcode-back" href="../../../iDEA.html#iDEA.methods.hartree_fock.propagate">[docs]</a><span class="k">def</span> <span class="nf">propagate</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">System</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyState</span><span class="p">,</span>
+    <span class="n">v_ptrb</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">t</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">hamiltonian_function</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">restricted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">SingleBodyEvolution</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Propagate a set of orbitals forward in time due to a dynamic local pertubation.</span>
+
+<span class="sd">    | Args:</span>
+<span class="sd">    |     s: iDEA.system.System, System object.</span>
+<span class="sd">    |     state: iDEA.state.SingleBodyState, State to be propigated.</span>
+<span class="sd">    |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].</span>
+<span class="sd">    |     t: np.ndarray, Grid of time values.</span>
+<span class="sd">    |     hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)</span>
+<span class="sd">    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)</span>
+
+<span class="sd">    | Returns:</span>
+<span class="sd">    |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">methods</span><span class="o">.</span><span class="n">non_interacting</span><span class="o">.</span><span class="n">propagate</span><span class="p">(</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">v_ptrb</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">hamiltonian</span><span class="p">,</span> <span class="n">restricted</span><span class="p">,</span> <span class="n">name</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, iDEA Developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

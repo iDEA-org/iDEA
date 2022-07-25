@@ -25,17 +25,17 @@ name = "interacting"
 
 
 def kinetic_energy_operator(s: iDEA.system.System) -> sps.dia_matrix:
-    """
+    r"""
     Compute many-particle kinetic energy operator as a matrix.
 
     This is built using a given number of finite differences to represent the second derivative.
     The number of differences taken is defined in s.stencil.
 
-    Args:
-        s: iDEA.system.System, System object.
+    | Args:
+    |     s: iDEA.system.System, System object.
 
-    Returns:
-        K: sps.dia_matrix, Kintetic energy operator.
+    | Returns:
+    |     K: sps.dia_matrix, Kintetic energy operator.
     """
     k = iDEA.methods.non_interacting.kinetic_energy_operator(s)
     k = sps.dia_matrix(k)
@@ -57,14 +57,14 @@ def kinetic_energy_operator(s: iDEA.system.System) -> sps.dia_matrix:
 
 
 def external_potential_operator(s: iDEA.system.System) -> sps.dia_matrix:
-    """
+    r"""
     Compute many-particle external potential energy operator as a matrix.
 
-    Args:
-        s: iDEA.system.System, System object.
+    | Args:
+    |     s: iDEA.system.System, System object.
 
-    Returns:
-        Vext: sps.dia_matrix, External potential operator.
+    | Returns:
+    |     Vext: sps.dia_matrix, External potential operator.
     """
     vext = iDEA.methods.non_interacting.external_potential_operator(s)
     vext = sps.dia_matrix(vext)
@@ -86,14 +86,14 @@ def external_potential_operator(s: iDEA.system.System) -> sps.dia_matrix:
 
 
 def hamiltonian(s: iDEA.system.System) -> sps.dia_matrix:
-    """
+    r"""
     Compute the many-body Hamiltonian.
 
-    Args:
-        s: iDEA.system.System, System object.
+    | Args:
+    |     s: iDEA.system.System, System object.
 
-    Returns:
-        H: sps.dia_matrix, Hamiltonian.
+    | Returns:
+    |     H: sps.dia_matrix, Hamiltonian.
     """
     # Construct the non-interacting part of the many-body Hamiltonian
     h = iDEA.methods.non_interacting.hamiltonian(s)[0]
@@ -136,28 +136,28 @@ def hamiltonian(s: iDEA.system.System) -> sps.dia_matrix:
 
 
 def total_energy(s: iDEA.system.System, state: iDEA.state.ManyBodyState) -> float:
-    """
+    r"""
     Compute the total energy of an interacting state.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.ManyBodyState, State.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.ManyBodyState, State.
 
-    Returns:
-        E: float, Total energy.
+    | Returns:
+    |     E: float, Total energy.
     """
     return state.energy
 
 
 def _permutation_parity(p):
-    """
+    r"""
     Compute the permulation paritiy of a given permutation.
 
-    Args:
-        p: tuple, Permutation.
+    | Args:
+    |     p: tuple, Permutation.
 
-    Returns:
-        parity: float, Permutation parity.
+    | Returns:
+    |     parity: float, Permutation parity.
     """
     p = list(p)
     parity = 1
@@ -170,20 +170,20 @@ def _permutation_parity(p):
 
 
 def antisymmetrize(s, spaces, spins, energies):
-    """
+    r"""
     Antisymmetrize the solution to the Schrodinger equation.
 
-    Args:
-        s: iDEA.system.System, System object.
-        spaces: np.ndarray, Spatial parts of the wavefunction.
-        spins: np.ndarray, Spin parts of the wavefunction.
-        energies: np.ndarray, Energies.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     spaces: np.ndarray, Spatial parts of the wavefunction.
+    |     spins: np.ndarray, Spin parts of the wavefunction.
+    |     energies: np.ndarray, Energies.
 
-    Returns:
-        fulls: np.ndarray, Full anantisymmetrized wavefunction.
-        spaces: np.ndarray, Spatial parts of the wavefunction.
-        spins: np.ndarray, Spin parts of the wavefunction.
-        energies: np.ndarray, Energies.
+    | Returns:
+    |     fulls: np.ndarray, Full anantisymmetrized wavefunction.
+    |     spaces: np.ndarray, Spatial parts of the wavefunction.
+    |     spins: np.ndarray, Spin parts of the wavefunction.
+    |     energies: np.ndarray, Energies.
 
     """
     # Perform antisymmetrization.
@@ -252,29 +252,29 @@ def antisymmetrize(s, spaces, spins, energies):
 
 
 def _estimate_level(s: iDEA.system.System, k: int) -> int:
-    """
+    r"""
     Estimate the solution to the Schrodinger equation needed to eachive given antisymetric energy state.
 
-    Args:
-        s: iDEA.system.System, System object.
-        k: int, Target energy state.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     k: int, Target energy state.
 
-    Returns:
-        level: int, Extimate of level of excitement.
+    | Returns:
+    |     level: int, Extimate of level of excitement.
     """
     return (abs(s.up_count - s.down_count) + 1) ** 2 * s.count * (k + 1)
 
 
 def _solve_on_gpu(H: np.ndarray, k: int) -> tuple:
-    """
+    r"""
     Solves the eigenproblem on the GPU.
 
-    Args:
-        H: np.ndarray, Hamiltonian.
-        k: int, Eigenstate to solve for.
+    | Args:
+    |     H: np.ndarray, Hamiltonian.
+    |     k: int, Eigenstate to solve for.
 
-    Returns:
-        eigenvalues_gpu, eigenstates_gpu: tuple, Solved eigenvalues and eigenstates.
+    | Returns:
+    |     eigenvalues_gpu, eigenstates_gpu: tuple, Solved eigenvalues and eigenstates.
     """
     sigma = 0
     which = "LA"
@@ -295,17 +295,17 @@ def _solve_on_gpu(H: np.ndarray, k: int) -> tuple:
 def solve(
     s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None
 ) -> iDEA.state.ManyBodyState:
-    """
+    r"""
     Solves the interacting Schrodinger equation of the given system.
 
-    Args:
-        s: iDEA.system.System, System object.
-        H: np.ndarray, Hamiltonian [If None this will be computed from s]. (default = None)
-        k: int, Energy state to solve for. (default = 0, the ground-state)
-        level: int. Max level of excitation to use when solving the Schrodinger equation.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     H: np.ndarray, Hamiltonian [If None this will be computed from s]. (default = None)
+    |     k: int, Energy state to solve for. (default = 0, the ground-state)
+    |     level: int. Max level of excitation to use when solving the Schrodinger equation.
 
-    Returns:
-        state: iDEA.state.ManyBodyState, Solved state.
+    | Returns:
+    |     state: iDEA.state.ManyBodyState, Solved state.
     """
     # Construct the many-body state.
     state = iDEA.state.ManyBodyState()
@@ -367,20 +367,20 @@ def propagate_step(
     dt: float,
     objs: tuple,
 ) -> iDEA.state.ManyBodyEvolution:
-    """
+    r"""
     Propagate a many body state forward in time, one time-step, due to a local pertubation.
 
-    Args:
-        s: iDEA.system.System, System object.
-        evolution: iDEA.state.ManyBodyEvolution, time-dependent evolution.
-        H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
-        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
-        j: int, Time index.
-        dt: float, Time-step.
-        objs: tuple. Tuple of objects needed to construct many-body operator (I, generate_terms).
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     evolution: iDEA.state.ManyBodyEvolution, time-dependent evolution.
+    |     H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
+    |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+    |     j: int, Time index.
+    |     dt: float, Time-step.
+    |     objs: tuple. Tuple of objects needed to construct many-body operator (I, generate_terms).
 
-    Returns:
-        evolution: iDEA.state.ManyBodyEvolution, time-dependent evolution one time-step evolved.
+    | Returns:
+    |     evolution: iDEA.state.ManyBodyEvolution, time-dependent evolution one time-step evolved.
     """
     # Construct the pertubation potential.
     vptrb = sps.dia_matrix(np.diag(v_ptrb[j, :]))
@@ -407,18 +407,18 @@ def propagate(
     t: np.ndarray,
     H: sps.dia_matrix = None,
 ) -> iDEA.state.ManyBodyEvolution:
-    """
+    r"""
     Propagate a many body state forward in time due to a local pertubation.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.ManyBodyState, State to be propigated.
-        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
-        t: np.ndarray, Grid of time values.
-        H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.ManyBodyState, State to be propigated.
+    |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+    |     t: np.ndarray, Grid of time values.
+    |     H: np.ndarray, Static Hamiltonian [If None this will be computed from s]. (default = None)
 
-    Returns:
-        evolution: iDEA.state.ManyBodyEvolution, Solved time-dependent evolution.
+    | Returns:
+    |     evolution: iDEA.state.ManyBodyEvolution, Solved time-dependent evolution.
     """
     # Construct the unperturbed Hamiltonian.
     if H is None:

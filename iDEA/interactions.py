@@ -20,13 +20,13 @@ def softened_interaction(
     .. math:: v_\mathrm{int}(x,x') = \frac{s}{|x-x'| + a}
 
 
-    Args:
-        x: np.ndarray, x grid.
-        strength: float, Strength of the interaction .. math:: s. (default = 1.0)
-        softening: float, Softening parameter of the interaction .. math:: a. (default = 1.0)
+    | Args:
+    |     x: np.ndarray, x grid.
+    |     strength: float, Strength of the interaction .. math:: s. (default = 1.0)
+    |     softening: float, Softening parameter of the interaction .. math:: a. (default = 1.0)
 
-    Returns:
-        v_int: np.ndarray, Softened interaction potential on x grid of the System.
+    | Returns:
+    |     v_int: np.ndarray, Softened interaction potential on x grid of the System.
     """
     v_int = np.zeros((x.shape[0], x.shape[0]), dtype="float")
     for i in range(x.shape[0]):
@@ -43,13 +43,13 @@ def softened_interaction_alternative(
 
     .. math:: v_\mathrm{int}(x,x') = \frac{s}{\sqrt{x-x'}^{2} + a}
 
-    Args:
-        x: np.ndarray, x grid.
-        strength: float, Strength of the interaction .. math:: s. (default = 1.0)
-        softening: float, Softening parameter of the interaction .. math:: a. (default = 1.0)
+    | Args:
+    |     x: np.ndarray, x grid.
+    |     strength: float, Strength of the interaction .. math:: s. (default = 1.0)
+    |     softening: float, Softening parameter of the interaction .. math:: a. (default = 1.0)
 
-    Returns:
-        v_int: np.ndarray, Softened interaction potential on x grid of the System.
+    | Returns:
+    |     v_int: np.ndarray, Softened interaction potential on x grid of the System.
     """
     v_int = np.zeros((x.shape[0], x.shape[0]), dtype="float")
     for i in range(x.shape[0]):
@@ -64,11 +64,11 @@ def raw_interaction(x: np.ndarray, strength: float = 1.0) -> np.ndarray:
 
     .. math:: v_\mathrm{int}(x,x') = \frac{s}{|x-x'| + 10^{-10}}
 
-    Args:
-        x: np.ndarray, x grid.
-        strength: float, Strength of the interaction .. math:: s. (default = 1.0)
+    | Args:
+    |     x: np.ndarray, x grid.
+    |     strength: float, Strength of the interaction .. math:: s. (default = 1.0)
 
-    Returns:
-        v_int: np.ndarray, Softened interaction potential on x grid of the System.
+    | Returns:
+    |     v_int: np.ndarray, Softened interaction potential on x grid of the System.
     """
     return softened_interaction(x, strength=strength, softening=1e-10)

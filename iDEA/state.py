@@ -34,16 +34,21 @@ class ManyBodyState(State):
         r"""
         State of particles in a many-body state.
 
-        This is described by a spatial part \psi(x_1,x_2,\dots,x_N) on the spatial grid, and a spin
-        part on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). These are NOT necessarily antisymmetric states,
+        This is described by a spatial part 
+        .. math:: \psi(x_1,x_2,\dots,x_N)
+        on the spatial grid, and a spin
+        part on the spin grid
+        .. math:: \chi(\sigma_1,\sigma_2,\dots,\sigma_N).
+        These are NOT necessarily antisymmetric states,
         they can be combined using the antisymmetrisation operaration to produce the full
-        wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N).
+        wavefunction
+        .. math:: \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N).
 
-        Args:
-            space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(x_1,x_2,\dots,x_N). (default = None)
-            spin: np.ndarray, Spin part of the wavefunction on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). (default = None)
-            full: np.ndarray, Total antisymmetrised wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N). (default = None)
-            energy: float, Total energy of the state.
+        | Args:
+        |     space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(x_1,x_2,\dots,x_N). (default = None)
+        |     spin: np.ndarray, Spin part of the wavefunction on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). (default = None)
+        |     full: np.ndarray, Total antisymmetrised wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N). (default = None)
+        |     energy: float, Total energy of the state.
         """
         if space is None:
             self.space = iDEA.utilities.ArrayPlaceholder()
@@ -64,20 +69,20 @@ class ManyBodyState(State):
 
 
 class SingleBodyState(State):
-    """
+    r"""
     State of particles in a single-body state.
 
     This is described by three arrays for each spin channel:
 
-    up.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].
-    up.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
-    up.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
-    up.occupied: np.ndarray, Indices of up.occupations that are non-zero, to indicate occupied orbitals.
+    | up.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].
+    | up.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
+    | up.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
+    | up.occupied: np.ndarray, Indices of up.occupations that are non-zero, to indicate occupied orbitals.
 
-    down.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].
-    down.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
-    down.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
-    down.occupied: np.ndarray, Indices of down.occupations that are non-zero, to indicate occupied orbitals.
+    | down.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].
+    | down.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].
+    | down.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].
+    | down.occupied: np.ndarray, Indices of down.occupations that are non-zero, to indicate occupied orbitals.
     """
 
     def __init__(self):
@@ -101,9 +106,9 @@ class ManyBodyEvolution(Evolution):
 
     In addition to the arrays defined within the initial ManyBodyState, this state is described by three additional arrays:
 
-    td_space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(t,x_1,x_2,\dots,x_N).
-    v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.
-    t: np.ndarray, Time grid used during evolution.
+    | td_space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(t,x_1,x_2,\dots,x_N).
+    | v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.
+    | t: np.ndarray, Time grid used during evolution.
     """
 
     def __init__(self, initial_state: ManyBodyState):
@@ -116,15 +121,15 @@ class ManyBodyEvolution(Evolution):
 
 
 class SingleBodyEvolution(Evolution):
-    """
+    r"""
     Time-dependent evolution of particles in a single-body state.
 
     In addition to the arrays defined within the initial SingleBodyState, this state is described by four additional arrays:
 
-    up.td_orbitals: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].
-    down.td_orbital: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].
-    v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.
-    t: np.ndarray, Time grid used during evolution.
+    | up.td_orbitals: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].
+    | down.td_orbital: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].
+    | v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.
+    | t: np.ndarray, Time grid used during evolution.
 
     In this case, only the occupied time-dependent orbitals are stored, as only these are propigated.
     """

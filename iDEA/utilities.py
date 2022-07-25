@@ -14,36 +14,36 @@ __all__ = [
 
 
 class Container:
-    """Empty container."""
+    r"""Empty container."""
 
 
 class ArrayPlaceholder:
-    """Array Placeholder."""
+    r"""Array Placeholder."""
 
 
 class Experiment(Container):
-    """Container to hold all results, quantities and definitions for an experiment."""
+    r"""Container to hold all results, quantities and definitions for an experiment."""
 
 
 def save_experiment(experiment: Experiment, file_name: str) -> None:
-    """
+    r"""
     Save an experiment to an experiment file.
 
-    Args:
-        experiment: iDEA.utilities.Experiment, Experiment object to save.
-        file_name: str, file name.
+    | Args:
+    |     experiment: iDEA.utilities.Experiment, Experiment object to save.
+    |     file_name: str, file name.
     """
     pickle.dump(experiment, open(file_name, "wb"))
 
 
 def load_experiment(file_name: str) -> Experiment:
-    """
+    r"""
     Load an experiment from an experiment file.
 
-    Args:
-        file_name: str, file name.
+    | Args:
+    |     file_name: str, file name.
 
-    Returns
-        experiment: iDEA.utilities.Experiment, Loaded Experiment object.
+    | Returns
+    |     experiment: iDEA.utilities.Experiment, Loaded Experiment object.
     """
     return pickle.load(open(file_name, "rb"))

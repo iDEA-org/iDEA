@@ -19,17 +19,17 @@ name = "non_interacting"
 
 
 def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
-    """
+    r"""
     Compute single-particle kinetic energy operator as a matrix.
 
     This is built using a given number of finite differences to represent the second derivative.
     The number of differences taken is defined in s.stencil.
 
-    Args:
-        s: iDEA.system.System, System object.
+    | Args:
+    |     s: iDEA.system.System, System object.
 
-    Returns:
-        K: np.ndarray, Kintetic energy operator.
+    | Returns:
+    |     K: np.ndarray, Kintetic energy operator.
     """
     if s.stencil == 3:
         sd = 1.0 * np.array([1, -2, 1], dtype=np.float) / s.dx**2
@@ -105,14 +105,14 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
 
 
 def external_potential_operator(s: iDEA.system.System) -> np.ndarray:
-    """
+    r"""
     Compute the external potential operator.
 
-    Args;
-        s: iDEA.system.System, System object.
+    | Args:
+    |     s: iDEA.system.System, System object.
 
-    Returns:
-        Vext: np.ndarray, External potential energy operator.
+    | Returns:
+    |     Vext: np.ndarray, External potential energy operator.
     """
     Vext = np.diag(s.v_ext)
     return Vext
@@ -127,20 +127,20 @@ def hamiltonian(
     K: np.ndarray = None,
     Vext: np.ndarray = None,
 ) -> np.ndarray:
-    """
+    r"""
     Compute the Hamiltonian from the kinetic and potential terms.
 
-    Args:
-        s: iDEA.system.System, System object.
-        up_n: np.ndarray, Charge density of up electrons.
-        down_n: np.ndarray, Charge density of down electrons.
-        up_p: np.ndarray, Charge density matrix of up electrons.
-        down_p: np.ndarray, Charge density matrix of down electrons.
-        K: np.ndarray, Single-particle kinetic energy operator [If None this will be computed from s]. (default = None)
-        Vext: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     up_n: np.ndarray, Charge density of up electrons.
+    |     down_n: np.ndarray, Charge density of down electrons.
+    |     up_p: np.ndarray, Charge density matrix of up electrons.
+    |     down_p: np.ndarray, Charge density matrix of down electrons.
+    |     K: np.ndarray, Single-particle kinetic energy operator [If None this will be computed from s]. (default = None)
+    |     Vext: np.ndarray, Potential energy operator [If None this will be computed from s]. (default = None)
 
-    Returns:
-        H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.
+    | Returns:
+    |     H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.
     """
     if K is None:
         K = kinetic_energy_operator(s)
@@ -151,15 +151,15 @@ def hamiltonian(
 
 
 def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> float:
-    """
+    r"""
     Compute the total energy of a non_interacting state.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState, State. (default = None)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState, State. (default = None)
 
-    Returns:
-        E: float, Total energy.
+    | Returns:
+    |     E: float, Total energy.
     """
     return iDEA.observables.single_particle_energy(s, state)
 
@@ -167,16 +167,16 @@ def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> fl
 def add_occupations(
     s: iDEA.system.System, state: iDEA.state.SingleBodyState, k: int
 ) -> iDEA.state.SingleBodyState:
-    """
+    r"""
     Calculate the occpuations of a state in a given energy excitation.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState, State.
-        k: int, Excitation state [k = 0 is the ground-state].
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState, State.
+    |     k: int, Excitation state [k = 0 is the ground-state].
 
-    Returns:
-        state: iDEA.state.SingleBodyState, State with occupations added.
+    | Returns:
+    |     state: iDEA.state.SingleBodyState, State with occupations added.
     """
     # Calculate the max level or orbitals needed to achieve required state and only use these.
     max_level = (k + 1) * int(np.ceil(s.count))
@@ -231,17 +231,17 @@ def sc_step(
     up_H: np.ndarray,
     down_H: np.ndarray,
 ):
-    """
+    r"""
     Performs a single step of the self-consistent cycle.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState, Previous state.
-        up_H: np.ndarray, Hamiltonian for up electrons.
-        down_H: np.ndarray, Hamiltonian for down electrons.
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.SingleBodyState, Previous state.
+    |     up_H: np.ndarray, Hamiltonian for up electrons.
+    |     down_H: np.ndarray, Hamiltonian for down electrons.
 
-    Returns:
-        state: iDEA.state.SingleBodyState, New state.
+    | Returns:
+    |     state: iDEA.state.SingleBodyState, New state.
     """
     # Solve the non-interacting Schrodinger equation.
     state.up.energies, state.up.orbitals = spla.eigh(up_H)
@@ -266,23 +266,23 @@ def solve(
     silent: bool = False,
     **kwargs
 ) -> iDEA.state.SingleBodyState:
-    """
+    r"""
     Solves the Schrodinger equation for the given system.
 
-    Args:
-        s: iDEA.system.System, System object.
-        hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
-        k: int, Energy state to solve for. (default = 0, the ground-state)
-        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
-        mixing: float, Mixing parameter. (default = 0.5)
-        tol: float, Tollerance of convergence. (default = 1e-10)
-        initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)
-        name: str, Name of method. (default = "non_interacting")
-        silent: bool, Set to true to prevent printing. (default = False)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
+    |     k: int, Energy state to solve for. (default = 0, the ground-state)
+    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    |     mixing: float, Mixing parameter. (default = 0.5)
+    |     tol: float, Tollerance of convergence. (default = 1e-10)
+    |     initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)
+    |     name: str, Name of method. (default = "non_interacting")
+    |     silent: bool, Set to true to prevent printing. (default = False)
 
 
-    Returns:
-        state: iDEA.state.SingleBodyState, Solved state.
+    | Returns:
+    |     state: iDEA.state.SingleBodyState, Solved state.
     """
     # Construct the single-body state.
     state = iDEA.state.SingleBodyState()
@@ -399,20 +399,20 @@ def propagate_step(
     restricted: bool,
     **kwargs
 ):
-    """
+    r"""
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
-    Args:
-        s: iDEA.system.System, System object.
-        evolution: iDEA.state.SingleBodyEvolution, Time-dependent evolution.
-        j: int, Time index to step to.
-        hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
-        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
-        dt: float, Timestep.
-        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     evolution: iDEA.state.SingleBodyEvolution, Time-dependent evolution.
+    |     j: int, Time index to step to.
+    |     hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
+    |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
+    |     dt: float, Timestep.
+    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
 
-    Returns:
-        evolution: iDEA.state.SingleBodyEvolution, Time-dependent evolution solved at time index j from j-1.
+    | Returns:
+    |     evolution: iDEA.state.SingleBodyEvolution, Time-dependent evolution solved at time index j from j-1.
     """
     n, up_n, down_n = iDEA.observables.density(
         s, evolution=evolution, time_indices=np.array([j - 1]), return_spins=True
@@ -461,20 +461,20 @@ def propagate(
     name: str = "non_interacting",
     **kwargs
 ) -> iDEA.state.SingleBodyEvolution:
-    """
+    r"""
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
-    Args:
-        s: iDEA.system.System, System object.
-        state: iDEA.state.SingleBodyState, State to be propigated.
-        v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
-        t: np.ndarray, Grid of time values.
-        hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
-        restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
-        name: str, Name of method. (default = "non_interacting")
+    | Args:
+    |    s: iDEA.system.System, System object.  
+    |    state: iDEA.state.SingleBodyState, State to be propigated. 
+    |    v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space]. 
+    |    t: np.ndarray, Grid of time values. \n
+    |    hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None) 
+    |    restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False) 
+    |    name: str, Name of method. (default = "non_interacting") 
 
-    Returns:
-        evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
+    | Returns:
+    |    evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
     # Determine the Hamiltonian function.
     if hamiltonian_function is None:

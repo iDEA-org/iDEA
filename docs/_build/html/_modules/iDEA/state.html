@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iDEA.state &mdash; iDEA 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> iDEA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">iDEA</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">iDEA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>iDEA.state</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for iDEA.state</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Defines the structures to describe the system states&quot;&quot;&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span> <span class="k">as</span> <span class="n">Interface</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">iDEA.utilities</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;State&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ManyBodyState&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SingleBodyState&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Evolution&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ManyBodyEvolution&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SingleBodyEvolution&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="State"><a class="viewcode-back" href="../../iDEA.html#iDEA.state.State">[docs]</a><span class="k">class</span> <span class="nc">State</span><span class="p">(</span><span class="n">Interface</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface class representing a static state.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="Evolution"><a class="viewcode-back" href="../../iDEA.html#iDEA.state.Evolution">[docs]</a><span class="k">class</span> <span class="nc">Evolution</span><span class="p">(</span><span class="n">Interface</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface class representing a time-dependent evolution of a state.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ManyBodyState"><a class="viewcode-back" href="../../iDEA.html#iDEA.state.ManyBodyState">[docs]</a><span class="k">class</span> <span class="nc">ManyBodyState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;State of interacting particles.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">spin</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        State of particles in a many-body state.</span>
+
+<span class="sd">        This is described by a spatial part </span>
+<span class="sd">        .. math:: \psi(x_1,x_2,\dots,x_N)</span>
+<span class="sd">        on the spatial grid, and a spin</span>
+<span class="sd">        part on the spin grid</span>
+<span class="sd">        .. math:: \chi(\sigma_1,\sigma_2,\dots,\sigma_N).</span>
+<span class="sd">        These are NOT necessarily antisymmetric states,</span>
+<span class="sd">        they can be combined using the antisymmetrisation operaration to produce the full</span>
+<span class="sd">        wavefunction</span>
+<span class="sd">        .. math:: \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N).</span>
+
+<span class="sd">        | Args:</span>
+<span class="sd">        |     space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(x_1,x_2,\dots,x_N). (default = None)</span>
+<span class="sd">        |     spin: np.ndarray, Spin part of the wavefunction on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). (default = None)</span>
+<span class="sd">        |     full: np.ndarray, Total antisymmetrised wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N). (default = None)</span>
+<span class="sd">        |     energy: float, Total energy of the state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">space</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">=</span> <span class="n">space</span>
+        <span class="k">if</span> <span class="n">spin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="n">spin</span>
+        <span class="k">if</span> <span class="n">full</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full</span> <span class="o">=</span> <span class="n">full</span>
+        <span class="k">if</span> <span class="n">energy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">=</span> <span class="n">energy</span></div>
+
+
+<div class="viewcode-block" id="SingleBodyState"><a class="viewcode-back" href="../../iDEA.html#iDEA.state.SingleBodyState">[docs]</a><span class="k">class</span> <span class="nc">SingleBodyState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    State of particles in a single-body state.</span>
+
+<span class="sd">    This is described by three arrays for each spin channel:</span>
+
+<span class="sd">    | up.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].</span>
+<span class="sd">    | up.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].</span>
+<span class="sd">    | up.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].</span>
+<span class="sd">    | up.occupied: np.ndarray, Indices of up.occupations that are non-zero, to indicate occupied orbitals.</span>
+
+<span class="sd">    | down.energies: np.ndarray, Array of single-body energies, indexed as energies[orbital_number].</span>
+<span class="sd">    | down.orbitals: np.ndarray, Array of single-body orbitals, indexed as orbitals[space,orbital_number].</span>
+<span class="sd">    | down.occupations: np.ndarray, Array of single-body occupations, indexed as occupations[orbital_number].</span>
+<span class="sd">    | down.occupied: np.ndarray, Indices of down.occupations that are non-zero, to indicate occupied orbitals.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">Container</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">Container</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">energies</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">orbitals</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupations</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">occupied</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">energies</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">orbitals</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupations</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">occupied</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ManyBodyEvolution"><a class="viewcode-back" href="../../iDEA.html#iDEA.state.ManyBodyEvolution">[docs]</a><span class="k">class</span> <span class="nc">ManyBodyEvolution</span><span class="p">(</span><span class="n">Evolution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Time-dependent evolution of particles in a many-body state.</span>
+
+<span class="sd">    In addition to the arrays defined within the initial ManyBodyState, this state is described by three additional arrays:</span>
+
+<span class="sd">    | td_space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(t,x_1,x_2,\dots,x_N).</span>
+<span class="sd">    | v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.</span>
+<span class="sd">    | t: np.ndarray, Time grid used during evolution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">:</span> <span class="n">ManyBodyState</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">initial_state</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">initial_state</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">full</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">initial_state</span><span class="o">.</span><span class="n">full</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">td_space</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_ptrb</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SingleBodyEvolution"><a class="viewcode-back" href="../../iDEA.html#iDEA.state.SingleBodyEvolution">[docs]</a><span class="k">class</span> <span class="nc">SingleBodyEvolution</span><span class="p">(</span><span class="n">Evolution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Time-dependent evolution of particles in a single-body state.</span>
+
+<span class="sd">    In addition to the arrays defined within the initial SingleBodyState, this state is described by four additional arrays:</span>
+
+<span class="sd">    | up.td_orbitals: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].</span>
+<span class="sd">    | down.td_orbital: np.ndarray, Array of single-body time-dependend orbitals, indexed as orbitals[time,space,orbital_number].</span>
+<span class="sd">    | v_ptrb: np.ndarray, Perturbation potential that this time-dependence was driven by. indexed as v_ptrb[space] if static, and v_ptrb[time,space] if dynamic.</span>
+<span class="sd">    | t: np.ndarray, Time grid used during evolution.</span>
+
+<span class="sd">    In this case, only the occupied time-dependent orbitals are stored, as only these are propigated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">:</span> <span class="n">SingleBodyState</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">initial_state</span><span class="o">.</span><span class="n">up</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">initial_state</span><span class="o">.</span><span class="n">down</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up</span><span class="o">.</span><span class="n">td_orbitals</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">down</span><span class="o">.</span><span class="n">td_orbitals</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_ptrb</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">iDEA</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">ArrayPlaceholder</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, iDEA Developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
