@@ -1,4 +1,4 @@
-# <img src="docs/logo.png" alt="iDEA" width="70"/> iDEA - The interacting Dynamic Electrons Appraoch
+# <img src="docs/logo.png" alt="iDEA" width="70"/> iDEA - The interacting Dynamic Electrons Approach
 
 ![pip](https://img.shields.io/pypi/v/iDEA-latest)
 ![tag](https://img.shields.io/github/v/tag/iDEA-org/iDEA)
