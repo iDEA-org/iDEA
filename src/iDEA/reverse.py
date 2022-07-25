@@ -59,7 +59,7 @@ def reverse(s: iDEA.system.System, target_n: np.ndarray, method: Container, v_gu
     return s_fictitious
 
 
-def _residual(v: np.ndarray, s_fictitious: iDEA.system.System, evolution_fictitious: iDEA.system.Evolution, j: int, method: Container, v_ptrb: np.ndarray, dt: float, restricted: bool, target_n: np.ndarray):
+def _residual(v: np.ndarray, s_fictitious: iDEA.system.System, evolution_fictitious: iDEA.state.Evolution, j: int, method: Container, v_ptrb: np.ndarray, dt: float, restricted: bool, target_n: np.ndarray):
     r"""
     The residual function used to optimise each time step of the time dependent reverse propagation.
 
