@@ -1,4 +1,4 @@
-# iDEA - The interacting Dynamic Electrons Appraoch
+# <img src="docs/logo.png" alt="iDEA" width="70"/> iDEA - The interacting Dynamic Electrons Appraoch
 
 ![pip](https://img.shields.io/pypi/v/iDEA-latest)
 ![tag](https://img.shields.io/github/v/tag/iDEA-org/iDEA)
@@ -6,7 +6,7 @@
 ![Issues](https://img.shields.io/github/issues/iDEA-org/iDEA)
 ![Pull Requests](https://img.shields.io/github/issues-pr/iDEA-org/iDEA)
 
-**iDEA (interacting Dynamic Electrons Appraoch) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducability, interactivity and simplicity.**
+**iDEA (interacting Dynamic Electrons Approach) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducability, interactivity and simplicity.**
 
 The principle goal of the iDEA code is to improve the accuracy of approximations within fundamental theories of many-electron quantum mechanics. It has a central role in a number of research projects related to many-particle quantum mechanics for electrons in matter.
 
@@ -24,6 +24,8 @@ Some of iDEA's features:
 - Reverse-engineering to solve potential inversion, from exact Kohn-Sham DFT and beyond.
 - Fully parallelised using OpenBLAS.
 - Fully parallelised for all cuda supporting GPUS.
+
+<img src="docs/logos.png" alt="software" width="200"/>
 
 ## Depenencies
 
