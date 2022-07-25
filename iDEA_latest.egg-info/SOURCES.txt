@@ -6,7 +6,7 @@ setup.py
 ./iDEA/__init__.py
 ./iDEA/interactions.py
 ./iDEA/observables.py
-./iDEA/reverse.py
+./iDEA/reverse_engineering.py
 ./iDEA/state.py
 ./iDEA/system.py
 ./iDEA/utilities.py
