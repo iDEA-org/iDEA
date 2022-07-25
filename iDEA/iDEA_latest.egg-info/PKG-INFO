@@ -7,7 +7,7 @@ Author: Jack Wetherell
 Author-email: jack.wetherell@gmail.com
 Project-URL: Bug Tracker, https://github.com/iDEA-org/iDEA/issues
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: GPL License
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
