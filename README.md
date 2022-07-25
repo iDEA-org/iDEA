@@ -8,7 +8,7 @@
 
 **iDEA (interacting Dynamic Electrons Approach) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducability, interactivity and simplicity.**
 
-<img src=demo.gif" alt="demo" width="500"/>
+![demo](demo.gif)
 
 The principle goal of the iDEA code is to improve the accuracy of approximations within fundamental theories of many-electron quantum mechanics. It has a central role in a number of research projects related to many-particle quantum mechanics for electrons in matter.
 
