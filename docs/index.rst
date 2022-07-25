@@ -9,7 +9,7 @@ Welcome to iDEA's API documentation!
 In this page, we provide the full API documentation of the iDEA code.
 
 For more information please see the iDEA home page.
-The full code can be found on GitHub.
+The full code can be found on `GitHub <https://github.com/iDEA-org/iDEA>`_.
 We also provide a tutorial so you can learn how to use the iDEA code in your research and teaching projects.
 
 .. toctree::
