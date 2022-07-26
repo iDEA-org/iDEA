@@ -59,7 +59,7 @@ def reverse(
     while convergence > tol:
         if silent is False:
             print(
-                r"iDEA.reverse.reverse: convergence = {0:.5}, tollerance = {1:.5}".format(
+                r"iDEA.reverse_engineering.reverse: convergence = {0:.5}, tolerance = {1:.5}".format(
                     convergence, tol
                 ),
                 end="\r",
@@ -211,20 +211,20 @@ def reverse_propagation(
     evolution_fictitious.down.td_orbitals[0, :, :] = state_fictitious.down.orbitals[
         :, state_fictitious.down.occupied
     ]
-    evolution_fictitious.v_ptrb = v_ptrb
-    evolution_fictitious.t = t
+    evolution_fictitious.v_ptrb = copy.deepcopy(v_ptrb)
+    evolution_fictitious.t = copy.deepcopy(t)
 
     # Initialise error.
     error = np.zeros_like(t)
 
     # Reverse propagation.
     for j, ti in enumerate(
-        tqdm(t, desc="iDEA.reverse.reverse_propagation: reversing propagation")
+        tqdm(t, desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation")
     ):
         if j != 0:
 
             # Determine ficticious perturbing potential.
-            v_guess = evolution_fictitious.v_ptrb[j, :]
+            v_guess = np.zeros_like(evolution_fictitious.v_ptrb[j, :])
             result = spo.root(
                 _residual,
                 v_guess,
@@ -240,11 +240,8 @@ def reverse_propagation(
                 ),
                 method="hybr",
                 tol=tol,
+                options={"maxfev": 200},
             )
-            if result.success == False:
-                warnings.warn(
-                    "iDEA.reverse.reverse_propagation: continuing after error in root"
-                )
             evolution_fictitious.v_ptrb[j, :] = result.x
 
             # Perform propagation.

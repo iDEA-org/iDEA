@@ -375,7 +375,7 @@ def solve(
         count += 1
         if silent is False:
             print(
-                r"iDEA.methods.{0}.solve: convergence = {1:.5}, tollerance = {2:.5}".format(
+                r"iDEA.methods.{0}.solve: convergence = {1:.5}, tolerance = {2:.5}".format(
                     name, convergence, tol
                 ),
                 end="\r",

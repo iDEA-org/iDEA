@@ -1,4 +1,4 @@
-# <img src="docs/logo.png" alt="iDEA" width="70"/> iDEA - The interacting Dynamic Electrons Approach
+# <img src="docs/logo.png" alt="" width="70"/> iDEA - The interacting Dynamic Electrons Approach
 
 ![pip](https://img.shields.io/pypi/v/iDEA-latest)
 ![tag](https://img.shields.io/github/v/tag/iDEA-org/iDEA)
@@ -27,7 +27,7 @@ Some of iDEA's features:
 - Fully parallelised using OpenBLAS.
 - Fully parallelised for all cuda supporting GPUS.
 
-<img src="docs/logos.png" alt="software" width="200"/>
+<img src="docs/logos.png" alt="" width="200"/>
 
 ## Depenencies
 
@@ -88,5 +88,5 @@ We provide a tutorial so you can learn how to use the iDEA code in your research
 ## Getting Involved
 
 To get involved:
-- Raising issues and pull requests here is greaty appreciated!
+- Raising issues and pull requests here is greatly appreciated!
 - We can add any papers that can be fully reproduced by iDEA to our dedicated page by sending your open access paper to jack.wetherell@gmail.com.
