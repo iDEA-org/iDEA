@@ -54,11 +54,11 @@ To add iDEA to your poetry environment:
 
 ### Developer
 
-If you would like to develop iDEA, first fork this git repository, and then clone.
+If you would like to develop iDEA, first fork this git repository, and then clone from there.
 
 Add the upstream repository: `git remote add upstream https://github.com/iDEA-org/iDEA.git`
 
-And then install via pip: `poetry install`
+And then install locally: `python setup.py install`
 
 ## Documentation
 
