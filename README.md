@@ -6,7 +6,7 @@
 ![Issues](https://img.shields.io/github/issues/iDEA-org/iDEA)
 ![Pull Requests](https://img.shields.io/github/issues-pr/iDEA-org/iDEA)
 
-**iDEA (interacting Dynamic Electrons Approach) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducability, interactivity and simplicity.**
+**iDEA (interacting Dynamic Electrons Approach) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducibility, interactivity and simplicity.**
 
 [View on GitHub](https://github.com/iDEA-org/iDEA)
 
