@@ -111,3 +111,4 @@ Sean Adamson, Jacob Chapman, Thomas Durrant, Razak Elmaslmane, Mike Entwistle, R
 To get involved:
 - Raising issues and pull requests here is greatly appreciated!
 - We can add any papers that can be fully reproduced by iDEA to our dedicated page by sending your open access paper to jack.wetherell@gmail.com.
+- We provide a [template](https://github.com/iDEA-org/iDEA-project-template) to get you started!
