@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.poetry]
 name = "iDEA"
-version = "0.1.6"
+version = "1.0.0"
 description = "interacting Dynamic Electrons Approach"
 authors = ["Jack Wetherell <jack.wetherell@gmail.com>, Leopold Talirz <leopold.talirz@gmail.com>, Matthew Hodgson <matt.hodgson@york.ac.uk>, Rex Godby <rex.godby@york.ac.uk>."]
 license = "GPLv3"
