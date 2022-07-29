@@ -98,7 +98,7 @@ iDEA can also be used to create teaching content, visualisations and expositions
 
 ## Developers
 
-<img src="docs/dev.png" alt="" width=500"/>
+<img src="docs/dev.png" alt="" width="500"/>
 
 ## Contributors
 
