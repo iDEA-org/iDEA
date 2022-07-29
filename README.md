@@ -29,7 +29,7 @@ Some of iDEA's features:
 - Fully parallelised using OpenBLAS.
 - Fully parallelised for all cuda supporting GPUS.
 
-## Depenencies
+## Dependencies
 
 iDEA supports `python 3.8+` along with the following dependences:
 ```
