@@ -31,7 +31,7 @@ Some of iDEA's features:
 
 ## Depenencies
 
-iDEA supports `python 3.8+` along with the follwing dependences:
+iDEA supports `python 3.8+` along with the following dependences:
 ```
 numpy >= "1.22.3"
 scipy >= "1.8.0"
