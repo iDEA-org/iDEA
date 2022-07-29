@@ -7,13 +7,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="iDEA-latest",
-    version="0.1.6",
+    version="1.0.0",
     author="Jack Wetherell",
     author_email="jack.wetherell@gmail.com",
     description="interacting Dynamic Electrons Approach (iDEA)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/iDEA-org/iDEA",
+    url="https://idea-org.github.io/",
     project_urls={
         "Bug Tracker": "https://github.com/iDEA-org/iDEA/issues",
     },

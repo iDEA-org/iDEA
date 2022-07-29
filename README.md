@@ -27,8 +27,6 @@ Some of iDEA's features:
 - Fully parallelised using OpenBLAS.
 - Fully parallelised for all cuda supporting GPUS.
 
-<img src="docs/logos.png" alt="" width="200"/>
-
 ## Depenencies
 
 iDEA supports `python 3.8+` along with the follwing dependences:
@@ -40,11 +38,13 @@ jupyterlab >= "3.3.2"
 tqdm >= "4.64.0"
 ```
 
+<img src="docs/logos.png" alt="" width="200"/>
+
 ## Installation
 
 ### User
 
-To install the latest version of the iDEA code:
+To install the [latest version of the iDEA code](https://pypi.org/project/iDEA-latest/):
 
 `pip install iDEA-latest`
 
@@ -62,7 +62,7 @@ And then install locally: `python setup.py install`
 
 ## Documentation
 
-For full details of usage please see our tutorial. The full API documentation is available at readthedocs.
+For full details of usage please see our [tutorial](https://github.com/iDEA-org/iDEA/blob/master/tutorial/tutorial.ipynb). The full API documentation is available at [readthedocs](https://idea-interacting-dynamic-electrons-approach.readthedocs.io/en/latest/).
 
 ## Example
 
@@ -83,7 +83,28 @@ plt.show()
 
 ## Tutorial
 
-We provide a tutorial so you can learn how to use the iDEA code in your research and teaching projects.
+We provide a [tutorial](https://github.com/iDEA-org/iDEA/blob/master/tutorial/tutorial.ipynb) where you can learn how to use the iDEA code in your research and teaching projects.
+
+## Papers You Can Reproduce With iDEA
+
+1. Advantageous nearsightedness of many-body perturbation theory contrasted with Kohn-Sham density functional theory.
+    [paper](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.99.045129), [reprint](https://jackwetherell.github.io/files/nearsightedness.pdf), [preprint](https://arxiv.org/pdf/1812.02661.pdf), [code](https://github.com/JackWetherell/advantageous-nearsightedness).
+
+More coming soon...
+
+## Teaching
+
+iDEA can also be used to create teaching content, visualisations and expositions> For example, see the following [YouTube video created using iDEA](https://www.youtube.com/watch?v=JaSVguMFA-M&ab_channel=JackWetherell).
+
+## Developers
+
+<img src="docs/dev.png" alt="" width="100"/>
+
+## Contributors
+
+We thank all of the developers, PhD students, masters students, summer project interns and researchers for thier key contributions to iDEA:
+
+Sean Adamson, Jacob Chapman, Thomas Durrant, Razak Elmaslmane, Mike Entwistle, Rex Godby, Matt Hodgson, Piers Lillystone, Aaron Long, Robbie Oliver, James Ramsden, Ewan Richardson, Matthew Smith, Leopold Talirz and Jack Wetherell. 
 
 ## Getting Involved
 
