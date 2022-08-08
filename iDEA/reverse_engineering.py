@@ -219,7 +219,10 @@ def reverse_propagation(
 
     # Reverse propagation.
     for j, ti in enumerate(
-        tqdm(t, desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation")
+        tqdm(
+            t,
+            desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation",
+        )
     ):
         if j != 0:
 

@@ -16,6 +16,7 @@ name = "hartree_fock"
 kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator
 hartree_potential_operator = iDEA.methods.hartree.hartree_potential_operator
+propagate_step = iDEA.methods.non_interacting.propagate_step
 
 
 def exchange_potential_operator(s: iDEA.system.System, p: np.ndarray) -> np.ndarray:
