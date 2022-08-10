@@ -1,5 +1,7 @@
 # <img src="docs/logo.png" alt="" width="70"/> iDEA - The interacting Dynamic Electrons Approach
 
+Exploring exact and approximate methods for many-electron quantum mechanics.
+
 ![pip](https://img.shields.io/pypi/v/iDEA-latest)
 ![tag](https://img.shields.io/github/v/tag/iDEA-org/iDEA)
 [![Documentation Status](https://readthedocs.org/projects/idea-interacting-dynamic-electrons-approach/badge/?version=latest)](https://idea-interacting-dynamic-electrons-approach.readthedocs.io/en/latest/?badge=latest)
@@ -7,6 +9,8 @@
 ![Pull Requests](https://img.shields.io/github/issues-pr/iDEA-org/iDEA)
 
 **iDEA (interacting Dynamic Electrons Approach) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducibility, interactivity and simplicity.**
+
+[Homepage](https://idea-org.github.io/)  
 
 [View on GitHub](https://github.com/iDEA-org/iDEA)
 
@@ -81,9 +85,13 @@ We provide a [tutorial](https://github.com/iDEA-org/iDEA/blob/master/tutorial/tu
 
 More coming soon...
 
+The development and applications of the iDEA code from 2010 to 2021 is documented [here](https://www-users.york.ac.uk/~rwg3/idea.html).
+
 ## Teaching
 
 iDEA can also be used to create teaching content, visualisations and expositions> For example, see the following [YouTube video created using iDEA](https://www.youtube.com/watch?v=JaSVguMFA-M&ab_channel=JackWetherell).
+
+iDEA was used to create teaching content for the [Density Functional Theory MOOC on Coursera](https://www.coursera.org/learn/density-functional-theory).
 
 ## Developers
 
