@@ -465,13 +465,13 @@ def propagate(
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
 
     | Args:
-    |    s: iDEA.system.System, System object.  
-    |    state: iDEA.state.SingleBodyState, State to be propigated. 
-    |    v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space]. 
+    |    s: iDEA.system.System, System object.
+    |    state: iDEA.state.SingleBodyState, State to be propigated.
+    |    v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
     |    t: np.ndarray, Grid of time values. \n
-    |    hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None) 
-    |    restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False) 
-    |    name: str, Name of method. (default = "non_interacting") 
+    |    hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
+    |    restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    |    name: str, Name of method. (default = "non_interacting")
 
     | Returns:
     |    evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
