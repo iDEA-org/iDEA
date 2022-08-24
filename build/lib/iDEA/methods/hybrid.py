@@ -21,6 +21,7 @@ exchange_potential_operator = iDEA.methods.hartree_fock.exchange_potential_opera
 exchange_correlation_potential_operator = (
     iDEA.methods.lda.exchange_correlation_potential_operator
 )
+propagate_step = iDEA.methods.non_interacting.propagate_step
 
 
 def hamiltonian(

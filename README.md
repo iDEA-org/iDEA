@@ -80,8 +80,8 @@ We provide a [tutorial](https://github.com/iDEA-org/iDEA/blob/master/tutorial/tu
 
 ## Papers You Can Reproduce With iDEA
 
-1. Advantageous nearsightedness of many-body perturbation theory contrasted with Kohn-Sham density functional theory.
-    [paper](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.99.045129), [reprint](https://jackwetherell.github.io/files/nearsightedness.pdf), [preprint](https://arxiv.org/pdf/1812.02661.pdf), [code](https://github.com/JackWetherell/advantageous-nearsightedness).
+1. "Advantageous nearsightedness of many-body perturbation theory contrasted with Kohn-Sham density functional theory", J. Wetherell, M. J. P. Hodgson, L. Talirz, and R. W. Godby, Physical Review B 99 045129 (2019).
+[paper](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.99.045129), [reprint](https://jackwetherell.github.io/files/nearsightedness.pdf), [preprint](https://arxiv.org/pdf/1812.02661.pdf), [code](https://github.com/JackWetherell/advantageous-nearsightedness).
 
 More coming soon...
 

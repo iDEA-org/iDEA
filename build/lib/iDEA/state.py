@@ -34,7 +34,7 @@ class ManyBodyState(State):
         r"""
         State of particles in a many-body state.
 
-        This is described by a spatial part 
+        This is described by a spatial part
         .. math:: \psi(x_1,x_2,\dots,x_N)
         on the spatial grid, and a spin
         part on the spin grid

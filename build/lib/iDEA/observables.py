@@ -543,7 +543,9 @@ def exchange_energy(
     elif len(p.shape) == 3:
         E_x = np.zeros(shape=p.shape[0], dtype=complex)
         for j in range(E_x.shape[0]):
-            E_x[j] = 0.5 * np.tensordot(p[j, :, :].T, v_x[j, :, :], axes=2) * s.dx * s.dx
+            E_x[j] = (
+                0.5 * np.tensordot(p[j, :, :].T, v_x[j, :, :], axes=2) * s.dx * s.dx
+            )
         return E_x.real
 
     else:

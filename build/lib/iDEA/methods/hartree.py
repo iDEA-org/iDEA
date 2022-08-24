@@ -14,6 +14,7 @@ name = "hartree"
 
 kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator
+propagate_step = iDEA.methods.non_interacting.propagate_step
 
 
 def hartree_potential_operator(s: iDEA.system.System, n: np.ndarray) -> np.ndarray:
