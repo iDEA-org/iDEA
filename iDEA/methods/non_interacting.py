@@ -86,7 +86,7 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
                     864,
                     -50,
                 ],
-                dtype=np.float,
+                dtype=float,
             )
             / s.dx**2
         )
