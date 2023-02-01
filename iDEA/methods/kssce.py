@@ -14,7 +14,7 @@ from functools import partial
 
 name = "kssce"
 
-default_params = {"interp_n":"cubic", "interp_invNe":"cubic", "interp_vsce": "cubic"}
+default_params = {"interp_n":"cubic", "interp_invNe":"hermite_cubic", "interp_vsce": "cubic"}
 
 kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator

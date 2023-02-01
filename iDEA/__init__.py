@@ -9,6 +9,7 @@ import iDEA.methods.hartree
 import iDEA.methods.hartree_fock
 import iDEA.methods.lda
 import iDEA.methods.hybrid
+import iDEA.methods.kssce
 import iDEA.reverse_engineering
 
 
