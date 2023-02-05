@@ -18,7 +18,8 @@ default_params = {"interp_n":"cubic", "interp_invNe":"hermite_cubic", "interp_vs
 
 kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator
-propagate_step = iDEA.methods.non_interacting.propagate_step
+propagate_ni = iDEA.methods.non_interacting.propagate
+solve_ni = iDEA.methods.non_interacting.solve
 
 
 def interpolate_n(x: np.ndarray, n: np.ndarray, interp: str = "cubic") -> PPoly:
@@ -295,7 +296,7 @@ def solve(
     | Returns:
     |     state: iDEA.state.SingleBodyState, Solved state.
     """
-    return iDEA.methods.non_interacting.solve(
+    return solve_ni(
         s, partial(hamiltonian, method_params=method_params), k, restricted, mixing, tol, initial, name, silent
     )
 
@@ -323,6 +324,6 @@ def propagate(
     | Returns:
     |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
-    return iDEA.methods.non_interacting.propagate(
+    return propagate_ni(
         s, state, v_ptrb, t, partial(hamiltonian, method_params=method_params), restricted, name
     )
