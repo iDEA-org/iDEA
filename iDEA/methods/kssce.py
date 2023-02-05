@@ -361,7 +361,6 @@ def propagate(
     state: iDEA.state.SingleBodyState,
     v_ptrb: np.ndarray,
     t: np.ndarray,
-    hamiltonian_function: Callable = None,
     restricted: bool = False,
     method_params: Dict[str, str] = default_params,
 ) -> iDEA.state.SingleBodyEvolution:
@@ -373,7 +372,6 @@ def propagate(
     |     state: iDEA.state.SingleBodyState, State to be propigated.
     |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
     |     t: np.ndarray, Grid of time values.
-    |     hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
     |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
     |     method_params: Dict[str, str], Dictionary of method parameters.
     | Returns:
