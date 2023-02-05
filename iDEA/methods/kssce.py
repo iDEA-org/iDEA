@@ -1,4 +1,12 @@
-"""Contains all Strictly Correlated Electrons functions for use in Kohn-Sham Strictly-Correlated Electrons."""
+"""Contains all Strictly Correlated Electrons functions for use in Kohn-Sham Strictly-Correlated Electrons.
+
+References:
+1. F. Malet and P. Gori-Giorgi, Strong correlation in Kohn-Sham density functional theory, Phys. Rev. Lett. 109, 246402 (2012). DOI: [10.1103/PhysRevLett.109.246402](https://dx.doi.org/10.1103/PhysRevLett.109.246402)
+2. F. Malet, A. Mirtschink, J. C. Cremon, S. M. Reimann, and P. Gori-Giorgi. Kohn-Sham density functional theory for quantum wires in arbitrary correlation regimes. Phys. Rev. B 87, 115146 (2013) DOI: [10.1103/PhysRevB.87.115146](http://dx.doi.org/10.1103/PhysRevB.87.115146)
+3. A. Mirtschink, M. Seidl, and P. Gori-Giorgi. Derivative discontinuity in the strong-interaction limit of density functional theory. Phys. Rev. Lett.  111, 126402 (2013) DOI: [10.1103/PhysRevLett.111.126402](http://dx.doi.org/10.1103/PhysRevLett.111.126402)
+4. F. Malet, A. Mirtschink, K. J. H. Giesbertz, L. O. Wagner, and P. Gori-Giorgi. Exchange-correlation functionals from the strongly-interacting limit of DFT: Applications to model chemical systems. Phys. Chem. Chem. Phys. 16, 14551 (2014) DOI: [10.1039/c4cp00407h](http://dx.doi.org/10.1039/c4cp00407h)
+5. A. Marie, D. P. Kooi, J. Grossi, M. Seidl, Z. Musslimani, K.J.H. Giesbertz, P. Gori-Giorgi. Real space Mott-Anderson electron localization with long-range interactions. Physical Review Research 4, 043192 (2022) DOI: [10.1103/PhysRevResearch.4.043192](https://dx.doi.org/10.1103/PhysRevResearch.4.043192)
+"""
 
 
 from collections.abc import Callable
@@ -14,7 +22,11 @@ from functools import partial
 
 name = "kssce"
 
-default_params = {"interp_n":"cubic", "interp_invNe":"hermite_cubic", "interp_vsce": "cubic"}
+default_params = {
+    "interp_n": "cubic",
+    "interp_invNe": "hermite_cubic",
+    "interp_vsce": "cubic",
+}
 
 kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator
@@ -39,24 +51,24 @@ def interpolate_n(x: np.ndarray, n: np.ndarray, interp: str = "cubic") -> PPoly:
 
     if interp == "cubic":
         # Cubic spline interpolation
-        return scipy.interpolate.CubicSpline(x,
-                        n,
-                        bc_type="clamped", # First derivative on both ends is zero
-                        )
+        return scipy.interpolate.CubicSpline(
+            x,
+            n,
+            bc_type="clamped",  # First derivative on both ends is zero
+        )
     elif interp == "akima":
         # Akima interpolation
-        return scipy.interpolate.Akima1DInterpolator(x,
-                        n
-                        )
+        return scipy.interpolate.Akima1DInterpolator(x, n)
     elif interp == "pchip":
         # Piecewise cubic Hermite interpolation
-        return scipy.interpolate.PchipInterpolator(x,
-                        n
-                        )
+        return scipy.interpolate.PchipInterpolator(x, n)
     else:
         raise ValueError("Interpolation method not recognized.")
 
-def interpolate_invNe(n: np.ndarray, Ne: np.ndarray, x: np.ndarray, interp: str = "cubic") -> PPoly:
+
+def interpolate_invNe(
+    n: np.ndarray, Ne: np.ndarray, x: np.ndarray, interp: str = "cubic"
+) -> PPoly:
     """
     Obtain x(Ne)
 
@@ -77,30 +89,37 @@ def interpolate_invNe(n: np.ndarray, Ne: np.ndarray, x: np.ndarray, interp: str 
 
     if interp == "hermite_cubic":
         # Hermite cubic spline interpolation with derivative
-        return scipy.interpolate.CubicHermiteSpline(Ne,
-                        x,
-                        1/n, # Derivative of x(Ne) = 1/n(Neinv(Ne))
-                        )
+        return scipy.interpolate.CubicHermiteSpline(
+            Ne,
+            x,
+            1 / n,  # Derivative of x(Ne) = 1/n(Neinv(Ne))
+        )
     elif interp == "cubic":
         # Cubic spline interpolation
-        return scipy.interpolate.CubicSpline(Ne,
-                        x,
-                        bc_type="not-a-knot", # Derivative diverges at both ends
-                        )
+        return scipy.interpolate.CubicSpline(
+            Ne,
+            x,
+            bc_type="not-a-knot",  # Derivative diverges at both ends
+        )
     elif interp == "akima":
         # Akima interpolation
-        return scipy.interpolate.Akima1DInterpolator(Ne,
-                        x,
-                        )
+        return scipy.interpolate.Akima1DInterpolator(
+            Ne,
+            x,
+        )
     elif interp == "pchip":
         # Piecewise cubic Hermite interpolation
-        return scipy.interpolate.PchipInterpolator(Ne,
-                        x,
-                        )
+        return scipy.interpolate.PchipInterpolator(
+            Ne,
+            x,
+        )
     else:
         raise ValueError("Interpolation method not recognized.")
 
-def compute_comotion_functions(n: np.ndarray, Ne: np.ndarray, x: np.ndarray, N: int, interp: str = "hermite_cubic") -> np.ndarray:
+
+def compute_comotion_functions(
+    n: np.ndarray, Ne: np.ndarray, x: np.ndarray, N: int, interp: str = "hermite_cubic"
+) -> np.ndarray:
     """
     Compute all comotion functions at once.
 
@@ -115,11 +134,19 @@ def compute_comotion_functions(n: np.ndarray, Ne: np.ndarray, x: np.ndarray, N: 
     # Interpolate inverse of the cumulant
     invNe_interp = interpolate_invNe(n, Ne, x, interp=interp)
     # Electron indices
-    i = np.arange(1, N+1)
-    return invNe_interp(Ne[None, :]+i[:, None]-1-np.heaviside(Ne[None, :]-N+i[:, None]-1, 0.)*N)
+    i = np.arange(1, N + 1)
+    return invNe_interp(
+        Ne[None, :]
+        + i[:, None]
+        - 1
+        - np.heaviside(Ne[None, :] - N + i[:, None] - 1, 0.0) * N
+    )
 
 
-def sce_potential_operator(s: iDEA.system.System, n: np.ndarray, method_params: dict = default_params,
+def sce_potential_operator(
+    s: iDEA.system.System,
+    n: np.ndarray,
+    method_params: Dict[str, str] = default_params,
 ) -> np.ndarray:
     r"""
     Compute the SCE potential operator V_SCE, which is diag(v_sce(x)).
@@ -146,57 +173,65 @@ def sce_potential_operator(s: iDEA.system.System, n: np.ndarray, method_params: 
         Ne = n_interp.antiderivative()(s.x)
 
         # Compute co-motion functions
-        f = compute_comotion_functions(n, Ne, s.x, s.count, method_params["interp_invNe"])
-        
+        f = compute_comotion_functions(
+            n, Ne, s.x, s.count, method_params["interp_invNe"]
+        )
+
         # Compute the derivative of the SCE potential
 
         # Compute the interaction between the first electron and the rest
-        w = s.interaction(s.x-f[1:])
+        w = s.interaction(s.x - f[1:])
 
         # Compute v_sce'(x) = \sum_i w'(|x-f_i|)
-        v_scep = np.sum(s.dinteraction(s.x-f[1:]), axis=0) # axis=0 sums over the electrons
+        v_scep = np.sum(
+            s.dinteraction(s.x - f[1:]), axis=0
+        )  # axis=0 sums over the electrons
 
         # Compute w''_i(x) = w''(|x-f_i|)
-        wpp_i = s.ddinteraction(s.x-f[1:])
+        wpp_i = s.ddinteraction(s.x - f[1:])
 
         # Compute f_i'(x) = n(x)/n(f(x))
-        fp = n[None, :]/interpolate_n(s.x, n, interp=method_params["interp_n"])(f[1:])
+        fp = n[None, :] / interpolate_n(s.x, n, interp=method_params["interp_n"])(f[1:])
 
         # Compute v_sce''(x) = \sum_i sign(x-f_i) w''(|x-f_i|) (1-f_i'(x))
-        v_scepp = np.sum(wpp_i*np.sign(s.x-f[1:])*(1-fp), axis=0)
+        v_scepp = np.sum(wpp_i * np.sign(s.x - f[1:]) * (1 - fp), axis=0)
         # v_sce = -np.cumsum(np.sum(dw, axis=0))*s.dx
 
         if method_params["interp_vsce"] == "hermite_cubic":
             # Hermite cubic spline interpolation with derivative
-            v_sce = scipy.interpolate.CubicHermiteSpline(s.x,
-                            v_scep,
-                            v_scepp
-                            ).antiderivative()(s.x)
+            v_sce = scipy.interpolate.CubicHermiteSpline(
+                s.x, v_scep, v_scepp
+            ).antiderivative()(s.x)
         elif method_params["interp_vsce"] == "akima":
             # Akima interpolation
-            v_sce = scipy.interpolate.Akima1DInterpolator(s.x,
-                            v_scepp
-                            ).antiderivative()(s.x)
+            v_sce = scipy.interpolate.Akima1DInterpolator(
+                s.x, v_scepp
+            ).antiderivative()(s.x)
         elif method_params["interp_vsce"] == "pchip":
             # Piecewise cubic Hermite interpolation
-            v_sce = scipy.interpolate.PchipInterpolator(s.x,
-                            v_scepp
-                            ).antiderivative()(s.x)
+            v_sce = scipy.interpolate.PchipInterpolator(s.x, v_scepp).antiderivative()(
+                s.x
+            )
         elif method_params["interp_vsce"] == "cubic":
             # Cubic spline interpolation
-            v_sce = scipy.interpolate.CubicSpline(s.x,
-                            v_scepp,
-                            bc_type="not-a-knot"
-                            ).antiderivative()(s.x)
-        
+            v_sce = scipy.interpolate.CubicSpline(
+                s.x, v_scepp, bc_type="not-a-knot"
+            ).antiderivative()(s.x)
+
         # Compute the SCE energy
-        E_sce = 1/2*interpolate_n(s.x, n*np.sum(w, axis=0)).integrate(s.x[0], s.x[-1])
+        E_sce = (
+            1 / 2 * interpolate_n(s.x, n * np.sum(w, axis=0)).integrate(s.x[0], s.x[-1])
+        )
 
         # Fix the arbitrary potential in v_sce by demanding E_sce = int v_sce(x) n(x) dx
-        v_sce = v_sce + E_sce/s.count*s.dx - np.sum(v_sce*n)/s.count*s.dx
+        v_sce = v_sce + E_sce / s.count * s.dx - np.sum(v_sce * n) / s.count * s.dx
         return np.diag(v_sce)
 
-def sce_energy(s: iDEA.system.System, n: np.ndarray, method_params: Dict[str, str] = default_params,
+
+def sce_energy(
+    s: iDEA.system.System,
+    n: np.ndarray,
+    method_params: Dict[str, str] = default_params,
 ) -> float:
     r"""
     Compute the SCE energy.
@@ -208,16 +243,24 @@ def sce_energy(s: iDEA.system.System, n: np.ndarray, method_params: Dict[str, st
     | Returns:
     |     E: float, SCE energy.
     """
-    
+
     # Interpolate the charge density and integrate to get the cumulant Ne(x)
     Ne = interpolate_n(s.x, n, method_params["interp_n"]).antiderivative()(s.x)
 
     # Compute co-motion functions
-    f = compute_comotion_functions(n, Ne, s.x, s.count, method_params["interp_invNe"]) #+s.dx/2
-    
+    f = compute_comotion_functions(
+        n, Ne, s.x, s.count, method_params["interp_invNe"]
+    )  # +s.dx/2
+
     # Compute the interaction between the first electron and the rest
-    w = s.interaction(np.abs(s.x-f[1:]))
-    return 1/2*interpolate_n(s.x, n*np.sum(w, axis=0), method_params["interp_n"]).integrate(s.x[0], s.x[-1])
+    w = s.interaction(np.abs(s.x - f[1:]))
+    return (
+        1
+        / 2
+        * interpolate_n(
+            s.x, n * np.sum(w, axis=0), method_params["interp_n"]
+        ).integrate(s.x[0], s.x[-1])
+    )
 
 
 def hamiltonian(
@@ -254,14 +297,18 @@ def hamiltonian(
     return H, H, H
 
 
-def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState, method_params=default_params) -> float:
+def total_energy(
+    s: iDEA.system.System,
+    state: iDEA.state.SingleBodyState,
+    method_params: Dict[str, str] = default_params,
+) -> float:
     r"""
     Compute the total energy.
 
     | Args:
     |     s: iDEA.system.System, System object.
     |     state: iDEA.state.SingleBodyState, State. (default = None)
-
+    |     method_params: Dict[str, str], Dictionary of method parameters.
     | Returns:
     |     E: float, Total energy.
     """
@@ -289,7 +336,7 @@ def solve(
     |     k: int, Energy state to solve for. (default = 0, the ground-state)
     |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
     |     mixing: float, Mixing parameter. (default = 0.5)
-    |    tol: float, Tollerance of convergence. (default = 1e-10)
+    |     tol: float, Tollerance of convergence. (default = 1e-10)
     |     initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)
     |     silent: bool, Set to true to prevent printing. (default = False)
     |     method_params: Dict[str, str], Dictionary of method parameters.
@@ -297,7 +344,15 @@ def solve(
     |     state: iDEA.state.SingleBodyState, Solved state.
     """
     return solve_ni(
-        s, partial(hamiltonian, method_params=method_params), k, restricted, mixing, tol, initial, name, silent
+        s,
+        partial(hamiltonian, method_params=method_params),
+        k,
+        restricted,
+        mixing,
+        tol,
+        initial,
+        name,
+        silent,
     )
 
 
@@ -325,5 +380,11 @@ def propagate(
     |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
     return propagate_ni(
-        s, state, v_ptrb, t, partial(hamiltonian, method_params=method_params), restricted, name
+        s,
+        state,
+        v_ptrb,
+        t,
+        partial(hamiltonian, method_params=method_params),
+        restricted,
+        name,
     )
