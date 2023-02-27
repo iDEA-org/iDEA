@@ -32,16 +32,16 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
     |     K: np.ndarray, Kintetic energy operator.
     """
     if s.stencil == 3:
-        sd = 1.0 * np.array([1, -2, 1], dtype=np.float) / s.dx**2
+        sd = 1.0 * np.array([1, -2, 1], dtype=float) / s.dx**2
         sdi = (-1, 0, 1)
     elif s.stencil == 5:
-        sd = 1.0 / 12.0 * np.array([-1, 16, -30, 16, -1], dtype=np.float) / s.dx**2
+        sd = 1.0 / 12.0 * np.array([-1, 16, -30, 16, -1], dtype=float) / s.dx**2
         sdi = (-2, -1, 0, 1, 2)
     elif s.stencil == 7:
         sd = (
             1.0
             / 180.0
-            * np.array([2, -27, 270, -490, 270, -27, 2], dtype=np.float)
+            * np.array([2, -27, 270, -490, 270, -27, 2], dtype=float)
             / s.dx**2
         )
         sdi = (-3, -2, -1, 0, 1, 2, 3)
@@ -50,7 +50,7 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
             1.0
             / 5040.0
             * np.array(
-                [-9, 128, -1008, 8064, -14350, 8064, -1008, 128, -9], dtype=np.float
+                [-9, 128, -1008, 8064, -14350, 8064, -1008, 128, -9], dtype=float
             )
             / s.dx**2
         )
@@ -61,7 +61,7 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
             / 25200.0
             * np.array(
                 [8, -125, 1000, -6000, 42000, -73766, 42000, -6000, 1000, -125, 8],
-                dtype=np.float,
+                dtype=float,
             )
             / s.dx**2
         )
@@ -86,7 +86,7 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
                     864,
                     -50,
                 ],
-                dtype=np.float,
+                dtype=float,
             )
             / s.dx**2
         )
