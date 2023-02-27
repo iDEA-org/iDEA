@@ -1,4 +1,4 @@
-# <img src="docs/logo.png" alt="" width="70"/> iDEA 
+# <img src="docs/logo.png" alt="" width="70"/> iDEA (interacting Dynamic Electrons Approach)  
 
 Exploring exact solutions and practical approximations in many-electron quantum mechanics.
 
@@ -12,9 +12,9 @@ Exploring exact solutions and practical approximations in many-electron quantum 
  
 <p>One of the main goals of iDEA is to help users understand when popular approximations used in practical quantum theory calculations may be unreliable and why. By using iDEA to study a variety of systems, researchers can identify the circumstances in which these approximations are least secure and develop more advanced methods for use in materials science.</p>
 
-<!--**iDEA (interacting Dynamic Electrons Approach) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducibility, interactivity and simplicity.**
+<!--**iDEA (interacting Dynamic Electrons Approach) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducibility, interactivity and simplicity.** -->
 
-[Homepage](https://idea-org.github.io/)-->
+[Homepage](https://idea-org.github.io/)
 
 [View on GitHub](https://github.com/iDEA-org/iDEA)
 
