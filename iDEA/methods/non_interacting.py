@@ -190,12 +190,12 @@ def add_occupations(
     # Construct all possible occupations.
     up_occupations = []
     for up_index in up_indices:
-        up_occupation = np.zeros(shape=up_energies.shape, dtype=np.float)
+        up_occupation = np.zeros(shape=up_energies.shape, dtype=float)
         np.put(up_occupation, up_index, [1.0] * s.up_count)
         up_occupations.append(up_occupation)
     down_occupations = []
     for down_index in down_indices:
-        down_occupation = np.zeros(shape=down_energies.shape, dtype=np.float)
+        down_occupation = np.zeros(shape=down_energies.shape, dtype=float)
         np.put(down_occupation, down_index, [1.0] * s.down_count)
         down_occupations.append(down_occupation)
     occupations = list(itertools.product(up_occupations, down_occupations))
