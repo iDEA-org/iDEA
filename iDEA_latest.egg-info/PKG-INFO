@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: iDEA-latest
-Version: 1.0.1
+Version: 1.0.2
 Summary: interacting Dynamic Electrons Approach (iDEA)
 Home-page: https://idea-org.github.io/
 Author: Jack Wetherell
@@ -14,9 +14,9 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 License-File: COPYING.txt
 
-# <img src="docs/logo.png" alt="" width="70"/> iDEA - The interacting Dynamic Electrons Approach
+# <img src="docs/logo.png" alt="" width="70"/> iDEA (interacting Dynamic Electrons Approach)  
 
-Exploring exact and approximate methods for many-electron quantum mechanics.
+Exploring exact solutions and practical approximations in many-electron quantum mechanics.
 
 ![pip](https://img.shields.io/pypi/v/iDEA-latest)
 ![tag](https://img.shields.io/github/v/tag/iDEA-org/iDEA)
@@ -24,9 +24,13 @@ Exploring exact and approximate methods for many-electron quantum mechanics.
 ![Issues](https://img.shields.io/github/issues/iDEA-org/iDEA)
 ![Pull Requests](https://img.shields.io/github/issues-pr/iDEA-org/iDEA)
 
-**iDEA (interacting Dynamic Electrons Approach) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducibility, interactivity and simplicity.**
+<p>iDEA (the interacting dynamic electrons approach) is a comprehensive software library that enables users to explore and understand the intricacies of many-body quantum mechanics. Developed at the <a href="https://www.york.ac.uk/">University of York</a> and the <a href="https://www.polytechnique.edu/en">&Eacute;cole polytechnique</a>, iDEA is written in Python and offers both exact and approximate approaches to quantum mechanics. With its focus on reproducibility, interactivity, and simplicity, iDEA has been used in a variety of research projects to gain insights into fundamental theories, such as density functional theory and many-body perturbation theory, as well as in educational contexts, such as <a href="https://www.coursera.org/learn/density-functional-theory">Coursera online courses</a>.</p>
+ 
+<p>One of the main goals of iDEA is to help users understand when popular approximations used in practical quantum theory calculations may be unreliable and why. By using iDEA to study a variety of systems, researchers can identify the circumstances in which these approximations are least secure and develop more advanced methods for use in materials science.</p>
 
-[Homepage](https://idea-org.github.io/)  
+<!--**iDEA (interacting Dynamic Electrons Approach) is a high-performance, user friendly, free software framework in python for state-of-the-art research, experiments, testing and education in many-body quantum physics with a focus on reproducibility, interactivity and simplicity.** -->
+
+[Homepage](https://idea-org.github.io/)
 
 [View on GitHub](https://github.com/iDEA-org/iDEA)
 
@@ -105,17 +109,25 @@ The development and applications of the iDEA code from 2010 to 2021 is documente
 
 ## Teaching
 
-iDEA can also be used to create teaching content, visualisations and expositions> For example, see the following [YouTube video created using iDEA](https://www.youtube.com/watch?v=JaSVguMFA-M&ab_channel=JackWetherell).
+iDEA can be used to create teaching content, visualisations and expositions. For example, see the following [YouTube video created using iDEA](https://www.youtube.com/watch?v=JaSVguMFA-M&ab_channel=JackWetherell).
 
 iDEA was used to create teaching content for the [Density Functional Theory MOOC on Coursera](https://www.coursera.org/learn/density-functional-theory).
 
 ## Developers
 
-<img src="docs/dev.png" alt="" width="500"/>
+Dr. Jack Wetherell, Dr. Matt Hodgson and Dr. Leopold Talirz.
+
+<div style="display:flex;">
+    <img src="docs/Jack_Wetherell.jpeg" style="width:25%;">
+    <img src="docs/Matt_Hodgson.jpg" style="width:28%">
+    <img src="docs/Leopold_Talirz.jpeg" style="width:25%">
+</div>
+
+<!--img src="docs/dev.png" alt="" width="500"/-->
 
 ## Contributors
 
-We thank all of the developers, PhD students, masters students, summer project interns and researchers for thier key contributions to iDEA:
+We thank all of the developers, PhD students, master's students, summer project interns and researchers for thier key contributions to iDEA:
 
 Sean Adamson, Jacob Chapman, Thomas Durrant, Razak Elmaslmane, Mike Entwistle, Rex Godby, Matt Hodgson, Piers Lillystone, Aaron Long, Robbie Oliver, James Ramsden, Ewan Richardson, Matthew Smith, Leopold Talirz and Jack Wetherell. 
 

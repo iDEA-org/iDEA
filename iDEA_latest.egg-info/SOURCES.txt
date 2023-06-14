@@ -25,14 +25,12 @@ setup.py
 ./iDEA/methods/non_interacting.py
 dist/iDEA-latest-0.1.1.tar.gz
 dist/iDEA-latest-0.1.2.tar.gz
-dist/iDEA-latest-0.1.3.tar.gz
 dist/iDEA-latest-0.1.4.tar.gz
 dist/iDEA-latest-0.1.5.tar.gz
 dist/iDEA-latest-0.1.6.tar.gz
 dist/iDEA-latest-1.0.0.tar.gz
 dist/iDEA_latest-0.1.1-py3-none-any.whl
 dist/iDEA_latest-0.1.2-py3-none-any.whl
-dist/iDEA_latest-0.1.3-py3-none-any.whl
 dist/iDEA_latest-0.1.4-py3-none-any.whl
 dist/iDEA_latest-0.1.5-py3-none-any.whl
 dist/iDEA_latest-0.1.6-py3-none-any.whl
