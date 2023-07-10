@@ -49,7 +49,7 @@ For full details of usage please see our [tutorial](https://github.com/iDEA-org/
 Some of iDEA's features:
 - Exact solution of the many-electron problem by solving the static and time-dependent Schrödinger equation, including exact exchange and correlation.
 - Exact solutions which approach the degree of exchange and correlation in realistic systems.
-- Free choice of external potential that may be time-dependent, on an arbitrarilty dense spatial grid, for any number of electron with any spin configuration.
+- Free choice of external potential that may be time-dependent, on an arbitrarily dense spatial grid, for any number of electron with any spin configuration.
 - Implementation of various approximate methods (established and novel) for comparison, including:
     - Non-interacting electrons
     - Hartree theory
