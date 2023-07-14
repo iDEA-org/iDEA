@@ -11,4 +11,5 @@ iDEA:
         hartree_fock: exchange_potential_operator, hamiltionian, total_energy, solve, propagate.
         lda: xc_potential_operator, hamiltionian, total_energy, solve, propagate.
         hybrid: hamiltionian, total_energy, solve, propagate.
+        kssce: interpolate_n, interpolate_invNe, interpolate_vsce, compute_comotion_functions, sce_potential_operator, sce_energy, hamiltonian, total_energy, solve, propagate
     reverse_engineering: reverse, reverse_propagation.
