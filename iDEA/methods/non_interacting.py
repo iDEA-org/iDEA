@@ -212,7 +212,7 @@ def add_occupations(
         energies.append(E)
 
     # Choose the correct energy index.
-    energy_index = np.argsort(energies)[k]
+    energy_index = np.argsort(energies,kind='stable')[k]
 
     # Construct correct occupations.
     state.up.occupations = np.zeros(shape=state_copy.up.energies.shape)
