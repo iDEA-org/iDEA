@@ -49,7 +49,7 @@ def kinetic_energy_operator(s: iDEA.system.System) -> sps.dia_matrix:
     generate_terms = lambda f, A, B, n: (
         fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n)
     )
-    terms = generate_terms(sps.kron, h, I, s.count)
+    terms = generate_terms(sps.kron, k, I, s.count)
     K = sps.dia_matrix((s.x.shape[0] ** s.count,) * 2, dtype=float)
     for term in terms:
         K += term
@@ -78,7 +78,7 @@ def external_potential_operator(s: iDEA.system.System) -> sps.dia_matrix:
     generate_terms = lambda f, A, B, n: (
         fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n)
     )
-    terms = generate_terms(sps.kron, h, I, s.count)
+    terms = generate_terms(sps.kron, vext, I, s.count)
     Vext = sps.dia_matrix((s.x.shape[0] ** s.count,) * 2, dtype=float)
     for term in terms:
         Vext += term
