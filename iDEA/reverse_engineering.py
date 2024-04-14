@@ -195,7 +195,7 @@ def reverse_propagation(
             s_fictitious.x.shape[0],
             state_fictitious.up.occupied.shape[0],
         ),
-        dtype=np.complex,
+        dtype=complex,
     )
     evolution_fictitious.down.td_orbitals = np.zeros(
         shape=(
@@ -203,7 +203,7 @@ def reverse_propagation(
             s_fictitious.x.shape[0],
             state_fictitious.down.occupied.shape[0],
         ),
-        dtype=np.complex,
+        dtype=complex,
     )
     evolution_fictitious.up.td_orbitals[0, :, :] = state_fictitious.up.orbitals[
         :, state_fictitious.up.occupied
