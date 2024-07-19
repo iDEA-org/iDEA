@@ -32,4 +32,4 @@ jobs:
         pip install scipy 
     - name: Test with pytest
       run: |
-        pytest tests/test_manybody.py::ShortTest
+        pytest iDEA/tests/test_manybody.py::ShortTest
