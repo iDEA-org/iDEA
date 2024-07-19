@@ -1,6 +1,6 @@
 # This workflow will execute the manybody long test manually in GitHub actions.
 
-name: Many-Body Groundstate Short Test
+name: Many-Body Groundstate Long Test
 
 # Run on manual execution
 on:
