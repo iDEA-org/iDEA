@@ -1,7 +1,8 @@
 # This workflow will execute the manybody test on push and pull requests
 
-name: Manybody Test
+name: Many-Body Groundstate Short Test
 
+# Run on push, pull request and manual execution
 on:
   push:
     branches: [ "master" ]
@@ -25,6 +26,7 @@ jobs:
       with:
         python-version: "3.10"
         
+      # Cache so dependencies only need to be installed once
     - name: Cache pip
       uses: actions/cache@v3
       with:
@@ -43,6 +45,6 @@ jobs:
       run: |
         pip list
     
-    - name: Test with pytest
+    - name: Run TestShort with pytest 
       run: |
         pytest tests/test_manybody.py::TestShort
