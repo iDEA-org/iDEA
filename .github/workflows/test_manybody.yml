@@ -27,8 +27,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pytest
-        pip install iDEA-latest 
+        pip install .
     - name: Test with pytest
       run: |
         pytest tests/test_manybody.py::TestShort
-
