@@ -1,4 +1,4 @@
-# This workflow will execute the manybody test on push and pull requests
+# This workflow will execute the manybody short test on push and pull requests
 
 name: Many-Body Groundstate Short Test
 
