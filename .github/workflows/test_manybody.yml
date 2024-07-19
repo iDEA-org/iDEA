@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.10
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: "3.10"
     - name: Install dependencies
@@ -28,8 +28,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest
         pip install iDEA-latest 
-        pip install numpy
-        pip install scipy 
     - name: Test with pytest
       run: |
-        pytest iDEA/tests/test_manybody.py::ShortTest
+        pytest tests/test_manybody.py::ShortTest
+
