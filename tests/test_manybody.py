@@ -5,7 +5,7 @@ Version: 1.0
 Tests the Many-Body functionality of iDEA against analytical results to protect the iDEA code from any bugs/errors introduced during updates to iDEA.  
 To run manually, use pytest test_manybody.py when in the 'iDEA/tests/many_body' directory.
 
-The system consists of two electrons with spin = 'ud' or spin ='uu' in a harmonic oscillator potential with a softened coulomb interaction i.e. Hooke's atom. 
+The system consists of two electrons with spin = 'ud' or spin = 'uu' in a harmonic oscillator potential with a softened coulomb interaction i.e. Hooke's atom. 
 The analytical solution determines the ground state wavefunction for both electrons using separation of variables. 
 One component is solved analytically (Phi) and the other is solved numerically (Chi), both components are combined to give the full many-body wavefunction (Psi) from which observables can be calculated.
 
