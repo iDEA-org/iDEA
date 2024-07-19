@@ -5,12 +5,13 @@ Version: 1.0
 Tests the Many-Body functionality of iDEA against analytical results to protect the iDEA code from any bugs/errors introduced during updates to iDEA.  
 To run manually, use pytest test_manybody.py when in the 'iDEA/tests/many_body' directory.
 
-The system consists of two electrons with spin = 'ud' or spin ='uu in a quantum harmonic oscillator (QHO) potential. The analytical solution determines the ground state wavefunction for both electrons using separation 
-of variables. One component is solved analytically (Phi) and the other is solved numerically (Chi), both components are combined to give the full many-body wavefunction (Psi) from which observables can be calculated.
+The system consists of two electrons with spin = 'ud' or spin ='uu' in a harmonic oscillator potential with a softened coulomb interaction i.e. Hooke's atom. 
+The analytical solution determines the ground state wavefunction for both electrons using separation of variables. 
+One component is solved analytically (Phi) and the other is solved numerically (Chi), both components are combined to give the full many-body wavefunction (Psi) from which observables can be calculated.
 
 The same system is then solved using iDEA. Observables can then be compared to the results from the analytical solution. 
 
-Tests are written with pytest to check for numerical accuracy and correct behaviour by comparison of iDEA and the analytical test system. 
+Tests are written with pytest to check for numerical accuracy by comparison of iDEA and the analytical test system. 
 '''
 
 # Dependencies
@@ -233,8 +234,6 @@ class Groundstate:
         # Analytical wavefunction
         Phi = np.exp((-1 * omega) * (v**2))
 
-       # wavefunction = np.zeros((231,231))
-
         # Calculate for uu spin
         if spin == 'uu': 
             # Numerical wavefunction
@@ -302,7 +301,6 @@ class Groundstate:
 
         # Get observables 
         density = iDEA.observables.density(system, state = ground_state)
-        # np.save('reproducible_density', density)
 
         total_energy = ground_state.energy
         wavefunction = ground_state.space 
@@ -345,8 +343,8 @@ def iDEA_long(spin):
 @pytest.mark.parametrize('spin', [('ud'), ('uu')], scope='class')
 class TestShort: 
     r'''
-        Contains short runtime test functions, invoked using Pytest. 
-        Approximate runtime : ~ 16.8 seconds
+        Contains short runtime test functions, invoked using Pytest.
+        Approximate runtime : ~ 16.8 seconds for 'uu' and 'ud' systems combined.
     '''
     
     def test_density(self, analytic_short, iDEA_short):
@@ -393,30 +391,17 @@ class TestShort:
         Psi_2_modsq = abs(iDEA_short.wavefunction)**2
         Psi_1_star = np.conjugate(analytic_short.wavefunction)
         Psi_2 = iDEA_short.wavefunction 
+
         metric = np.sqrt(np.sum(Psi_1_modsq + Psi_2_modsq)*dx - 2 * abs(np.sum(Psi_1_star * Psi_2)*dx))
 
         assert metric <= tolerance 
-
-    # def test_reproducible_density(self):
-    #     density_metric = np.load('reproducible_density.npy')
-    #     iDEA_density = Results.short.iDEA.density
-
-    #     assert iDEA_density.all() == density_metric.all()
-
-    # def test_reproducible_wavefunction():
-    #     wavefunction_metric = 'hardcode'
-    #     assert np.sum(abs(iDEA_results.wavefunction)) == wavefunction_metric
-
-    # def test_reproducible_total_energy():
-    #     total_energy_metric = 'hardcode'
-    #     assert iDEA_results.total_energy == total_energy_metric
 
 
 @pytest.mark.parametrize('spin', [('ud'), ('uu')], scope='class')
 class TestLong:
     r'''
         Contains long runtime test functions, invoked using Pytest. 
-        Approximate runtime : ~ 18 minutes
+        Approximate runtime : ~ 18 minutes for 'uu' and 'ud' systems combined.
     '''
 
     def test_density(self, analytic_long, iDEA_long):
@@ -465,9 +450,3 @@ class TestLong:
         metric = np.sqrt(np.sum(Psi_1_modsq + Psi_2_modsq)*dx - 2 * abs(np.sum(Psi_1_star * Psi_2)*dx))
 
         assert metric <= tolerance 
-
-    #  def test_reproducible_density(self):
-    #     density_metric = np.load('reproducible_density.npy')
-    #     iDEA_density = Results.short.iDEA.density
-
-    #     assert iDEA_density.all() == density_metric.all()
