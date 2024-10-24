@@ -5,6 +5,7 @@ from abc import ABC as Interface
 import copy
 import numpy as np
 import iDEA.utilities
+import pickle
 
 
 __all__ = [
@@ -141,3 +142,48 @@ class SingleBodyEvolution(Evolution):
         self.down.td_orbitals = iDEA.utilities.ArrayPlaceholder()
         self.v_ptrb = iDEA.utilities.ArrayPlaceholder()
         self.t = iDEA.utilities.ArrayPlaceholder()
+
+
+def save_many_body_state(state: ManyBodyState, file_name: str) -> None:
+    r"""
+    Save a many body state to a system file.
+
+    | Args:
+    |     state: iDEA.state.ManyBodyState, State object to save.
+    |     file_name: str, file name.
+    """
+    pickle.dump(state, open(file_name, "wb"))
+
+def save_single_body_state(state: SingleBodyState, file_name: str) -> None:
+    r"""
+    Save a single body state to a system file.
+
+    | Args:
+    |     state: iDEA.state.SingleBodyState, State object to save.
+    |     file_name: str, file name.
+    """
+    pickle.dump(state, open(file_name, "wb"))
+
+def load_many_body_state(file_name: str) -> ManyBodyState:
+    r"""
+    Load a many body state from an system file.
+
+    | Args:
+    |     file_name: str, file name.
+
+    | Returns
+    |     system: iDEA.state.ManyBodyState, Loaded State object.
+    """
+    return pickle.load(open(file_name, "rb"))
+
+def load_single_body_state(file_name: str) -> SingleBodyState:
+    r"""
+    Load a single body state from an system file.
+
+    | Args:
+    |     file_name: str, file name.
+
+    | Returns
+    |     system: iDEA.state.SingleBodyState, Loaded State object.
+    """
+    return pickle.load(open(file_name, "rb"))
