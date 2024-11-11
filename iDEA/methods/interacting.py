@@ -293,7 +293,7 @@ def _solve_on_gpu(H: np.ndarray, k: int) -> tuple:
 
 
 def solve(
-    s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None
+    s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, allstates: bool=False
 ) -> iDEA.state.ManyBodyState:
     r"""
     Solves the interacting Schrodinger equation of the given system.
@@ -303,6 +303,7 @@ def solve(
     |     H: np.ndarray, Hamiltonian [If None this will be computed from s]. (default = None)
     |     k: int, Energy state to solve for. (default = 0, the ground-state)
     |     level: int. Max level of excitation to use when solving the Schrodinger equation.
+    |     allstates: bool, if True returns all states computed while solving, if false only returns state indicated by k. (default = False)
 
     | Returns:
     |     state: iDEA.state.ManyBodyState, Solved state.
@@ -356,7 +357,14 @@ def solve(
     state.full = fulls[..., k]
     state.energy = energies[k]
 
-    return state
+    if allstates == False:
+        return state
+    elif allstates == True:
+        state.allspace = spaces
+        state.allspin = spins
+        state.allfull = fulls
+        state.allenergy = energies
+        return state
 
 
 def propagate_step(

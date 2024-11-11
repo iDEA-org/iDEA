@@ -30,7 +30,7 @@ class ManyBodyState(State):
     """State of interacting particles."""
 
     def __init__(
-        self, space: np.ndarray = None, spin: np.ndarray = None, full=None, energy=None
+        self, space: np.ndarray = None, spin: np.ndarray = None, full=None, energy=None, allspace: np.ndarray = None, allspin: np.ndarray= None, allfull=None, allenergy=None
     ):
         r"""
         State of particles in a many-body state.
@@ -50,6 +50,10 @@ class ManyBodyState(State):
         |     spin: np.ndarray, Spin part of the wavefunction on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). (default = None)
         |     full: np.ndarray, Total antisymmetrised wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N). (default = None)
         |     energy: float, Total energy of the state.
+        |     allspace: np.ndarray, spatial part of all wavefunctions generated during solving
+        |     allspin: np.ndarray, spin part of all wavefunctions generated during solving
+        |     allfull: np.ndarray, full wavefunctions for all generated during solving
+        |     allenergies: np.ndarray, all energies generated during solving
         """
         if space is None:
             self.space = iDEA.utilities.ArrayPlaceholder()
