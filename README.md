@@ -1,5 +1,12 @@
 # <img src="docs/logo.png" alt="" width="70"/> iDEA (interacting Dynamic Electrons Approach)  
 
+ADDITIONAL FUNCTIONALITY ADDED 
+- Save states into a file for analysis later: iDEA.state.save_many_body_state(state,filename), iDEA.state.load_many_body_state(filename), iDEA.state.save_single_body_state(state,filename), iDEA.state.load_single_body_state(filename).
+- Added the pickle import so saving and loading systems works
+- Added the ablility to block prints when solving states using the stopprint=True flag in idea.methods.interacting.solve()
+- Added the ability to get all the information gained during state solving using the allstates=True flag in idea.methods.interacting.solve(). This adds 4 new variables to the state object: allspace, allspin, allfull, allenergy. Specific excitations can be accessed by state.allspace[...,k], state.allspin[...,k], state.allfull[...,k], state.allenergy[k]. This allows to quickly get information about all excitations up to the excitation its solving for.
+
+
 Exploring exact solutions and practical approximations in many-electron quantum mechanics.
 
 ![pip](https://img.shields.io/pypi/v/iDEA-latest)
