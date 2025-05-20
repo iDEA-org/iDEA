@@ -1,18 +1,19 @@
 """Contains all interacting functionality and solvers."""
 
-import os
 import copy
-import string
-import itertools
 import functools
-from tqdm import tqdm
+import itertools
+import os
+import string
+
 import numpy as np
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
-import iDEA.system
-import iDEA.state
-import iDEA.methods.non_interacting
+from tqdm import tqdm
 
+import iDEA.methods.non_interacting
+import iDEA.state
+import iDEA.system
 
 if os.environ.get("iDEA_GPU") == "True":
     import cupy as cnp
@@ -101,7 +102,7 @@ def hamiltonian(s: iDEA.system.System) -> sps.dia_matrix:
         U = np.log(
             np.einsum(indices + "->" + symbols[: s.count], *(np.exp(s.v_int),) * int(s.count * (s.count - 1) / 2))
         )
-        U = sps.diags(U.reshape((H0.shape[0])), format="dia")
+        U = sps.diags(U.reshape(H0.shape[0]), format="dia")
     else:
         U = 0.0
 
@@ -353,7 +354,7 @@ def propagate_step(
     Hp = H + Vptrb
 
     # Evolve.
-    wavefunction = evolution.td_space[j - 1, ...].reshape((s.x.shape[0] ** s.count))
+    wavefunction = evolution.td_space[j - 1, ...].reshape(s.x.shape[0] ** s.count)
     wavefunction = spsla.expm_multiply(-1.0j * dt * Hp, wavefunction)
     evolution.td_space[j, ...] = wavefunction.reshape((s.x.shape[0],) * s.count)
 

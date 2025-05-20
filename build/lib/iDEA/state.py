@@ -1,10 +1,11 @@
 """Defines the structures to describe the system states"""
 
-from abc import ABC as Interface
 import copy
-import numpy as np
-import iDEA.utilities
+from abc import ABC as Interface
 
+import numpy as np
+
+import iDEA.utilities
 
 __all__ = [
     "State",
@@ -60,7 +61,7 @@ class ManyBodyState(State):
         else:
             self.full = full
         if energy is None:
-            self.energy = float()
+            self.energy = 0.0
         else:
             self.energy = energy
 

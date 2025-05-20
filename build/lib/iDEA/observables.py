@@ -1,12 +1,14 @@
 import copy
-import string
 import itertools
+import string
 from typing import Union
+
 import numpy as np
-import iDEA.system
-import iDEA.state
-import iDEA.methods.non_interacting
+
 import iDEA.methods.interacting
+import iDEA.methods.non_interacting
+import iDEA.state
+import iDEA.system
 
 
 def observable(
@@ -92,7 +94,7 @@ def observable(
             return O.real
 
     else:
-        raise AttributeError(f"State or Evolution must be provided.")
+        raise AttributeError("State or Evolution must be provided.")
 
 
 def density(
@@ -189,7 +191,7 @@ def density(
             return n
 
     else:
-        raise AttributeError(f"State or Evolution must be provided.")
+        raise AttributeError("State or Evolution must be provided.")
 
 
 def density_matrix(
@@ -310,7 +312,7 @@ def density_matrix(
             return p
 
     else:
-        raise AttributeError(f"State or Evolution must be provided.")
+        raise AttributeError("State or Evolution must be provided.")
 
 
 def kinetic_energy(
@@ -346,7 +348,7 @@ def kinetic_energy(
         return observable(s, K, evolution=evolution)
 
     else:
-        raise AttributeError(f"State or Evolution must be provided.")
+        raise AttributeError("State or Evolution must be provided.")
 
 
 def external_potential(s: iDEA.system.System) -> np.ndarray:
@@ -534,4 +536,4 @@ def _placeholder(
     if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
         raise NotImplementedError()
     else:
-        raise AttributeError(f"State or Evolution must be provided.")
+        raise AttributeError("State or Evolution must be provided.")

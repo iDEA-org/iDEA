@@ -1,14 +1,15 @@
 """Contains all Hartree Fock functionality and solvers."""
 
 from collections.abc import Callable
+
 import numpy as np
-import iDEA.system
-import iDEA.state
-import iDEA.observables
-import iDEA.methods.non_interacting
+
 import iDEA.methods.hartree
 import iDEA.methods.hartree_fock
-
+import iDEA.methods.non_interacting
+import iDEA.observables
+import iDEA.state
+import iDEA.system
 
 name = "hybrid"
 

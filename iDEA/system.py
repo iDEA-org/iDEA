@@ -1,10 +1,11 @@
 """Contains all functionality to define and manage definitions of model systems."""
 
 import warnings
-import numpy as np
-import iDEA.utilities
-import iDEA.interactions
 
+import numpy as np
+
+import iDEA.interactions
+import iDEA.utilities
 
 __all__ = ["System", "save_system", "load_system", "systems"]
 
@@ -59,11 +60,11 @@ class System:
         assert (
             self.x.shape[0] == self.v_int.shape[0] and self.x.shape[0] == self.v_int.shape[1]
         ), "v_int is not of the correct shape, got shape {self.v_int.shape} instead."
-        assert self.count >= 0, f"count is not positive."
+        assert self.count >= 0, "count is not positive."
         assert set(self.electrons).issubset(
             set(["u", "d"])
         ), f"Electrons must have only up or down spin, e.g 'uudd'. Got {self.electrons} instead"
-        assert self.count == self.up_count + self.down_count, f"Electrons must obay up_count + down_count = count."
+        assert self.count == self.up_count + self.down_count, "Electrons must obay up_count + down_count = count."
         assert self.stencil in [
             3,
             5,

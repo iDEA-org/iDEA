@@ -2,17 +2,18 @@
 
 import copy
 import itertools
-from tqdm import tqdm
 from collections.abc import Callable
+
 import numpy as np
-import scipy.sparse as sps
 import numpy.linalg as npla
 import scipy.linalg as spla
+import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
-import iDEA.system
-import iDEA.state
-import iDEA.observables
+from tqdm import tqdm
 
+import iDEA.observables
+import iDEA.state
+import iDEA.system
 
 name = "non_interacting"
 
@@ -353,7 +354,7 @@ def solve(
         count += 1
         if silent is False:
             print(
-                r"iDEA.methods.{0}.solve: convergence = {1:.5}, tolerance = {2:.5}".format(name, convergence, tol),
+                rf"iDEA.methods.{name}.solve: convergence = {convergence:.5}, tolerance = {tol:.5}",
                 end="\r",
             )
 
@@ -479,7 +480,7 @@ def propagate(
     evolution.t = t
 
     # Propagate.
-    for j, ti in enumerate(tqdm(t, desc="iDEA.methods.{}.propagate: propagating state".format(name))):
+    for j, ti in enumerate(tqdm(t, desc=f"iDEA.methods.{name}.propagate: propagating state")):
         if j != 0:
             evolution = propagate_step(s, evolution, j, hamiltonian_function, v_ptrb, dt, restricted, **kwargs)
 

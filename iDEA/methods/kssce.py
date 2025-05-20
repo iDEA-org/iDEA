@@ -8,16 +8,17 @@ References:
 5. A. Marie, D. P. Kooi, J. Grossi, M. Seidl, Z. Musslimani, K.J.H. Giesbertz, P. Gori-Giorgi. Real space Mott-Anderson electron localization with long-range interactions. Physical Review Research 4, 043192 (2022) DOI: [10.1103/PhysRevResearch.4.043192](https://dx.doi.org/10.1103/PhysRevResearch.4.043192)
 """
 
-from collections.abc import Callable
+from functools import partial
+from typing import Dict
+
 import numpy as np
 import scipy
 from scipy.interpolate import PPoly
-import iDEA.system
-import iDEA.state
-import iDEA.observables
+
 import iDEA.methods.non_interacting
-from typing import Callable, Dict
-from functools import partial
+import iDEA.observables
+import iDEA.state
+import iDEA.system
 
 name = "kssce"
 
