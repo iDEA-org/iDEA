@@ -2,7 +2,6 @@
 
 import pickle
 
-
 __all__ = [
     "Container",
     "ArrayPlaceholder",

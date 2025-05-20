@@ -1,15 +1,16 @@
 """Contains all reverse-engineering functionality."""
 
 import copy
-import warnings
 from collections.abc import Container
-from tqdm import tqdm
+
 import numpy as np
 import scipy.optimize as spo
 import scipy.sparse as sps
-import iDEA.system
-import iDEA.state
+from tqdm import tqdm
+
 import iDEA.observables
+import iDEA.state
+import iDEA.system
 
 
 def reverse(
@@ -58,7 +59,7 @@ def reverse(
     while convergence > tol:
         if silent is False:
             print(
-                r"iDEA.reverse_engineering.reverse: convergence = {0:.5}, tolerance = {1:.5}".format(convergence, tol),
+                rf"iDEA.reverse_engineering.reverse: convergence = {convergence:.5}, tolerance = {tol:.5}",
                 end="\r",
             )
         state = method.solve(s_fictitious, initial=(n, up_n, down_n, p, up_p, down_p), silent=True, **kwargs)
