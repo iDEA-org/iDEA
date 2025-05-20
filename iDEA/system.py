@@ -129,7 +129,8 @@ def save_system(s: System, file_name: str) -> None:
     |     system: iDEA.system.System, System object to save.
     |     file_name: str, file name.
     """
-    pickle.dump(s, open(file_name, "wb"))
+    with open(file_name, "wb") as file:
+        pickle.dump(s, file)
 
 
 def load_system(file_name: str) -> System:
@@ -142,7 +143,10 @@ def load_system(file_name: str) -> System:
     | Returns
     |     system: iDEA.system.System, Loaded System object.
     """
-    return pickle.load(open(file_name, "rb"))
+    with open(file_name, "rb") as file:
+        system = pickle.load(file)
+
+    return system
 
 
 # Define some default built in systems.
