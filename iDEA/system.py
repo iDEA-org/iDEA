@@ -83,7 +83,8 @@ class System:
     def x(self, value):
         self.__x = value
         self.__dx = self.__x[1] - self.__x[0]
-        warnings.warn("x grid has been changed: dx has been recomputed, please update v_ext and v_int on this grid.")
+        warnings.warn("x grid has been changed: dx has been recomputed, please update v_ext and v_int on this grid.",
+                      stacklevel=2)
 
     @x.deleter
     def x(self):
@@ -122,7 +123,7 @@ class System:
 
 def save_system(s: System, file_name: str) -> None:
     r"""
-    Save a system to an system file.
+    Save a system to a system file.
 
     | Args:
     |     system: iDEA.system.System, System object to save.
@@ -133,7 +134,7 @@ def save_system(s: System, file_name: str) -> None:
 
 def load_system(file_name: str) -> System:
     r"""
-    Load a system from an system file.
+    Load a system from a system file.
 
     | Args:
     |     file_name: str, file name.
