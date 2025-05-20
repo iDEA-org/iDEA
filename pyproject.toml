@@ -31,8 +31,7 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "B", "SIM", "I"]
-ignore = ["E7", "F8"]
 
 [tool.ruff.lint.pep8-naming]
 # Apply the iDEA naming convention
-extend-ignore-names = ["iDEA_GPU"]
+extend-ignore-names = ["iDEA_*"]
