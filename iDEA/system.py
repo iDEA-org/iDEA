@@ -1,5 +1,6 @@
 """Contains all functionality to define and manage definitions of model systems."""
 
+import pickle
 import warnings
 
 import numpy as np

@@ -464,7 +464,7 @@ def exchange_potential(s: iDEA.system.System, p: np.ndarray) -> np.ndarray:
         return v_x
 
     else:
-        raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
+        raise AttributeError(f"Expected array of shape 1 or 2, got {p.shape} instead.")
 
 
 def exchange_energy(s: iDEA.system.System, p: np.ndarray, v_x: np.ndarray) -> Union[float, np.ndarray]:
@@ -490,7 +490,7 @@ def exchange_energy(s: iDEA.system.System, p: np.ndarray, v_x: np.ndarray) -> Un
         return E_x.real
 
     else:
-        raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
+        raise AttributeError(f"Expected array of shape 1 or 2, got {p.shape} instead.")
 
 
 def single_particle_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> float:
