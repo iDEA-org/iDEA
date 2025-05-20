@@ -1,6 +1,5 @@
 """Contains some pre-defined electron-electron interations"""
 
-
 import numpy as np
 
 
@@ -11,9 +10,7 @@ __all__ = [
 ]
 
 
-def softened_interaction(
-    x: np.ndarray, strength: float = 1.0, softening: float = 1.0
-) -> np.ndarray:
+def softened_interaction(x: np.ndarray, strength: float = 1.0, softening: float = 1.0) -> np.ndarray:
     r"""
     Constructs the softened interaction potential.
 
@@ -35,9 +32,7 @@ def softened_interaction(
     return v_int
 
 
-def softened_interaction_alternative(
-    x: np.ndarray, strength: float = 1.0, softening: float = 1.0
-) -> np.ndarray:
+def softened_interaction_alternative(x: np.ndarray, strength: float = 1.0, softening: float = 1.0) -> np.ndarray:
     r"""
     Constructs the alternative softened interaction potential.
 

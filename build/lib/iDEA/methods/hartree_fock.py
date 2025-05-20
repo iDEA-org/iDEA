@@ -1,6 +1,5 @@
 """Contains all Hartree Fock functionality and solvers."""
 
-
 from collections.abc import Callable
 import numpy as np
 import iDEA.system
@@ -120,9 +119,7 @@ def solve(
     | Returns:
     |     state: iDEA.state.SingleBodyState, Solved state.
     """
-    return iDEA.methods.non_interacting.solve(
-        s, hamiltonian, k, restricted, mixing, tol, initial, name, silent
-    )
+    return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol, initial, name, silent)
 
 
 def propagate(
@@ -147,6 +144,4 @@ def propagate(
     | Returns:
     |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
-    return iDEA.methods.non_interacting.propagate(
-        s, state, v_ptrb, t, hamiltonian, restricted, name
-    )
+    return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted, name)
