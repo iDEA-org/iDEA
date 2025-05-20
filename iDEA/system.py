@@ -48,10 +48,10 @@ class System:
 
     def check(self):
         r"""Performs checks on system properties. Raises AssertionError if any check fails."""
-        assert type(self.x) == np.ndarray, f"x grid is not of type np.ndarray, got {type(self.x)} instead."
-        assert type(self.v_ext) == np.ndarray, f"v_ext is not of type np.ndarray, got {type(self.v_ext)} instead."
-        assert type(self.v_int) == np.ndarray, f"v_int is not of type np.ndarray, got {type(self.v_int)} instead."
-        assert type(self.count) == int, f"count is not of type int, got {type(self.NE)} instead."
+        assert self.x is np.ndarray, f"x grid is not of type np.ndarray, got {type(self.x)} instead."
+        assert self.v_ext is np.ndarray, f"v_ext is not of type np.ndarray, got {type(self.v_ext)} instead."
+        assert self.v_int is np.ndarray, f"v_int is not of type np.ndarray, got {type(self.v_int)} instead."
+        assert self.count is int, f"count is not of type int, got {type(self.count)} instead."
         assert len(self.x.shape) == 1, f"x grid is not a 1D array, got {len(self.x.shape)}D array instead."
         assert len(self.v_ext.shape) == 1, f"v_ext is not a 1D array, got {len(self.v_ext.shape)}D array instead."
         assert len(self.v_int.shape) == 2, f"v_int is not a 2D array, got {len(self.v_int.shape)}D array instead."
