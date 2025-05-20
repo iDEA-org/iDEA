@@ -25,7 +25,7 @@ def reverse(
     **kwargs,
 ) -> iDEA.state.State:
     r"""
-    Determines what ficticious system is needed for a given method, when solving the system, to produce a given target density.
+    Determines what fictitious system is needed for a given method, when solving the system, to produce a given target density.
     If the given target density is from solving the interacting electron problem (iDEA.methods.interacting), and the method is the non-interacting electron solver (iDEA.methods.non_interacting)
     the output is the Kohn-Sham system.
 
@@ -195,14 +195,14 @@ def reverse_propagation(
     error = np.zeros_like(t)
 
     # Reverse propagation.
-    for j, ti in enumerate(
+    for j, _ti in enumerate(
         tqdm(
             t,
             desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation",
         )
     ):
         if j != 0:
-            # Determine ficticious perturbing potential.
+            # Determine fictitious perturbing potential.
             v_guess = np.zeros_like(evolution_fictitious.v_ptrb[j, :])
             result = spo.root(
                 _residual,
