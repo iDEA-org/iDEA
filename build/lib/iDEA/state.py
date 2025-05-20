@@ -1,6 +1,5 @@
 """Defines the structures to describe the system states"""
 
-
 from abc import ABC as Interface
 import copy
 import numpy as np
@@ -28,9 +27,7 @@ class Evolution(Interface):
 class ManyBodyState(State):
     """State of interacting particles."""
 
-    def __init__(
-        self, space: np.ndarray = None, spin: np.ndarray = None, full=None, energy=None
-    ):
+    def __init__(self, space: np.ndarray = None, spin: np.ndarray = None, full=None, energy=None):
         r"""
         State of particles in a many-body state.
 

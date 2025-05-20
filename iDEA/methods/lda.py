@@ -1,6 +1,5 @@
 """Contains all LDA functionality and solvers."""
 
-
 from collections.abc import Callable
 import numpy as np
 import iDEA.system
@@ -64,9 +63,7 @@ class HEG:
     }
 
 
-def exchange_correlation_potential(
-    s: iDEA.system.System, n: np.ndarray, separate: bool = False
-) -> np.ndarray:
+def exchange_correlation_potential(s: iDEA.system.System, n: np.ndarray, separate: bool = False) -> np.ndarray:
     r"""
     Compute the LDA exchange-correlation potential from a density.
 
@@ -95,10 +92,7 @@ def exchange_correlation_potential(
                 ) * n[j] ** p["g"]
                 r_s = 0.5 / n[j]
                 energy = (
-                    -(
-                        (q["a"] * r_s + q["e"] * r_s**2)
-                        / (1.0 + q["b"] * r_s + q["c"] * r_s**2 + q["d"] * r_s**3)
-                    )
+                    -((q["a"] * r_s + q["e"] * r_s**2) / (1.0 + q["b"] * r_s + q["c"] * r_s**2 + q["d"] * r_s**3))
                     * np.log(1.0 + q["f"] * r_s + q["g"] * r_s**2)
                     / q["f"]
                 )
@@ -111,29 +105,15 @@ def exchange_correlation_potential(
                         r_s
                         * (q["a"] + q["e"] * r_s)
                         * (q["f"] + 2.0 * q["g"] * r_s)
-                        * (
-                            q["b"] * r_s
-                            + q["c"] * (r_s**2)
-                            + q["d"] * (r_s**3)
-                            + 1.0
-                        )
+                        * (q["b"] * r_s + q["c"] * (r_s**2) + q["d"] * (r_s**3) + 1.0)
                         / (q["f"] * r_s + q["g"] * (r_s**2) + 1.0)
                     )
                     - (
                         (q["a"] + 2.0 * q["e"] * r_s)
-                        * (
-                            q["b"] * r_s
-                            + q["c"] * (r_s**2)
-                            + q["d"] * (r_s**3)
-                            + 1.0
-                        )
+                        * (q["b"] * r_s + q["c"] * (r_s**2) + q["d"] * (r_s**3) + 1.0)
                         * np.log(1.0 + q["f"] * r_s + q["g"] * (r_s**2))
                     )
-                ) / (
-                    q["f"]
-                    * (q["b"] * r_s + q["c"] * (r_s**2) + q["d"] * (r_s**3) + 1.0)
-                    ** 2
-                )
+                ) / (q["f"] * (q["b"] * r_s + q["c"] * (r_s**2) + q["d"] * (r_s**3) + 1.0) ** 2)
                 v_c[j] = energy - r_s * derivative
         v_xc = v_x + v_c
         if separate == True:
@@ -148,9 +128,7 @@ def exchange_correlation_potential(
         raise AttributeError(f"Expected array of shape 1 or 2, got {n.shape} instead.")
 
 
-def exchange_correlation_potential_operator(
-    s: iDEA.system.System, n: np.ndarray
-) -> np.ndarray:
+def exchange_correlation_potential_operator(s: iDEA.system.System, n: np.ndarray) -> np.ndarray:
     r"""
     Compute the exchange potential operator.
 
@@ -200,9 +178,7 @@ def hamiltonian(
     return H, H, H
 
 
-def exchange_correlation_energy(
-    s: iDEA.system.System, n: np.ndarray, separate: bool = False
-) -> np.ndarray:
+def exchange_correlation_energy(s: iDEA.system.System, n: np.ndarray, separate: bool = False) -> np.ndarray:
     r"""
     Compute the LDA exchange-correlation energy from a density.
 
@@ -230,10 +206,7 @@ def exchange_correlation_energy(
             ) * n[j] ** p["g"]
             r_s = 0.5 / n[j]
             e_c[j] = (
-                -(
-                    (q["a"] * r_s + q["e"] * r_s**2)
-                    / (1.0 + q["b"] * r_s + q["c"] * r_s**2 + q["d"] * r_s**3)
-                )
+                -((q["a"] * r_s + q["e"] * r_s**2) / (1.0 + q["b"] * r_s + q["c"] * r_s**2 + q["d"] * r_s**3))
                 * np.log(1.0 + q["f"] * r_s + q["g"] * r_s**2)
                 / q["f"]
             )
@@ -292,9 +265,7 @@ def solve(
     | Returns:
     |     state: iDEA.state.SingleBodyState, Solved state.
     """
-    return iDEA.methods.non_interacting.solve(
-        s, hamiltonian, k, restricted, mixing, tol, initial, name, silent
-    )
+    return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol, initial, name, silent)
 
 
 def propagate(
@@ -319,6 +290,4 @@ def propagate(
     | Returns:
     |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
-    return iDEA.methods.non_interacting.propagate(
-        s, state, v_ptrb, t, hamiltonian, restricted, name
-    )
+    return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted, name)

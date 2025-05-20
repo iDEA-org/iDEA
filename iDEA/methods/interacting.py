@@ -1,6 +1,5 @@
 """Contains all interacting functionality and solvers."""
 
-
 import os
 import copy
 import string
@@ -129,15 +128,10 @@ def hamiltonian(s: iDEA.system.System, GPU: bool = False):
     # Add the interaction part of the many-body Hamiltonian
     symbols = string.ascii_lowercase + string.ascii_uppercase
     if s.count > 1:
-        indices = ",".join(
-            ["".join(c) for c in itertools.combinations(symbols[: s.count], 2)]
-        )
+        indices = ",".join(["".join(c) for c in itertools.combinations(symbols[: s.count], 2)])
         v_int = xp.asarray(s.v_int) if GPU else s.v_int
         U = xp.log(
-            xp.einsum(
-                indices + "->" + symbols[: s.count],
-                *(xp.exp(v_int),) * int(s.count * (s.count - 1) / 2)
-            )
+            xp.einsum(indices + "->" + symbols[: s.count], *(xp.exp(v_int),) * int(s.count * (s.count - 1) / 2))
         )
         U = sp.diags(U.reshape((H0.shape[0])), format=fmt)
     else:
@@ -203,14 +197,7 @@ def antisymmetrize(s, spaces, spins, energies):
     # Perform antisymmetrization.
     l = string.ascii_lowercase[: s.count]
     L = string.ascii_uppercase[: s.count]
-    st = (
-        l
-        + "Y,"
-        + L
-        + "Y->"
-        + "".join([i for sub in list(zip(l, L)) for i in sub])
-        + "Y"
-    )
+    st = l + "Y," + L + "Y->" + "".join([i for sub in list(zip(l, L)) for i in sub]) + "Y"
     fulls = np.einsum(st, spaces, spins)
     L = list(zip(list(range(0, s.count * 2, 2)), list(range(1, s.count * 2, 2))))
     perms = itertools.permutations(list(range(s.count)))
@@ -218,9 +205,7 @@ def antisymmetrize(s, spaces, spins, energies):
     fulls = np.zeros_like(fulls)
     for p in perms:
         indices = list(itertools.chain(*[L[e] for e in p]))
-        fulls += _permutation_parity(p) * np.moveaxis(
-            fulls_copy, list(range(s.count * 2)), indices
-        )
+        fulls += _permutation_parity(p) * np.moveaxis(fulls_copy, list(range(s.count * 2)), indices)
 
     # Filter out zeros.
     allowed_fulls = []
@@ -242,9 +227,7 @@ def antisymmetrize(s, spaces, spins, energies):
 
     # Normalise.
     for k in range(fulls.shape[-1]):
-        fulls[..., k] = fulls[..., k] / np.sqrt(
-            np.sum(abs(fulls[..., k]) ** 2) * s.dx**s.count
-        )
+        fulls[..., k] = fulls[..., k] / np.sqrt(np.sum(abs(fulls[..., k]) ** 2) * s.dx**s.count)
 
     # Filter out duplicates.
     allowed_fulls = []
@@ -279,8 +262,7 @@ def _estimate_level(s: iDEA.system.System, k: int) -> int:
     return (abs(s.up_count - s.down_count) + 1) ** 2 * s.count * (k + 1)
 
 
-def solve(
-    s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, GPU=False
+def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, GPU=False
 ) -> iDEA.state.ManyBodyState:
     r"""
     Solves the interacting Schrodinger equation of the given system.
@@ -323,18 +305,14 @@ def solve(
     # Reshape and normalise the solutions.
     spaces = spaces.reshape((s.x.shape[0],) * s.count + (spaces.shape[-1],))
     for j in range(spaces.shape[-1]):
-        spaces[..., j] = spaces[..., j] / np.sqrt(
-            np.sum(abs(spaces[..., j]) ** 2) * s.dx**s.count
-        )
+        spaces[..., j] = spaces[..., j] / np.sqrt(np.sum(abs(spaces[..., j]) ** 2) * s.dx**s.count)
 
     # Construct the spin part.
     symbols = string.ascii_lowercase + string.ascii_uppercase
     u = np.array([1, 0])
     d = np.array([0, 1])
     spin_state = tuple([u if spin == "u" else d for spin in s.electrons])
-    spin = np.einsum(
-        ",".join(symbols[: s.count]) + "->" + "".join(symbols[: s.count]), *spin_state
-    )
+    spin = np.einsum(",".join(symbols[: s.count]) + "->" + "".join(symbols[: s.count]), *spin_state)
     spins = np.zeros(shape=((2,) * s.count + (spaces.shape[-1],)))
     for i in range(spaces.shape[-1]):
         spins[..., i] = spin
@@ -427,21 +405,13 @@ def propagate(
 
     # Construct objects needed to update potential.
     I = sps.identity(s.x.shape[0], format="dia")
-    partial_operators = lambda A, B, k, n: (
-        A if i + k == n - 1 else B for i in range(n)
-    )
-    fold_partial_operators = lambda f, po: functools.reduce(
-        lambda acc, val: f(val, acc, format="dia"), po
-    )
-    generate_terms = lambda f, A, B, n: (
-        fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n)
-    )
+    partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
+    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format="dia"), po)
+    generate_terms = lambda f, A, B, n: (fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n))
     objs = (I, generate_terms)
 
     # Propagate.
-    for j, ti in enumerate(
-        tqdm(t, desc="iDEA.methods.interacting.propagate: propagating state")
-    ):
+    for j, ti in enumerate(tqdm(t, desc="iDEA.methods.interacting.propagate: propagating state")):
         if j != 0:
             propagate_step(s, evolution, H, v_ptrb, j, dt, objs)
 
