@@ -1,8 +1,6 @@
 """Contains many utilities useful for efficient iDEA usage."""
 
-
 import pickle
-
 
 __all__ = [
     "Container",
@@ -33,7 +31,8 @@ def save_experiment(experiment: Experiment, file_name: str) -> None:
     |     experiment: iDEA.utilities.Experiment, Experiment object to save.
     |     file_name: str, file name.
     """
-    pickle.dump(experiment, open(file_name, "wb"))
+    with open(file_name, "wb") as file:
+        pickle.dump(experiment, file)
 
 
 def load_experiment(file_name: str) -> Experiment:
@@ -46,4 +45,7 @@ def load_experiment(file_name: str) -> Experiment:
     | Returns
     |     experiment: iDEA.utilities.Experiment, Loaded Experiment object.
     """
-    return pickle.load(open(file_name, "rb"))
+    with open(file_name, "rb") as file:
+        experiment = pickle.load(file)
+
+    return experiment

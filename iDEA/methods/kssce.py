@@ -8,17 +8,17 @@ References:
 5. A. Marie, D. P. Kooi, J. Grossi, M. Seidl, Z. Musslimani, K.J.H. Giesbertz, P. Gori-Giorgi. Real space Mott-Anderson electron localization with long-range interactions. Physical Review Research 4, 043192 (2022) DOI: [10.1103/PhysRevResearch.4.043192](https://dx.doi.org/10.1103/PhysRevResearch.4.043192)
 """
 
+from functools import partial
+from typing import Dict
 
-from collections.abc import Callable
 import numpy as np
 import scipy
 from scipy.interpolate import PPoly
-import iDEA.system
-import iDEA.state
-import iDEA.observables
+
 import iDEA.methods.non_interacting
-from typing import Callable, Dict
-from functools import partial
+import iDEA.observables
+import iDEA.state
+import iDEA.system
 
 name = "kssce"
 
@@ -66,9 +66,7 @@ def interpolate_n(x: np.ndarray, n: np.ndarray, interp: str = "cubic") -> PPoly:
         raise ValueError("Interpolation method not recognized.")
 
 
-def interpolate_invNe(
-    n: np.ndarray, Ne: np.ndarray, x: np.ndarray, interp: str = "cubic"
-) -> PPoly:
+def interpolate_invNe(n: np.ndarray, Ne: np.ndarray, x: np.ndarray, interp: str = "cubic") -> PPoly:
     """
     Obtain x(Ne)
 
@@ -135,12 +133,7 @@ def compute_comotion_functions(
     invNe_interp = interpolate_invNe(n, Ne, x, interp=interp)
     # Electron indices
     i = np.arange(1, N + 1)
-    return invNe_interp(
-        Ne[None, :]
-        + i[:, None]
-        - 1
-        - np.heaviside(Ne[None, :] - N + i[:, None] - 1, 0.0) * N
-    )
+    return invNe_interp(Ne[None, :] + i[:, None] - 1 - np.heaviside(Ne[None, :] - N + i[:, None] - 1, 0.0) * N)
 
 
 def sce_potential_operator(
@@ -173,9 +166,7 @@ def sce_potential_operator(
         Ne = n_interp.antiderivative()(s.x)
 
         # Compute co-motion functions
-        f = compute_comotion_functions(
-            n, Ne, s.x, s.count, method_params["interp_invNe"]
-        )
+        f = compute_comotion_functions(n, Ne, s.x, s.count, method_params["interp_invNe"])
 
         # Compute the derivative of the SCE potential
 
@@ -183,9 +174,7 @@ def sce_potential_operator(
         w = s.interaction(s.x - f[1:])
 
         # Compute v_sce'(x) = \sum_i w'(|x-f_i|)
-        v_scep = np.sum(
-            s.dinteraction(s.x - f[1:]), axis=0
-        )  # axis=0 sums over the electrons
+        v_scep = np.sum(s.dinteraction(s.x - f[1:]), axis=0)  # axis=0 sums over the electrons
 
         # Compute w''_i(x) = w''(|x-f_i|)
         wpp_i = s.ddinteraction(s.x - f[1:])
@@ -199,29 +188,19 @@ def sce_potential_operator(
 
         if method_params["interp_vsce"] == "hermite_cubic":
             # Hermite cubic spline interpolation with derivative
-            v_sce = scipy.interpolate.CubicHermiteSpline(
-                s.x, v_scep, v_scepp
-            ).antiderivative()(s.x)
+            v_sce = scipy.interpolate.CubicHermiteSpline(s.x, v_scep, v_scepp).antiderivative()(s.x)
         elif method_params["interp_vsce"] == "akima":
             # Akima interpolation
-            v_sce = scipy.interpolate.Akima1DInterpolator(
-                s.x, v_scepp
-            ).antiderivative()(s.x)
+            v_sce = scipy.interpolate.Akima1DInterpolator(s.x, v_scepp).antiderivative()(s.x)
         elif method_params["interp_vsce"] == "pchip":
             # Piecewise cubic Hermite interpolation
-            v_sce = scipy.interpolate.PchipInterpolator(s.x, v_scepp).antiderivative()(
-                s.x
-            )
+            v_sce = scipy.interpolate.PchipInterpolator(s.x, v_scepp).antiderivative()(s.x)
         elif method_params["interp_vsce"] == "cubic":
             # Cubic spline interpolation
-            v_sce = scipy.interpolate.CubicSpline(
-                s.x, v_scepp, bc_type="not-a-knot"
-            ).antiderivative()(s.x)
+            v_sce = scipy.interpolate.CubicSpline(s.x, v_scepp, bc_type="not-a-knot").antiderivative()(s.x)
 
         # Compute the SCE energy
-        E_sce = (
-            1 / 2 * interpolate_n(s.x, n * np.sum(w, axis=0)).integrate(s.x[0], s.x[-1])
-        )
+        E_sce = 1 / 2 * interpolate_n(s.x, n * np.sum(w, axis=0)).integrate(s.x[0], s.x[-1])
 
         # Fix the arbitrary potential in v_sce by demanding E_sce = int v_sce(x) n(x) dx
         v_sce = v_sce + E_sce / s.count * s.dx - np.sum(v_sce * n) / s.count * s.dx
@@ -248,19 +227,11 @@ def sce_energy(
     Ne = interpolate_n(s.x, n, method_params["interp_n"]).antiderivative()(s.x)
 
     # Compute co-motion functions
-    f = compute_comotion_functions(
-        n, Ne, s.x, s.count, method_params["interp_invNe"]
-    )  # +s.dx/2
+    f = compute_comotion_functions(n, Ne, s.x, s.count, method_params["interp_invNe"])  # +s.dx/2
 
     # Compute the interaction between the first electron and the rest
     w = s.interaction(np.abs(s.x - f[1:]))
-    return (
-        1
-        / 2
-        * interpolate_n(
-            s.x, n * np.sum(w, axis=0), method_params["interp_n"]
-        ).integrate(s.x[0], s.x[-1])
-    )
+    return 1 / 2 * interpolate_n(s.x, n * np.sum(w, axis=0), method_params["interp_n"]).integrate(s.x[0], s.x[-1])
 
 
 def hamiltonian(

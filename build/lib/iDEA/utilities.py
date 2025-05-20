@@ -1,8 +1,6 @@
 """Contains many utilities useful for efficient iDEA usage."""
 
-
 import pickle
-
 
 __all__ = [
     "Container",

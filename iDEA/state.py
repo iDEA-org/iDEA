@@ -1,11 +1,11 @@
 """Defines the structures to describe the system states"""
 
-
-from abc import ABC as Interface
 import copy
-import numpy as np
-import iDEA.utilities
+from abc import ABC as Interface
 
+import numpy as np
+
+import iDEA.utilities
 
 __all__ = [
     "State",
@@ -28,9 +28,7 @@ class Evolution(Interface):
 class ManyBodyState(State):
     """State of interacting particles."""
 
-    def __init__(
-        self, space: np.ndarray = None, spin: np.ndarray = None, full=None, energy=None
-    ):
+    def __init__(self, space: np.ndarray = None, spin: np.ndarray = None, full=None, energy=None):
         r"""
         State of particles in a many-body state.
 
@@ -63,7 +61,7 @@ class ManyBodyState(State):
         else:
             self.full = full
         if energy is None:
-            self.energy = float()
+            self.energy = 0.0
         else:
             self.energy = energy
 

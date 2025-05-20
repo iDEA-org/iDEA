@@ -1,19 +1,19 @@
 """Contains all non-interacting functionality and solvers."""
 
-
 import copy
 import itertools
-from tqdm import tqdm
 from collections.abc import Callable
+
 import numpy as np
-import scipy.sparse as sps
 import numpy.linalg as npla
 import scipy.linalg as spla
+import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
-import iDEA.system
-import iDEA.state
-import iDEA.observables
+from tqdm import tqdm
 
+import iDEA.observables
+import iDEA.state
+import iDEA.system
 
 name = "non_interacting"
 
@@ -38,22 +38,10 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
         sd = 1.0 / 12.0 * np.array([-1, 16, -30, 16, -1], dtype=np.float) / s.dx**2
         sdi = (-2, -1, 0, 1, 2)
     elif s.stencil == 7:
-        sd = (
-            1.0
-            / 180.0
-            * np.array([2, -27, 270, -490, 270, -27, 2], dtype=np.float)
-            / s.dx**2
-        )
+        sd = 1.0 / 180.0 * np.array([2, -27, 270, -490, 270, -27, 2], dtype=np.float) / s.dx**2
         sdi = (-3, -2, -1, 0, 1, 2, 3)
     elif s.stencil == 9:
-        sd = (
-            1.0
-            / 5040.0
-            * np.array(
-                [-9, 128, -1008, 8064, -14350, 8064, -1008, 128, -9], dtype=np.float
-            )
-            / s.dx**2
-        )
+        sd = 1.0 / 5040.0 * np.array([-9, 128, -1008, 8064, -14350, 8064, -1008, 128, -9], dtype=np.float) / s.dx**2
         sdi = (-4, -3, -2, -1, 0, 1, 2, 3, 4)
     elif s.stencil == 11:
         sd = (
@@ -164,9 +152,7 @@ def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState) -> fl
     return iDEA.observables.single_particle_energy(s, state)
 
 
-def add_occupations(
-    s: iDEA.system.System, state: iDEA.state.SingleBodyState, k: int
-) -> iDEA.state.SingleBodyState:
+def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k: int) -> iDEA.state.SingleBodyState:
     r"""
     Calculate the occpuations of a state in a given energy excitation.
 
@@ -264,7 +250,7 @@ def solve(
     initial: tuple = None,
     name: str = "non_interacting",
     silent: bool = False,
-    **kwargs
+    **kwargs,
 ) -> iDEA.state.SingleBodyState:
     r"""
     Solves the Schrodinger equation for the given system.
@@ -312,15 +298,9 @@ def solve(
         down_p_old = initial[5]
 
     # Construct the initial Hamiltonian. (And break the symmetry.)
-    H_old, up_H_old, down_H_old = hamiltonian_function(
-        s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs
-    )
-    H, up_H, down_H = hamiltonian_function(
-        s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs
-    )
-    down_H += sps.spdiags(
-        1e-12 * s.x, np.array([0]), s.x.shape[0], s.x.shape[0]
-    ).toarray()
+    H_old, up_H_old, down_H_old = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
+    H, up_H, down_H = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
+    down_H += sps.spdiags(1e-12 * s.x, np.array([0]), s.x.shape[0], s.x.shape[0]).toarray()
 
     # Apply restriction.
     if restricted:
@@ -333,7 +313,6 @@ def solve(
     convergence = 1.0
     count = 0
     while convergence > tol:
-
         # Perform single self-consistent step.
         state = sc_step(s, state, up_H, down_H)
 
@@ -375,9 +354,7 @@ def solve(
         count += 1
         if silent is False:
             print(
-                r"iDEA.methods.{0}.solve: convergence = {1:.5}, tolerance = {2:.5}".format(
-                    name, convergence, tol
-                ),
+                rf"iDEA.methods.{name}.solve: convergence = {convergence:.5}, tolerance = {tol:.5}",
                 end="\r",
             )
 
@@ -397,7 +374,7 @@ def propagate_step(
     v_ptrb: np.ndarray,
     dt: float,
     restricted: bool,
-    **kwargs
+    **kwargs,
 ):
     r"""
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
@@ -420,9 +397,7 @@ def propagate_step(
     p, up_p, down_p = iDEA.observables.density_matrix(
         s, evolution=evolution, time_indices=np.array([j - 1]), return_spins=True
     )
-    H, up_H, down_H = hamiltonian_function(
-        s, up_n[0, ...], down_n[0, ...], up_p[0, ...], down_p[0, ...], **kwargs
-    )
+    H, up_H, down_H = hamiltonian_function(s, up_n[0, ...], down_n[0, ...], up_p[0, ...], down_p[0, ...], **kwargs)
     H = sps.csc_matrix(H)
     up_H = sps.csc_matrix(up_H)
     down_H = sps.csc_matrix(down_H)
@@ -435,16 +410,12 @@ def propagate_step(
 
     for i in range(evolution.up.occupied.shape[0]):
         up_O = -1.0j * (up_H + Vptrb) * dt
-        evolution.up.td_orbitals[j, :, i] = spsla.expm_multiply(
-            up_O, evolution.up.td_orbitals[j - 1, :, i]
-        )
+        evolution.up.td_orbitals[j, :, i] = spsla.expm_multiply(up_O, evolution.up.td_orbitals[j - 1, :, i])
         norm = npla.norm(evolution.up.td_orbitals[j, :, i]) * np.sqrt(s.dx)
         evolution.up.td_orbitals[j, :, i] /= norm
     for i in range(evolution.down.occupied.shape[0]):
         down_O = -1.0j * (down_H + Vptrb) * dt
-        evolution.down.td_orbitals[j, :, i] = spsla.expm_multiply(
-            down_O, evolution.down.td_orbitals[j - 1, :, i]
-        )
+        evolution.down.td_orbitals[j, :, i] = spsla.expm_multiply(down_O, evolution.down.td_orbitals[j - 1, :, i])
         norm = npla.norm(evolution.down.td_orbitals[j, :, i]) * np.sqrt(s.dx)
         evolution.down.td_orbitals[j, :, i] /= norm
 
@@ -459,7 +430,7 @@ def propagate(
     hamiltonian_function: Callable = None,
     restricted: bool = False,
     name: str = "non_interacting",
-    **kwargs
+    **kwargs,
 ) -> iDEA.state.SingleBodyEvolution:
     r"""
     Propagate a set of orbitals forward in time due to a dynamic local pertubation.
@@ -499,9 +470,7 @@ def propagate(
 
     # Initilise the single-body time-dependent evolution.
     evolution = iDEA.state.SingleBodyEvolution(state)
-    evolution.up.td_orbitals = np.zeros(
-        shape=(t.shape[0], s.x.shape[0], state.up.occupied.shape[0]), dtype=np.complex
-    )
+    evolution.up.td_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], state.up.occupied.shape[0]), dtype=np.complex)
     evolution.down.td_orbitals = np.zeros(
         shape=(t.shape[0], s.x.shape[0], state.down.occupied.shape[0]), dtype=np.complex
     )
@@ -511,12 +480,8 @@ def propagate(
     evolution.t = t
 
     # Propagate.
-    for j, ti in enumerate(
-        tqdm(t, desc="iDEA.methods.{}.propagate: propagating state".format(name))
-    ):
+    for j, ti in enumerate(tqdm(t, desc=f"iDEA.methods.{name}.propagate: propagating state")):
         if j != 0:
-            evolution = propagate_step(
-                s, evolution, j, hamiltonian_function, v_ptrb, dt, restricted, **kwargs
-            )
+            evolution = propagate_step(s, evolution, j, hamiltonian_function, v_ptrb, dt, restricted, **kwargs)
 
     return evolution

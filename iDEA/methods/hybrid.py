@@ -1,15 +1,16 @@
 """Contains all Hartree Fock functionality and solvers."""
 
-
 from collections.abc import Callable
+
 import numpy as np
-import iDEA.system
-import iDEA.state
-import iDEA.observables
-import iDEA.methods.non_interacting
+
 import iDEA.methods.hartree
 import iDEA.methods.hartree_fock
-
+import iDEA.methods.lda
+import iDEA.methods.non_interacting
+import iDEA.observables
+import iDEA.state
+import iDEA.system
 
 name = "hybrid"
 
@@ -18,9 +19,7 @@ kinetic_energy_operator = iDEA.methods.non_interacting.kinetic_energy_operator
 external_potential_operator = iDEA.methods.non_interacting.external_potential_operator
 hartree_potential_operator = iDEA.methods.hartree.hartree_potential_operator
 exchange_potential_operator = iDEA.methods.hartree_fock.exchange_potential_operator
-exchange_correlation_potential_operator = (
-    iDEA.methods.lda.exchange_correlation_potential_operator
-)
+exchange_correlation_potential_operator = iDEA.methods.lda.exchange_correlation_potential_operator
 propagate_step = iDEA.methods.non_interacting.propagate_step
 
 
@@ -32,7 +31,7 @@ def hamiltonian(
     down_p: np.ndarray,
     K: np.ndarray = None,
     Vext: np.ndarray = None,
-    **kwargs
+    **kwargs,
 ) -> np.ndarray:
     r"""
     Compute the Hamiltonian from the kinetic and potential terms.
@@ -66,9 +65,7 @@ def hamiltonian(
     return H, up_H, down_H
 
 
-def total_energy(
-    s: iDEA.system.System, state: iDEA.state.SingleBodyState, alpha: float = 0.8
-) -> float:
+def total_energy(s: iDEA.system.System, state: iDEA.state.SingleBodyState, alpha: float = 0.8) -> float:
     r"""
     Compute the total energy.
 
@@ -141,6 +138,4 @@ def propagate(
     | Returns:
     |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
     """
-    return iDEA.methods.non_interacting.propagate(
-        s, state, v_ptrb, t, hamiltonian, restricted, name, alpha=alpha
-    )
+    return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted, name, alpha=alpha)

@@ -1,16 +1,16 @@
 """Contains all reverse-engineering functionality."""
 
-
 import copy
-import warnings
 from collections.abc import Container
-from tqdm import tqdm
+
 import numpy as np
 import scipy.optimize as spo
 import scipy.sparse as sps
-import iDEA.system
-import iDEA.state
+from tqdm import tqdm
+
 import iDEA.observables
+import iDEA.state
+import iDEA.system
 
 
 def reverse(
@@ -22,7 +22,7 @@ def reverse(
     pe: float = 0.1,
     tol: float = 1e-12,
     silent: bool = False,
-    **kwargs
+    **kwargs,
 ) -> iDEA.state.State:
     r"""
     Determines what ficticious system is needed for a given method, when solving the system, to produce a given target density.
@@ -59,23 +59,12 @@ def reverse(
     while convergence > tol:
         if silent is False:
             print(
-                r"iDEA.reverse_engineering.reverse: convergence = {0:.5}, tolerance = {1:.5}".format(
-                    convergence, tol
-                ),
+                rf"iDEA.reverse_engineering.reverse: convergence = {convergence:.5}, tolerance = {tol:.5}",
                 end="\r",
             )
-        state = method.solve(
-            s_fictitious,
-            initial=(n, up_n, down_n, p, up_p, down_p),
-            silent=True,
-            **kwargs
-        )
-        n, up_n, down_n = iDEA.observables.density(
-            s_fictitious, state=state, return_spins=True
-        )
-        p, up_p, down_p = iDEA.observables.density_matrix(
-            s_fictitious, state=state, return_spins=True
-        )
+        state = method.solve(s_fictitious, initial=(n, up_n, down_n, p, up_p, down_p), silent=True, **kwargs)
+        n, up_n, down_n = iDEA.observables.density(s_fictitious, state=state, return_spins=True)
+        p, up_p, down_p = iDEA.observables.density_matrix(s_fictitious, state=state, return_spins=True)
         s_fictitious.v_ext += mu * (n**pe - target_n**pe)
         convergence = np.sum(abs(n - target_n)) * s.dx
     if silent is False:
@@ -113,9 +102,7 @@ def _residual(
     """
     v_td = np.zeros_like(v_ptrb)
     v_td[j, :] = v[:]
-    evolution = method.propagate_step(
-        s_fictitious, evolution_fictitious, j, method.hamiltonian, v_td, dt, restricted
-    )
+    evolution = method.propagate_step(s_fictitious, evolution_fictitious, j, method.hamiltonian, v_td, dt, restricted)
     n = iDEA.observables.density(
         s_fictitious,
         evolution=evolution,
@@ -135,7 +122,7 @@ def reverse_propagation(
     t: np.ndarray,
     restricted: bool = False,
     tol: float = 1e-10,
-    **kwargs
+    **kwargs,
 ) -> iDEA.state.Evolution:
     r"""
     Determines what ficticious evolution is needed for a given method, when solving the system, to produce a given time dependent target density.
@@ -160,15 +147,9 @@ def reverse_propagation(
     hamiltonian_function = method.hamiltonian
 
     # Construct the unperturbed Hamiltonian.
-    n, up_n, down_n = iDEA.observables.density(
-        s_fictitious, state=state_fictitious, return_spins=True
-    )
-    p, up_p, down_p = iDEA.observables.density_matrix(
-        s_fictitious, state=state_fictitious, return_spins=True
-    )
-    H, up_H, down_H = hamiltonian_function(
-        s_fictitious, up_n, down_n, up_p, down_p, **kwargs
-    )
+    n, up_n, down_n = iDEA.observables.density(s_fictitious, state=state_fictitious, return_spins=True)
+    p, up_p, down_p = iDEA.observables.density_matrix(s_fictitious, state=state_fictitious, return_spins=True)
+    H, up_H, down_H = hamiltonian_function(s_fictitious, up_n, down_n, up_p, down_p, **kwargs)
     H = sps.csc_matrix(H)
     up_H = sps.csc_matrix(up_H)
     down_H = sps.csc_matrix(down_H)
@@ -205,12 +186,8 @@ def reverse_propagation(
         ),
         dtype=complex,
     )
-    evolution_fictitious.up.td_orbitals[0, :, :] = state_fictitious.up.orbitals[
-        :, state_fictitious.up.occupied
-    ]
-    evolution_fictitious.down.td_orbitals[0, :, :] = state_fictitious.down.orbitals[
-        :, state_fictitious.down.occupied
-    ]
+    evolution_fictitious.up.td_orbitals[0, :, :] = state_fictitious.up.orbitals[:, state_fictitious.up.occupied]
+    evolution_fictitious.down.td_orbitals[0, :, :] = state_fictitious.down.orbitals[:, state_fictitious.down.occupied]
     evolution_fictitious.v_ptrb = copy.deepcopy(v_ptrb)
     evolution_fictitious.t = copy.deepcopy(t)
 
@@ -218,15 +195,9 @@ def reverse_propagation(
     error = np.zeros_like(t)
 
     # Reverse propagation.
-    for j, ti in enumerate(
-        tqdm(
-            t,
-            desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation",
-        )
-    ):
+    for j in tqdm(t, desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation"):
         if j != 0:
-
-            # Determine ficticious perturbing potential.
+            # Determine fictitious perturbing potential.
             v_guess = np.zeros_like(evolution_fictitious.v_ptrb[j, :])
             result = spo.root(
                 _residual,
