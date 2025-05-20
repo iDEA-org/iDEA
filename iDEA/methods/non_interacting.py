@@ -297,19 +297,16 @@ def solve(
         up_p_old = initial[4]
         down_p_old = initial[5]
 
-    # Construct the initial Hamiltonian. (And break the symmetry.)
-    H_old, up_H_old, down_H_old = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
+    # Construct the initial Hamiltonian (and break the symmetry).
     H, up_H, down_H = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
     down_H += sps.spdiags(1e-12 * s.x, np.array([0]), s.x.shape[0], s.x.shape[0]).toarray()
 
     # Apply restriction.
     if restricted:
-        up_H_old = H_old
-        down_H_old = H_old
         up_H = H
         down_H = H
 
-    # Run self-consitent algorithm.
+    # Run self-consistent algorithm.
     convergence = 1.0
     count = 0
     while convergence > tol:
@@ -334,8 +331,6 @@ def solve(
 
         # Apply restriction.
         if restricted:
-            up_H_old = H_old
-            down_H_old = H_old
             up_H = H
             down_H = H
 
