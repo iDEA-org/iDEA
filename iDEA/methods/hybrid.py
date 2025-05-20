@@ -6,6 +6,7 @@ import numpy as np
 
 import iDEA.methods.hartree
 import iDEA.methods.hartree_fock
+import iDEA.methods.lda
 import iDEA.methods.non_interacting
 import iDEA.observables
 import iDEA.state
