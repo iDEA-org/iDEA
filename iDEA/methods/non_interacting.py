@@ -480,7 +480,7 @@ def propagate(
     evolution.t = t
 
     # Propagate.
-    for j, ti in enumerate(tqdm(t, desc=f"iDEA.methods.{name}.propagate: propagating state")):
+    for j in tqdm(t, desc=f"iDEA.methods.{name}.propagate: propagating state"):
         if j != 0:
             evolution = propagate_step(s, evolution, j, hamiltonian_function, v_ptrb, dt, restricted, **kwargs)
 

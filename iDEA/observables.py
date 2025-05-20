@@ -67,7 +67,7 @@ def observable(
     if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
         up_O = np.zeros(shape=evolution.t.shape, dtype=complex)
         for i, I in enumerate(evolution.up.occupied):
-            for j, ti in enumerate(evolution.t):
+            for j in evolution.t:
                 up_O[j] += (
                     np.vdot(
                         evolution.up.td_orbitals[j, :, i],
@@ -78,7 +78,7 @@ def observable(
                 )
         down_O = np.zeros(shape=evolution.t.shape, dtype=complex)
         for i, I in enumerate(evolution.down.occupied):
-            for j, ti in enumerate(evolution.t):
+            for j in evolution.t:
                 down_O[j] += (
                     np.vdot(
                         evolution.down.td_orbitals[j, :, i],

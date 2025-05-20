@@ -195,14 +195,9 @@ def reverse_propagation(
     error = np.zeros_like(t)
 
     # Reverse propagation.
-    for j, ti in enumerate(
-        tqdm(
-            t,
-            desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation",
-        )
-    ):
+    for j in tqdm(t, desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation"):
         if j != 0:
-            # Determine ficticious perturbing potential.
+            # Determine fictitious perturbing potential.
             v_guess = np.zeros_like(evolution_fictitious.v_ptrb[j, :])
             result = spo.root(
                 _residual,

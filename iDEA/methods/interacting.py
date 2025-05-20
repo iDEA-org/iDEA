@@ -401,7 +401,7 @@ def propagate(
     objs = (I, generate_terms)
 
     # Propagate.
-    for j, ti in enumerate(tqdm(t, desc="iDEA.methods.interacting.propagate: propagating state")):
+    for j in tqdm(t, desc="iDEA.methods.interacting.propagate: propagating state"):
         if j != 0:
             propagate_step(s, evolution, H, v_ptrb, j, dt, objs)
 
