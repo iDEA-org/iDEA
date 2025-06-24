@@ -40,6 +40,10 @@ Add the upstream repository: `git remote add upstream https://github.com/iDEA-or
 
 And then install locally: `python setup.py install`
 
+### Testing
+
+To run unit tests: `pytest -v`
+
 ## Documentation
 
 For full details of usage please see our [tutorial](https://github.com/iDEA-org/iDEA/blob/master/tutorial/tutorial.ipynb). The full API documentation is available at [readthedocs](https://idea-interacting-dynamic-electrons-approach.readthedocs.io/en/latest/).
@@ -131,6 +135,7 @@ scipy >= "1.8.0"
 matplotlib >= "3.5.1"
 jupyterlab >= "3.3.2"
 tqdm >= "4.64.0"
+pytest >= "8.4.1"
 ```
 
 <img src="docs/logos.png" alt="" width="200"/>
