@@ -5,6 +5,7 @@ from abc import ABC as Interface
 import copy
 import numpy as np
 import iDEA.utilities
+import pickle
 
 
 __all__ = [
@@ -29,7 +30,7 @@ class ManyBodyState(State):
     """State of interacting particles."""
 
     def __init__(
-        self, space: np.ndarray = None, spin: np.ndarray = None, full=None, energy=None
+        self, space: np.ndarray = None, spin: np.ndarray = None, full=None, energy=None, allspace: np.ndarray = None, allspin: np.ndarray= None, allfull=None, allenergy=None
     ):
         r"""
         State of particles in a many-body state.
@@ -49,6 +50,10 @@ class ManyBodyState(State):
         |     spin: np.ndarray, Spin part of the wavefunction on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). (default = None)
         |     full: np.ndarray, Total antisymmetrised wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N). (default = None)
         |     energy: float, Total energy of the state.
+        |     allspace: np.ndarray, spatial part of all wavefunctions generated during solving
+        |     allspin: np.ndarray, spin part of all wavefunctions generated during solving
+        |     allfull: np.ndarray, full wavefunctions for all generated during solving
+        |     allenergies: np.ndarray, all energies generated during solving
         """
         if space is None:
             self.space = iDEA.utilities.ArrayPlaceholder()
@@ -141,3 +146,48 @@ class SingleBodyEvolution(Evolution):
         self.down.td_orbitals = iDEA.utilities.ArrayPlaceholder()
         self.v_ptrb = iDEA.utilities.ArrayPlaceholder()
         self.t = iDEA.utilities.ArrayPlaceholder()
+
+
+def save_many_body_state(state: ManyBodyState, file_name: str) -> None:
+    r"""
+    Save a many body state to a system file.
+
+    | Args:
+    |     state: iDEA.state.ManyBodyState, State object to save.
+    |     file_name: str, file name.
+    """
+    pickle.dump(state, open(file_name, "wb"))
+
+def save_single_body_state(state: SingleBodyState, file_name: str) -> None:
+    r"""
+    Save a single body state to a system file.
+
+    | Args:
+    |     state: iDEA.state.SingleBodyState, State object to save.
+    |     file_name: str, file name.
+    """
+    pickle.dump(state, open(file_name, "wb"))
+
+def load_many_body_state(file_name: str) -> ManyBodyState:
+    r"""
+    Load a many body state from an system file.
+
+    | Args:
+    |     file_name: str, file name.
+
+    | Returns
+    |     system: iDEA.state.ManyBodyState, Loaded State object.
+    """
+    return pickle.load(open(file_name, "rb"))
+
+def load_single_body_state(file_name: str) -> SingleBodyState:
+    r"""
+    Load a single body state from an system file.
+
+    | Args:
+    |     file_name: str, file name.
+
+    | Returns
+    |     system: iDEA.state.SingleBodyState, Loaded State object.
+    """
+    return pickle.load(open(file_name, "rb"))

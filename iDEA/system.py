@@ -5,6 +5,7 @@ import warnings
 import numpy as np
 import iDEA.utilities
 import iDEA.interactions
+import pickle
 
 
 __all__ = ["System", "save_system", "load_system", "systems"]
