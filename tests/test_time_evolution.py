@@ -16,17 +16,18 @@ The test system is a Quantum harmonic oscillator in a purtibated field potenial.
 '''
 
 # Dependencies
-import math # Used for mathematical operations
-import numpy as np # Python's numerical library
-from scipy.sparse import spdiags # To construct the Hamiltonian as a matrix
-from scipy.sparse.linalg import eigsh # To solve the ground-state Schroedinger equation
+import math  # Used for mathematical operations
+from dataclasses import dataclass  # Importing the dataclass decorator
+
+import numpy as np  # Python's numerical library
+import pytest
+
 #from scipy.integrate import simps
 import iDEA
-import pytest
-from dataclasses import dataclass # Importing the dataclass decorator
+
 
 @dataclass
-class Groundstate():
+class Groundstate:
     r'''
     Contains all properties of the many body groundstate system.
 

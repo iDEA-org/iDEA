@@ -3,7 +3,6 @@
 import copy
 import functools
 import itertools
-import os
 import string
 
 import numpy as np
@@ -134,7 +133,7 @@ def hamiltonian(s: iDEA.system.System, GPU: bool = False):
         U = xp.log(
             xp.einsum(indices + "->" + symbols[: s.count], *(xp.exp(v_int),) * int(s.count * (s.count - 1) / 2))
         )
-        U = sps.diags(U.reshape((H0.shape[0])), format=fmt)
+        U = sps.diags(U.reshape(H0.shape[0]), format=fmt)
     else:
         U = 0.0
 

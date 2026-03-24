@@ -15,11 +15,14 @@ Tests are written with pytest to check for numerical accuracy by comparison of i
 '''
 
 # Dependencies
-import iDEA
 from dataclasses import dataclass
-import numpy as np 
+
+import numpy as np
+import pytest
 import scipy.linalg as spla
-import pytest 
+
+import iDEA
+
 
 @dataclass
 class Groundstate:
@@ -431,9 +434,7 @@ class TestLong:
         Tests that the wavefunction of the iDEA test system is within a specifed tolerance of the analytic solution. 
         '''
         
-        if spin == 'ud':
-            tolerance = 1.0e-12
-        elif spin == 'uu':
+        if spin == 'ud' or spin == 'uu':
             tolerance = 1.0e-12
 
         length = long_params['length']
