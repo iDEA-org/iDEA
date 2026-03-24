@@ -33,6 +33,7 @@ def kinetic_energy_operator(s: iDEA.system.System, GPU: bool = False):
     """
     if GPU:
         import cupyx.scipy.sparse as csps
+
         sp = csps
         fmt = "csr"
     else:
@@ -41,15 +42,9 @@ def kinetic_energy_operator(s: iDEA.system.System, GPU: bool = False):
     k = sps.csr_matrix(iDEA.methods.non_interacting.kinetic_energy_operator(s))
     k = sp.csr_matrix(k) if GPU else sps.dia_matrix(k)
     I = sp.identity(s.x.shape[0], format=fmt)
-    partial_operators = lambda A, B, k, n: (
-        A if i + k == n - 1 else B for i in range(n)
-    )
-    fold_partial_operators = lambda f, po: functools.reduce(
-        lambda acc, val: f(val, acc, format=fmt), po
-    )
-    generate_terms = lambda f, A, B, n: (
-        fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n)
-    )
+    partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
+    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format=fmt), po)
+    generate_terms = lambda f, A, B, n: (fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n))
     K = functools.reduce(lambda a, b: a + b, generate_terms(sp.kron, k, I, s.count))
     return K
 
@@ -67,6 +62,7 @@ def external_potential_operator(s: iDEA.system.System, GPU: bool = False):
     """
     if GPU:
         import cupyx.scipy.sparse as csps
+
         sp = csps
         fmt = "csr"
     else:
@@ -75,15 +71,9 @@ def external_potential_operator(s: iDEA.system.System, GPU: bool = False):
     vext = sps.csr_matrix(iDEA.methods.non_interacting.external_potential_operator(s))
     vext = sp.csr_matrix(vext) if GPU else sps.dia_matrix(vext)
     I = sp.identity(s.x.shape[0], format=fmt)
-    partial_operators = lambda A, B, k, n: (
-        A if i + k == n - 1 else B for i in range(n)
-    )
-    fold_partial_operators = lambda f, po: functools.reduce(
-        lambda acc, val: f(val, acc, format=fmt), po
-    )
-    generate_terms = lambda f, A, B, n: (
-        fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n)
-    )
+    partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
+    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format=fmt), po)
+    generate_terms = lambda f, A, B, n: (fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n))
     Vext = functools.reduce(lambda a, b: a + b, generate_terms(sp.kron, vext, I, s.count))
     return Vext
 
@@ -102,6 +92,7 @@ def hamiltonian(s: iDEA.system.System, GPU: bool = False):
     if GPU:
         import cupy as cp
         import cupyx.scipy.sparse as csps
+
         sp = csps
         xp = cp
         fmt = "csr"
@@ -114,15 +105,9 @@ def hamiltonian(s: iDEA.system.System, GPU: bool = False):
     h = sps.csr_matrix(iDEA.methods.non_interacting.hamiltonian(s)[0])
     h = sp.csr_matrix(h) if GPU else sps.dia_matrix(h)
     I = sp.identity(s.x.shape[0], format=fmt)
-    partial_operators = lambda A, B, k, n: (
-        A if i + k == n - 1 else B for i in range(n)
-    )
-    fold_partial_operators = lambda f, po: functools.reduce(
-        lambda acc, val: f(val, acc, format=fmt), po
-    )
-    generate_terms = lambda f, A, B, n: (
-        fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n)
-    )
+    partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
+    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format=fmt), po)
+    generate_terms = lambda f, A, B, n: (fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n))
     H0 = functools.reduce(lambda a, b: a + b, generate_terms(sp.kron, h, I, s.count))
 
     # Add the interaction part of the many-body Hamiltonian
@@ -130,9 +115,7 @@ def hamiltonian(s: iDEA.system.System, GPU: bool = False):
     if s.count > 1:
         indices = ",".join(["".join(c) for c in itertools.combinations(symbols[: s.count], 2)])
         v_int = xp.asarray(s.v_int) if GPU else s.v_int
-        U = xp.log(
-            xp.einsum(indices + "->" + symbols[: s.count], *(xp.exp(v_int),) * int(s.count * (s.count - 1) / 2))
-        )
+        U = xp.log(xp.einsum(indices + "->" + symbols[: s.count], *(xp.exp(v_int),) * int(s.count * (s.count - 1) / 2)))
         U = sps.diags(U.reshape(H0.shape[0]), format=fmt)
     else:
         U = 0.0
@@ -262,8 +245,7 @@ def _estimate_level(s: iDEA.system.System, k: int) -> int:
     return (abs(s.up_count - s.down_count) + 1) ** 2 * s.count * (k + 1)
 
 
-def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, GPU=False
-) -> iDEA.state.ManyBodyState:
+def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, GPU=False) -> iDEA.state.ManyBodyState:
     r"""
     Solves the interacting Schrodinger equation of the given system.
 
@@ -293,6 +275,7 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, G
         import cupy as cp
         import cupyx.scipy.sparse as csps
         import cupyx.scipy.sparse.linalg as cspsla
+
         name = cp.cuda.runtime.getDeviceProperties(cp.cuda.Device().id)["name"].decode()
         print(f"iDEA.methods.interacting.solve: solving eigenproblem on GPU: {name}...")
         energies, spaces = cspsla.eigsh(csps.csr_matrix(H), k=level, which="SA")

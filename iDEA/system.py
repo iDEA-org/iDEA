@@ -83,8 +83,9 @@ class System:
     def x(self, value):
         self.__x = value
         self.__dx = self.__x[1] - self.__x[0]
-        warnings.warn("x grid has been changed: dx has been recomputed, please update v_ext and v_int on this grid.",
-                      stacklevel=2)
+        warnings.warn(
+            "x grid has been changed: dx has been recomputed, please update v_ext and v_int on this grid.", stacklevel=2
+        )
 
     @x.deleter
     def x(self):

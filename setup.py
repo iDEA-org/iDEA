@@ -35,6 +35,6 @@ setuptools.setup(
         "autoflake>=1.4.0",
         "build>=0.7.0",
         "twine>=4.0.0",
-        'pytest>=8.3.0'
+        "pytest>=8.3.0",
     ],
 )
