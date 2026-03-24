@@ -23,7 +23,7 @@ def observable(
 
     | Args:
     |     s: iDEA.system.System, System object.
-    |     observable_operator: np.ndarray, Obserbable operator.
+    |     observable_operator: np.ndarray, Observable operator.
     |     state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
     |     evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
     |     return_spins: bool, True to also return the spin observables: total, up, down. (default = False)
@@ -31,10 +31,10 @@ def observable(
     | Returns:
     |     observable: float or np.ndarray, Observable.
     """
-    if state is not None and type(state) == iDEA.state.ManyBodyState:
+    if state is not None and isinstance(state, iDEA.state.ManyBodyState):
         raise NotImplementedError()
 
-    if state is not None and type(state) == iDEA.state.SingleBodyState:
+    if state is not None and isinstance(state, iDEA.state.SingleBodyState):
         up_O = 0.0
         for i in range(state.up.orbitals.shape[1]):
             up_O += (
@@ -61,10 +61,10 @@ def observable(
         else:
             return O
 
-    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.ManyBodyEvolution):
         raise NotImplementedError()
 
-    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.SingleBodyEvolution):
         up_O = np.zeros(shape=evolution.t.shape, dtype=complex)
         for i, I in enumerate(evolution.up.occupied):
             for j, _ti in enumerate(evolution.t):
@@ -117,7 +117,7 @@ def density(
     | Returns:
     |     n: np.ndarray, Charge density, or evolution of charge density.
     """
-    if state is not None and type(state) == iDEA.state.ManyBodyState:
+    if state is not None and isinstance(state, iDEA.state.ManyBodyState):
         spin_densities = np.zeros(shape=(s.x.shape[0], 2))
         for i in range(s.x.shape[0]):
             for k in range(2):
@@ -130,7 +130,7 @@ def density(
         else:
             return n
 
-    if state is not None and type(state) == iDEA.state.SingleBodyState:
+    if state is not None and isinstance(state, iDEA.state.SingleBodyState):
         up_n = np.zeros(shape=s.x.shape[0])
         down_n = np.zeros(shape=s.x.shape[0])
         for i in range(state.up.orbitals.shape[1]):
@@ -143,7 +143,7 @@ def density(
         else:
             return n
 
-    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.ManyBodyEvolution):
         if time_indices is None:
             time_indices = np.array(range(evolution.t.shape[0]))
         spin_densities = np.zeros(shape=(time_indices.shape[0], s.x.shape[0], 2))
@@ -173,7 +173,7 @@ def density(
         else:
             return n
 
-    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.SingleBodyEvolution):
         if time_indices is None:
             time_indices = np.array(range(evolution.t.shape[0]))
         up_n = np.zeros(shape=(time_indices.shape[0], s.x.shape[0]))
@@ -214,7 +214,7 @@ def density_matrix(
     | Returns:
     |     p: np.ndarray, Charge density matrix, or evolution of charge density matrix.
     """
-    if state is not None and type(state) == iDEA.state.ManyBodyState:
+    if state is not None and isinstance(state, iDEA.state.ManyBodyState):
         tosum = list(range(2, s.count * 2))
         spin_p = (
             np.tensordot(state.full, state.full.conj(), axes=(tosum, tosum)).diagonal(axis1=1, axis2=3)
@@ -229,7 +229,7 @@ def density_matrix(
         else:
             return p
 
-    if state is not None and type(state) == iDEA.state.SingleBodyState:
+    if state is not None and isinstance(state, iDEA.state.SingleBodyState):
         up_p = np.zeros(shape=s.x.shape * 2)
         down_p = np.zeros(shape=s.x.shape * 2)
         for i in range(state.up.orbitals.shape[1]):
@@ -247,7 +247,7 @@ def density_matrix(
         else:
             return p
 
-    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.ManyBodyEvolution):
         if time_indices is None:
             time_indices = np.array(range(evolution.t.shape[0]))
         tosum = list(range(2, s.count * 2))
@@ -280,7 +280,7 @@ def density_matrix(
         else:
             return p
 
-    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.SingleBodyEvolution):
         if time_indices is None:
             time_indices = np.array(range(evolution.t.shape[0]))
         up_p = np.zeros(shape=(time_indices.shape[0], s.x.shape[0], s.x.shape[0]), dtype=complex)
@@ -331,19 +331,19 @@ def kinetic_energy(
     | Returns:
     |     E_k: float or np.ndarray, Kinetic energy, or evolution of kinetic energy.
     """
-    if state is not None and type(state) == iDEA.state.ManyBodyState:
+    if state is not None and isinstance(state, iDEA.state.ManyBodyState):
         K = iDEA.methods.interacting.kinetic_energy_operator(s)
         return observable(s, K, state=state)
 
-    if state is not None and type(state) == iDEA.state.SingleBodyState:
+    if state is not None and isinstance(state, iDEA.state.SingleBodyState):
         K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
         return observable(s, K, state=state)
 
-    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.ManyBodyEvolution):
         K = iDEA.methods.interacting.kinetic_energy_operator(s)
         return observable(s, K, evolution=evolution)
 
-    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.SingleBodyEvolution):
         K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
         return observable(s, K, evolution=evolution)
 
@@ -516,24 +516,24 @@ def _placeholder(
     return_spins: bool = False,
 ) -> Union[float, np.ndarray]:
     r"""
-    Placeholer function. Use this as a template when constructing observable methods.
+    Placeholder function. Use this as a template when constructing observable methods.
 
     | Args:
     |     s: iDEA.system.System, System object.
     |     state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
     |     evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
-    |     return_spins: bool, True to also return the spin placeholer: total, up, down. (default = False)
+    |     return_spins: bool, True to also return the spin placeholder: total, up, down. (default = False)
 
     | Returns:
-    |     observable: float or np.ndarray, Placeholer.
+    |     observable: float or np.ndarray, Placeholder.
     """
-    if state is not None and type(state) == iDEA.state.SingleBodyState:
+    if state is not None and isinstance(state, iDEA.state.SingleBodyState):
         raise NotImplementedError()
-    if state is not None and type(state) == iDEA.state.ManyBodyState:
+    if state is not None and isinstance(state, iDEA.state.ManyBodyState):
         raise NotImplementedError()
-    if evolution is not None and type(evolution) == iDEA.state.SingleBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.SingleBodyEvolution):
         raise NotImplementedError()
-    if evolution is not None and type(evolution) == iDEA.state.ManyBodyEvolution:
+    if evolution is not None and isinstance(evolution, iDEA.state.ManyBodyEvolution):
         raise NotImplementedError()
     else:
         raise AttributeError("State or Evolution must be provided.")

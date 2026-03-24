@@ -3,6 +3,7 @@ import iDEA.methods.hartree
 import iDEA.methods.hartree_fock
 import iDEA.methods.hybrid
 import iDEA.methods.interacting
+import iDEA.methods.kssce
 import iDEA.methods.lda
 import iDEA.methods.non_interacting
 import iDEA.observables

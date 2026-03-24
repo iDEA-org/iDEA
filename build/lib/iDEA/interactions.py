@@ -5,7 +5,6 @@ import numpy as np
 __all__ = [
     "softened_interaction",
     "softened_interaction_alternative",
-    "raw_interaction",
 ]
 
 
@@ -50,19 +49,3 @@ def softened_interaction_alternative(x: np.ndarray, strength: float = 1.0, softe
         for j in range(x.shape[0]):
             v_int[i, j] = strength / np.sqrt((x[i] - x[j]) ** 2 + softening)
     return v_int
-
-
-def raw_interaction(x: np.ndarray, strength: float = 1.0) -> np.ndarray:
-    r"""
-    Constructs the raw interaction potential.
-
-    .. math:: v_\mathrm{int}(x,x') = \frac{s}{|x-x'| + 10^{-10}}
-
-    | Args:
-    |     x: np.ndarray, x grid.
-    |     strength: float, Strength of the interaction .. math:: s. (default = 1.0)
-
-    | Returns:
-    |     v_int: np.ndarray, Softened interaction potential on x grid of the System.
-    """
-    return softened_interaction(x, strength=strength, softening=1e-10)

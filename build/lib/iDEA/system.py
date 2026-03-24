@@ -1,5 +1,6 @@
 """Contains all functionality to define and manage definitions of model systems."""
 
+import pickle
 import warnings
 
 import numpy as np
@@ -47,10 +48,10 @@ class System:
 
     def check(self):
         r"""Performs checks on system properties. Raises AssertionError if any check fails."""
-        assert type(self.x) == np.ndarray, f"x grid is not of type np.ndarray, got {type(self.x)} instead."
-        assert type(self.v_ext) == np.ndarray, f"v_ext is not of type np.ndarray, got {type(self.v_ext)} instead."
-        assert type(self.v_int) == np.ndarray, f"v_int is not of type np.ndarray, got {type(self.v_int)} instead."
-        assert type(self.count) == int, f"count is not of type int, got {type(self.NE)} instead."
+        assert isinstance(self.x, np.ndarray), f"x grid is not of type np.ndarray, got {type(self.x)} instead."
+        assert isinstance(self.v_ext, np.ndarray), f"v_ext is not of type np.ndarray, got {type(self.v_ext)} instead."
+        assert isinstance(self.v_int, np.ndarray), f"v_int is not of type np.ndarray, got {type(self.v_int)} instead."
+        assert isinstance(self.count, int), f"count is not of type int, got {type(self.count)} instead."
         assert len(self.x.shape) == 1, f"x grid is not a 1D array, got {len(self.x.shape)}D array instead."
         assert len(self.v_ext.shape) == 1, f"v_ext is not a 1D array, got {len(self.v_ext.shape)}D array instead."
         assert len(self.v_int.shape) == 2, f"v_int is not a 2D array, got {len(self.v_int.shape)}D array instead."
@@ -82,7 +83,9 @@ class System:
     def x(self, value):
         self.__x = value
         self.__dx = self.__x[1] - self.__x[0]
-        warnings.warn("x grid has been changed: dx has been recomputed, please update v_ext and v_int on this grid.")
+        warnings.warn(
+            "x grid has been changed: dx has been recomputed, please update v_ext and v_int on this grid.", stacklevel=2
+        )
 
     @x.deleter
     def x(self):
@@ -121,18 +124,19 @@ class System:
 
 def save_system(s: System, file_name: str) -> None:
     r"""
-    Save a system to an system file.
+    Save a system to a system file.
 
     | Args:
     |     system: iDEA.system.System, System object to save.
     |     file_name: str, file name.
     """
-    pickle.dump(s, open(file_name, "wb"))
+    with open(file_name, "wb") as file:
+        pickle.dump(s, file)
 
 
 def load_system(file_name: str) -> System:
     r"""
-    Load a system from an system file.
+    Load a system from a system file.
 
     | Args:
     |     file_name: str, file name.
@@ -140,7 +144,10 @@ def load_system(file_name: str) -> System:
     | Returns
     |     system: iDEA.system.System, Loaded System object.
     """
-    return pickle.load(open(file_name, "rb"))
+    with open(file_name, "rb") as file:
+        system = pickle.load(file)
+
+    return system
 
 
 # Define some default built in systems.

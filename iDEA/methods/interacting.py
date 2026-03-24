@@ -271,7 +271,7 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, G
         level = _estimate_level(s, k)
 
     # Solve the many-body Schrodinger equation.
-    if GPU == True:
+    if GPU:
         import cupy as cp
         import cupyx.scipy.sparse as csps
         import cupyx.scipy.sparse.linalg as cspsla

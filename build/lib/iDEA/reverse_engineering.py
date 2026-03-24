@@ -176,7 +176,7 @@ def reverse_propagation(
             s_fictitious.x.shape[0],
             state_fictitious.up.occupied.shape[0],
         ),
-        dtype=np.complex,
+        dtype=complex,
     )
     evolution_fictitious.down.td_orbitals = np.zeros(
         shape=(
@@ -184,7 +184,7 @@ def reverse_propagation(
             s_fictitious.x.shape[0],
             state_fictitious.down.occupied.shape[0],
         ),
-        dtype=np.complex,
+        dtype=complex,
     )
     evolution_fictitious.up.td_orbitals[0, :, :] = state_fictitious.up.orbitals[:, state_fictitious.up.occupied]
     evolution_fictitious.down.td_orbitals[0, :, :] = state_fictitious.down.orbitals[:, state_fictitious.down.occupied]
@@ -195,14 +195,9 @@ def reverse_propagation(
     error = np.zeros_like(t)
 
     # Reverse propagation.
-    for j, ti in enumerate(
-        tqdm(
-            t,
-            desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation",
-        )
-    ):
+    for j in tqdm(t, desc="iDEA.reverse_engineering.reverse_propagation: reversing propagation"):
         if j != 0:
-            # Determine ficticious perturbing potential.
+            # Determine fictitious perturbing potential.
             v_guess = np.zeros_like(evolution_fictitious.v_ptrb[j, :])
             result = spo.root(
                 _residual,

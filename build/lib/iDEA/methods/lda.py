@@ -117,7 +117,7 @@ def exchange_correlation_potential(s: iDEA.system.System, n: np.ndarray, separat
                 ) / (q["f"] * (q["b"] * r_s + q["c"] * (r_s**2) + q["d"] * (r_s**3) + 1.0) ** 2)
                 v_c[j] = energy - r_s * derivative
         v_xc = v_x + v_c
-        if separate == True:
+        if separate:
             return v_xc, v_x, v_c
         else:
             return v_xc
@@ -215,7 +215,7 @@ def exchange_correlation_energy(s: iDEA.system.System, n: np.ndarray, separate: 
     E_xc = np.dot(e_xc, n) * s.dx
     E_x = np.dot(e_x, n) * s.dx
     E_c = np.dot(e_c, n) * s.dx
-    if separate == True:
+    if separate:
         return E_xc, E_x, E_c
     else:
         return E_xc

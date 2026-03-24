@@ -31,7 +31,7 @@ setuptools.setup(
         "jupyterlab>=3.3.2",
         "tqdm>=4.64.0",
         "black>=22.3.0",
-        "ruff>=0.11.10",
+        "ruff>=0.15.7",
         "autoflake>=1.4.0",
         "build>=0.7.0",
         "twine>=4.0.0",

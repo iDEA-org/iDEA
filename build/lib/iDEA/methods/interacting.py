@@ -3,7 +3,6 @@
 import copy
 import functools
 import itertools
-import os
 import string
 
 import numpy as np
@@ -15,16 +14,10 @@ import iDEA.methods.non_interacting
 import iDEA.state
 import iDEA.system
 
-if os.environ.get("iDEA_GPU") == "True":
-    import cupy as cnp
-    import cupyx.scipy.sparse as csps
-    import cupyx.scipy.sparse.linalg as cspsla
-
-
 name = "interacting"
 
 
-def kinetic_energy_operator(s: iDEA.system.System) -> sps.dia_matrix:
+def kinetic_energy_operator(s: iDEA.system.System, GPU: bool = False):
     r"""
     Compute many-particle kinetic energy operator as a matrix.
 
@@ -33,76 +26,97 @@ def kinetic_energy_operator(s: iDEA.system.System) -> sps.dia_matrix:
 
     | Args:
     |     s: iDEA.system.System, System object.
+    |     GPU: bool, Compute on GPU using cupy. If false will use scipy on CPU. (default = False)
 
     | Returns:
-    |     K: sps.dia_matrix, Kintetic energy operator.
+    |     K: sparse matrix, Kintetic energy operator.
     """
-    k = iDEA.methods.non_interacting.kinetic_energy_operator(s)
-    k = sps.dia_matrix(k)
-    I = sps.identity(s.x.shape[0], format="dia")
+    if GPU:
+        import cupyx.scipy.sparse as csps
+
+        sp = csps
+        fmt = "csr"
+    else:
+        sp = sps
+        fmt = "dia"
+    k = sps.csr_matrix(iDEA.methods.non_interacting.kinetic_energy_operator(s))
+    k = sp.csr_matrix(k) if GPU else sps.dia_matrix(k)
+    I = sp.identity(s.x.shape[0], format=fmt)
     partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
-    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format="dia"), po)
+    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format=fmt), po)
     generate_terms = lambda f, A, B, n: (fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n))
-    terms = generate_terms(sps.kron, h, I, s.count)
-    K = sps.dia_matrix((s.x.shape[0] ** s.count,) * 2, dtype=float)
-    for term in terms:
-        K += term
+    K = functools.reduce(lambda a, b: a + b, generate_terms(sp.kron, k, I, s.count))
     return K
 
 
-def external_potential_operator(s: iDEA.system.System) -> sps.dia_matrix:
+def external_potential_operator(s: iDEA.system.System, GPU: bool = False):
     r"""
     Compute many-particle external potential energy operator as a matrix.
 
     | Args:
     |     s: iDEA.system.System, System object.
+    |     GPU: bool, Compute on GPU using cupy. If false will use scipy on CPU. (default = False)
 
     | Returns:
-    |     Vext: sps.dia_matrix, External potential operator.
+    |     Vext: sparse matrix, External potential operator.
     """
-    vext = iDEA.methods.non_interacting.external_potential_operator(s)
-    vext = sps.dia_matrix(vext)
-    I = sps.identity(s.x.shape[0], format="dia")
+    if GPU:
+        import cupyx.scipy.sparse as csps
+
+        sp = csps
+        fmt = "csr"
+    else:
+        sp = sps
+        fmt = "dia"
+    vext = sps.csr_matrix(iDEA.methods.non_interacting.external_potential_operator(s))
+    vext = sp.csr_matrix(vext) if GPU else sps.dia_matrix(vext)
+    I = sp.identity(s.x.shape[0], format=fmt)
     partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
-    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format="dia"), po)
+    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format=fmt), po)
     generate_terms = lambda f, A, B, n: (fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n))
-    terms = generate_terms(sps.kron, h, I, s.count)
-    Vext = sps.dia_matrix((s.x.shape[0] ** s.count,) * 2, dtype=float)
-    for term in terms:
-        Vext += term
+    Vext = functools.reduce(lambda a, b: a + b, generate_terms(sp.kron, vext, I, s.count))
     return Vext
 
 
-def hamiltonian(s: iDEA.system.System) -> sps.dia_matrix:
+def hamiltonian(s: iDEA.system.System, GPU: bool = False):
     r"""
     Compute the many-body Hamiltonian.
 
     | Args:
     |     s: iDEA.system.System, System object.
+    |     GPU: bool, Compute on GPU using cupy. If false will use scipy on CPU. (default = False)
 
     | Returns:
-    |     H: sps.dia_matrix, Hamiltonian.
+    |     H: sparse matrix, Hamiltonian.
     """
+    if GPU:
+        import cupy as cp
+        import cupyx.scipy.sparse as csps
+
+        sp = csps
+        xp = cp
+        fmt = "csr"
+    else:
+        sp = sps
+        xp = np
+        fmt = "dia"
+
     # Construct the non-interacting part of the many-body Hamiltonian
-    h = iDEA.methods.non_interacting.hamiltonian(s)[0]
-    h = sps.dia_matrix(h)
-    I = sps.identity(s.x.shape[0], format="dia")
+    h = sps.csr_matrix(iDEA.methods.non_interacting.hamiltonian(s)[0])
+    h = sp.csr_matrix(h) if GPU else sps.dia_matrix(h)
+    I = sp.identity(s.x.shape[0], format=fmt)
     partial_operators = lambda A, B, k, n: (A if i + k == n - 1 else B for i in range(n))
-    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format="dia"), po)
+    fold_partial_operators = lambda f, po: functools.reduce(lambda acc, val: f(val, acc, format=fmt), po)
     generate_terms = lambda f, A, B, n: (fold_partial_operators(f, partial_operators(A, B, k, n)) for k in range(n))
-    terms = generate_terms(sps.kron, h, I, s.count)
-    H0 = sps.dia_matrix((s.x.shape[0] ** s.count,) * 2, dtype=float)
-    for term in terms:
-        H0 += term
+    H0 = functools.reduce(lambda a, b: a + b, generate_terms(sp.kron, h, I, s.count))
 
     # Add the interaction part of the many-body Hamiltonian
     symbols = string.ascii_lowercase + string.ascii_uppercase
     if s.count > 1:
         indices = ",".join(["".join(c) for c in itertools.combinations(symbols[: s.count], 2)])
-        U = np.log(
-            np.einsum(indices + "->" + symbols[: s.count], *(np.exp(s.v_int),) * int(s.count * (s.count - 1) / 2))
-        )
-        U = sps.diags(U.reshape(H0.shape[0]), format="dia")
+        v_int = xp.asarray(s.v_int) if GPU else s.v_int
+        U = xp.log(xp.einsum(indices + "->" + symbols[: s.count], *(xp.exp(v_int),) * int(s.count * (s.count - 1) / 2)))
+        U = sps.diags(U.reshape(H0.shape[0]), format=fmt)
     else:
         U = 0.0
 
@@ -231,34 +245,7 @@ def _estimate_level(s: iDEA.system.System, k: int) -> int:
     return (abs(s.up_count - s.down_count) + 1) ** 2 * s.count * (k + 1)
 
 
-def _solve_on_gpu(H: np.ndarray, k: int) -> tuple:
-    r"""
-    Solves the eigenproblem on the GPU.
-
-    | Args:
-    |     H: np.ndarray, Hamiltonian.
-    |     k: int, Eigenstate to solve for.
-
-    | Returns:
-    |     eigenvalues_gpu, eigenstates_gpu: tuple, Solved eigenvalues and eigenstates.
-    """
-    sigma = 0
-    which = "LA"
-    H_gpu_shifted = csps.csr_matrix(H - sigma * csps.csr_matrix(sps.eye(H.shape[0])))
-    H_gpu_LU = cspsla.splu(H_gpu_shifted)
-    H_gpu_LO = cspsla.LinearOperator(H_gpu_shifted.shape, H_gpu_LU.solve)
-    eigenvalues_gpu, eigenstates_gpu = cspsla.eigsh(H_gpu_LO, k=k, which=which)
-    eigenvalues_gpu = eigenvalues_gpu
-    eigenstates_gpu = eigenstates_gpu
-    eigenvalues_gpu = (1 + eigenvalues_gpu * sigma) / eigenvalues_gpu
-    idx = np.argsort(eigenvalues_gpu)
-    eigenstates_gpu = cnp.transpose(eigenstates_gpu)
-    eigenvalues_gpu = eigenvalues_gpu[idx]
-    eigenstates_gpu = cnp.transpose(eigenstates_gpu[idx])
-    return eigenvalues_gpu, eigenstates_gpu
-
-
-def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None) -> iDEA.state.ManyBodyState:
+def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, GPU=False) -> iDEA.state.ManyBodyState:
     r"""
     Solves the interacting Schrodinger equation of the given system.
 
@@ -267,6 +254,7 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None) -
     |     H: np.ndarray, Hamiltonian [If None this will be computed from s]. (default = None)
     |     k: int, Energy state to solve for. (default = 0, the ground-state)
     |     level: int. Max level of excitation to use when solving the Schrodinger equation.
+    |     GPU: bool, Solve on GPU using cupy. If false will use scipy on CPU.
 
     | Returns:
     |     state: iDEA.state.ManyBodyState, Solved state.
@@ -276,20 +264,25 @@ def solve(s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None) -
 
     # Construct the Hamiltonian.
     if H is None:
-        H = hamiltonian(s)
+        H = hamiltonian(s, GPU=GPU)
 
     # Estimate the level of excitation.
     if level is None:
         level = _estimate_level(s, k)
 
     # Solve the many-body Schrodinger equation.
-    print("iDEA.methods.interacting.solve: solving eigenproblem...")
-    if os.environ.get("iDEA_GPU") == "True":
-        H_gpu = csps.csr_matrix(H)
-        energies, spaces = _solve_on_gpu(H_gpu, level)
+    if GPU:
+        import cupy as cp
+        import cupyx.scipy.sparse as csps
+        import cupyx.scipy.sparse.linalg as cspsla
+
+        name = cp.cuda.runtime.getDeviceProperties(cp.cuda.Device().id)["name"].decode()
+        print(f"iDEA.methods.interacting.solve: solving eigenproblem on GPU: {name}...")
+        energies, spaces = cspsla.eigsh(csps.csr_matrix(H), k=level, which="SA")
         energies = energies.get()
         spaces = spaces.get()
     else:
+        print("iDEA.methods.interacting.solve: solving eigenproblem on CPU...")
         energies, spaces = spsla.eigsh(H.tocsr(), k=level, which="SA")
 
     # Reshape and normalise the solutions.
@@ -401,7 +394,7 @@ def propagate(
     objs = (I, generate_terms)
 
     # Propagate.
-    for j, ti in enumerate(tqdm(t, desc="iDEA.methods.interacting.propagate: propagating state")):
+    for j in tqdm(t, desc="iDEA.methods.interacting.propagate: propagating state"):
         if j != 0:
             propagate_step(s, evolution, H, v_ptrb, j, dt, objs)
 

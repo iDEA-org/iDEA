@@ -123,18 +123,8 @@ class Groundstate:
                     )
                 )
 
-        # Set boundaries of x space grid
-        x_max = L / 2
-        x_min = -L / 2
+        # Set intervals of x space grid
         dx = L / N
-
-        # Create x space grid
-        x = np.linspace(x_min, x_max, N)
-
-        # Set boundaries of time space grid
-        t_max = T / 2
-        t_min = -T / 2
-        dt = T / timesteps
 
         # Create time grid
         t = np.linspace(0, T, timesteps)
@@ -189,7 +179,6 @@ class Groundstate:
         T = params["t_length"]
         timesteps = params["num_points_in_time"]
         e = params["perturbating_field_strengh"]
-        analytic_terms = params["Analytic_terms"]
         K = params["State"]
 
         # Set boundaries of x space grid
@@ -199,10 +188,6 @@ class Groundstate:
         # Create x space grid
         x = np.linspace(x_min, x_max, N)
 
-        # Set boundaries of time space grid
-        t_max = T / 2
-        t_min = -T / 2
-
         # Create time grid
         t = np.linspace(0, T, timesteps)
 
@@ -210,7 +195,7 @@ class Groundstate:
         v_ext = 0.5 * w**2 * x**2 + e * x
         v_int = iDEA.interactions.softened_interaction(x)
         v_ptrb = np.zeros((t.shape[0], x.shape[0]))
-        for j, ti in enumerate(t):
+        for j, _ti in enumerate(t):
             v_ptrb[j, :] = -e * x
 
         # Defining the iDEA system

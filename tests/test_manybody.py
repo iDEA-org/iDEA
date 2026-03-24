@@ -178,8 +178,6 @@ class Groundstate:
             | Returns:
             |     anti_wavefunction : np.array, Antisymmetrized wavefunction.
             """
-            grid_size = wavefunction.shape[0]
-
             # Antisymmetrize
             anti_wavefunction = wavefunction - wavefunction.T
 

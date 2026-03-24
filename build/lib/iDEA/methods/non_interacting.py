@@ -32,16 +32,16 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
     |     K: np.ndarray, Kintetic energy operator.
     """
     if s.stencil == 3:
-        sd = 1.0 * np.array([1, -2, 1], dtype=np.float) / s.dx**2
+        sd = 1.0 * np.array([1, -2, 1], dtype=float) / s.dx**2
         sdi = (-1, 0, 1)
     elif s.stencil == 5:
-        sd = 1.0 / 12.0 * np.array([-1, 16, -30, 16, -1], dtype=np.float) / s.dx**2
+        sd = 1.0 / 12.0 * np.array([-1, 16, -30, 16, -1], dtype=float) / s.dx**2
         sdi = (-2, -1, 0, 1, 2)
     elif s.stencil == 7:
-        sd = 1.0 / 180.0 * np.array([2, -27, 270, -490, 270, -27, 2], dtype=np.float) / s.dx**2
+        sd = 1.0 / 180.0 * np.array([2, -27, 270, -490, 270, -27, 2], dtype=float) / s.dx**2
         sdi = (-3, -2, -1, 0, 1, 2, 3)
     elif s.stencil == 9:
-        sd = 1.0 / 5040.0 * np.array([-9, 128, -1008, 8064, -14350, 8064, -1008, 128, -9], dtype=np.float) / s.dx**2
+        sd = 1.0 / 5040.0 * np.array([-9, 128, -1008, 8064, -14350, 8064, -1008, 128, -9], dtype=float) / s.dx**2
         sdi = (-4, -3, -2, -1, 0, 1, 2, 3, 4)
     elif s.stencil == 11:
         sd = (
@@ -49,7 +49,7 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
             / 25200.0
             * np.array(
                 [8, -125, 1000, -6000, 42000, -73766, 42000, -6000, 1000, -125, 8],
-                dtype=np.float,
+                dtype=float,
             )
             / s.dx**2
         )
@@ -74,7 +74,7 @@ def kinetic_energy_operator(s: iDEA.system.System) -> np.ndarray:
                     864,
                     -50,
                 ],
-                dtype=np.float,
+                dtype=float,
             )
             / s.dx**2
         )
@@ -165,7 +165,7 @@ def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k:
     |     state: iDEA.state.SingleBodyState, State with occupations added.
     """
     # Calculate the max level or orbitals needed to achieve required state and only use these.
-    max_level = (k + 1) * int(np.ceil(s.count))
+    max_level = max(s.up_count, s.down_count) + k
     up_energies = state.up.energies[:max_level]
     down_energies = state.down.energies[:max_level]
 
@@ -176,12 +176,12 @@ def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k:
     # Construct all possible occupations.
     up_occupations = []
     for up_index in up_indices:
-        up_occupation = np.zeros(shape=up_energies.shape, dtype=np.float)
+        up_occupation = np.zeros(shape=up_energies.shape, dtype=float)
         np.put(up_occupation, up_index, [1.0] * s.up_count)
         up_occupations.append(up_occupation)
     down_occupations = []
     for down_index in down_indices:
-        down_occupation = np.zeros(shape=down_energies.shape, dtype=np.float)
+        down_occupation = np.zeros(shape=down_energies.shape, dtype=float)
         np.put(down_occupation, down_index, [1.0] * s.down_count)
         down_occupations.append(down_occupation)
     occupations = list(itertools.product(up_occupations, down_occupations))
@@ -198,7 +198,7 @@ def add_occupations(s: iDEA.system.System, state: iDEA.state.SingleBodyState, k:
         energies.append(E)
 
     # Choose the correct energy index.
-    energy_index = np.argsort(energies)[k]
+    energy_index = np.argsort(energies, kind="stable")[k]
 
     # Construct correct occupations.
     state.up.occupations = np.zeros(shape=state_copy.up.energies.shape)
@@ -297,19 +297,16 @@ def solve(
         up_p_old = initial[4]
         down_p_old = initial[5]
 
-    # Construct the initial Hamiltonian. (And break the symmetry.)
-    H_old, up_H_old, down_H_old = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
+    # Construct the initial Hamiltonian (and break the symmetry).
     H, up_H, down_H = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
     down_H += sps.spdiags(1e-12 * s.x, np.array([0]), s.x.shape[0], s.x.shape[0]).toarray()
 
     # Apply restriction.
     if restricted:
-        up_H_old = H_old
-        down_H_old = H_old
         up_H = H
         down_H = H
 
-    # Run self-consitent algorithm.
+    # Run self-consistent algorithm.
     convergence = 1.0
     count = 0
     while convergence > tol:
@@ -334,8 +331,6 @@ def solve(
 
         # Apply restriction.
         if restricted:
-            up_H_old = H_old
-            down_H_old = H_old
             up_H = H
             down_H = H
 
@@ -470,17 +465,15 @@ def propagate(
 
     # Initilise the single-body time-dependent evolution.
     evolution = iDEA.state.SingleBodyEvolution(state)
-    evolution.up.td_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], state.up.occupied.shape[0]), dtype=np.complex)
-    evolution.down.td_orbitals = np.zeros(
-        shape=(t.shape[0], s.x.shape[0], state.down.occupied.shape[0]), dtype=np.complex
-    )
+    evolution.up.td_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], state.up.occupied.shape[0]), dtype=complex)
+    evolution.down.td_orbitals = np.zeros(shape=(t.shape[0], s.x.shape[0], state.down.occupied.shape[0]), dtype=complex)
     evolution.up.td_orbitals[0, :, :] = state.up.orbitals[:, state.up.occupied]
     evolution.down.td_orbitals[0, :, :] = state.down.orbitals[:, state.down.occupied]
     evolution.v_ptrb = v_ptrb
     evolution.t = t
 
     # Propagate.
-    for j, ti in enumerate(tqdm(t, desc=f"iDEA.methods.{name}.propagate: propagating state")):
+    for j in tqdm(t, desc=f"iDEA.methods.{name}.propagate: propagating state"):
         if j != 0:
             evolution = propagate_step(s, evolution, j, hamiltonian_function, v_ptrb, dt, restricted, **kwargs)
 
