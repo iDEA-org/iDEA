@@ -75,7 +75,7 @@ Some of iDEA's features:
 - Implementation of all common observables.
 - Reverse-engineering to solve potential inversion, from exact Kohn-Sham DFT and beyond.
 - Fully parallelised using OpenBLAS.
-- Fully parallelised for all cuda supporting GPUS.
+- GPU acceleration of the exact interacting solver (see [GPU Acceleration](#gpu-acceleration)).
 
 ## Example
 
@@ -93,6 +93,37 @@ print(E)
 plt.plot(system.x, n, 'k-')
 plt.show()
 ```
+
+## GPU Acceleration
+
+Solving the many-electron Schrödinger equation exactly is by far the most demanding thing iDEA does: the size of the problem grows exponentially with the number of electrons, and even two electrons on a fine grid means working with matrices with tens of billions of elements. To make this fast, iDEA can offload this heavy linear algebra to an NVIDIA GPU using [CuPy](https://cupy.dev/).
+
+GPU acceleration is available for the **exact interacting solver** (`iDEA.methods.interacting`), for both:
+- **Ground-state and excited-state calculations** — building the many-body Hamiltonian and solving the eigenproblem on the GPU.
+- **Time-dependent calculations** — propagating the many-body wavefunction through time on the GPU.
+
+Using it is as simple as adding `GPU=True`:
+
+```python
+import iDEA
+
+system = iDEA.system.systems.atom
+
+# Solve for the ground state on the GPU.
+ground_state = iDEA.methods.interacting.solve(system, k=0, GPU=True)
+
+# Propagate in time on the GPU.
+evolution = iDEA.methods.interacting.propagate(system, ground_state, v_ptrb, t, GPU=True)
+```
+
+Everything else about your workflow stays the same — the results are returned as ordinary NumPy arrays, agree with the CPU implementation to machine precision, and all observables can be computed as usual. If you don't have a GPU, simply leave `GPU=False` (the default) and the calculation runs on the CPU.
+
+A few things to be aware of:
+- You will need an NVIDIA GPU with CUDA, and the [CuPy](https://docs.cupy.dev/en/stable/install.html) package installed (it is an optional dependency, so it is not installed by default).
+- The **approximate methods** (non-interacting, Hartree, Hartree-Fock, LDA, hybrids) run on the CPU only. This is by design: they work with small single-particle matrices for which a GPU offers no benefit — they are already fast.
+- The speedup grows with system size: the finer the grid and the more electrons, the more the GPU helps.
+
+You can measure the performance benefit on your own hardware using the benchmarking scripts in the `benchmarking` directory: `gpu.py` benchmarks ground-state calculations, and `gpu_td.py` benchmarks time-dependent propagation. Each produces a plot comparing CPU and GPU run time and memory usage across a range of grid sizes.
 
 ## Tutorial
 
