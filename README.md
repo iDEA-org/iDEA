@@ -56,6 +56,21 @@ ruff format iDEA/ tests/ benchmarking/
 
 To run unit tests: `pytest -v`
 
+The GPU tests in `tests/test_gpu.py` check that the GPU and CPU produce the same results for interacting ground-state and time-dependent calculations. They are skipped automatically unless CuPy is installed (see [GPU Acceleration](#gpu-acceleration)). On an Intel i9 / RTX 4090 these take roughly 26 minutes.
+
+### Benchmarking
+
+The `benchmarking` directory contains scripts that measure how the exact interacting solver scales on the CPU compared to the GPU:
+
+```
+python benchmarking/gpu.py      # ground state, grid sizes 50-450
+python benchmarking/gpu_td.py   # time-dependent propagation, grid sizes 50-300
+```
+
+Each script detects your CPU and GPU, prints them along with an estimated runtime calibrated on your machine, and then writes a plot of wall-clock time and peak memory against grid size to `benchmarking/gpu_scaling.png` and `benchmarking/gpu_td_scaling.png` respectively.
+
+On an Intel i9 / RTX 4090 these take roughly 11 minutes and 2 minutes. Most of that is the CPU points, whose cost grows steeply with grid size — the GPU sweep is a small fraction of the total. Without CuPy installed both scripts still run, recording the CPU points and skipping the GPU ones.
+
 ## Documentation
 
 For full details of usage please see our [tutorial](https://github.com/iDEA-org/iDEA/blob/master/tutorial/tutorial.ipynb). The full API documentation is available at [readthedocs](https://idea-interacting-dynamic-electrons-approach.readthedocs.io/en/latest/).
@@ -119,11 +134,11 @@ evolution = iDEA.methods.interacting.propagate(system, ground_state, v_ptrb, t, 
 Everything else about your workflow stays the same — the results are returned as ordinary NumPy arrays, agree with the CPU implementation to machine precision, and all observables can be computed as usual. If you don't have a GPU, simply leave `GPU=False` (the default) and the calculation runs on the CPU.
 
 A few things to be aware of:
-- You will need an NVIDIA GPU with CUDA, and the [CuPy](https://docs.cupy.dev/en/stable/install.html) package installed (it is an optional dependency, so it is not installed by default).
+- You will need an NVIDIA GPU with CUDA, and the [CuPy](https://docs.cupy.dev/en/stable/install.html) package installed. It is an optional dependency, so it is not installed by default — use `pip install -e ".[gpu]"` (or `pip install cupy-cudaxxx` directly, matching your CUDA version).
 - The **approximate methods** (non-interacting, Hartree, Hartree-Fock, LDA, hybrids) run on the CPU only. This is by design: they work with small single-particle matrices for which a GPU offers no benefit — they are already fast.
 - The speedup grows with system size: the finer the grid and the more electrons, the more the GPU helps.
 
-You can measure the performance benefit on your own hardware using the benchmarking scripts in the `benchmarking` directory: `gpu.py` benchmarks ground-state calculations, and `gpu_td.py` benchmarks time-dependent propagation. Each produces a plot comparing CPU and GPU run time and memory usage across a range of grid sizes.
+You can measure the performance benefit on your own hardware using the scripts in the `benchmarking` directory — see [Benchmarking](#benchmarking).
 
 ## Tutorial
 
