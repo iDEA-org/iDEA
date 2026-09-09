@@ -6,6 +6,7 @@ import numpy as np
 
 import iDEA.methods.hartree
 import iDEA.methods.hartree_fock
+import iDEA.methods.lda
 import iDEA.methods.non_interacting
 import iDEA.observables
 import iDEA.state
@@ -19,6 +20,7 @@ external_potential_operator = iDEA.methods.non_interacting.external_potential_op
 hartree_potential_operator = iDEA.methods.hartree.hartree_potential_operator
 exchange_potential_operator = iDEA.methods.hartree_fock.exchange_potential_operator
 exchange_correlation_potential_operator = iDEA.methods.lda.exchange_correlation_potential_operator
+check_spin_polarisation = iDEA.methods.lda.check_spin_polarisation
 propagate_step = iDEA.methods.non_interacting.propagate_step
 
 
@@ -107,7 +109,13 @@ def solve(
 
     | Returns:
     |     state: iDEA.state.SingleBodyState, Solved state.
+
+    | Note:
+    |     The correlation part of this functional is iDEA's LDA, whose parameterisation is a fit to the fully
+    |     spin-polarised 1D HEG evaluated on the total density. A warning is raised if s is not fully
+    |     spin-polarised. See the iDEA.methods.lda module docstring.
     """
+    check_spin_polarisation(s)
     return iDEA.methods.non_interacting.solve(
         s, hamiltonian, k, restricted, mixing, tol, initial, name, silent, alpha=alpha
     )
@@ -136,5 +144,11 @@ def propagate(
 
     | Returns:
     |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
+
+    | Note:
+    |     The correlation part of this functional is iDEA's LDA, whose parameterisation is a fit to the fully
+    |     spin-polarised 1D HEG evaluated on the total density. A warning is raised if s is not fully
+    |     spin-polarised. See the iDEA.methods.lda module docstring.
     """
+    check_spin_polarisation(s)
     return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted, name, alpha=alpha)

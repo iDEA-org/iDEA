@@ -1,5 +1,29 @@
-"""Contains all LDA functionality and solvers."""
+r"""Contains all LDA functionality and solvers.
 
+.. warning::
+
+    The exchange-correlation functional in this module is built from a single set of parameters, fitted to the
+    **fully spin-polarised** one-dimensional homogeneous electron gas (1D HEG) with the softened Coulomb
+    interaction that iDEA uses, and it is evaluated on the *total* density :math:`n = n_\uparrow + n_\downarrow`.
+    The unpolarised 1D HEG has not been fitted, so no second parameter set exists to interpolate against.
+
+    This LDA is therefore spin-unresolved:
+
+    * :math:`\epsilon_{xc}` and :math:`v_{xc}` carry no dependence on the spin polarisation
+      :math:`\zeta = (n_\uparrow - n_\downarrow) / n`, so two systems with the same total density but different
+      spin configurations (for example ``'uu'`` and ``'ud'``) are given identical exchange-correlation energies
+      and potentials;
+    * :func:`hamiltonian` returns the same Hamiltonian for up-spin and down-spin electrons, which is why the
+      ``restricted`` argument has no effect on this method;
+    * only a fully spin-polarised system (all electrons ``'u'``, or all electrons ``'d'``) lies within the regime
+      the parameters were fitted to. For any other system the functional is being applied outside its fit, and
+      :func:`solve` and :func:`propagate` raise a warning saying so.
+
+    Implementing a genuine LSDA, which would require the unpolarised 1D HEG to be fitted as well, is tracked in
+    https://github.com/iDEA-org/iDEA/issues/47.
+"""
+
+import warnings
 from collections.abc import Callable
 
 import numpy as np
@@ -20,7 +44,11 @@ propagate_step = iDEA.methods.non_interacting.propagate_step
 
 
 class HEG:
-    """Class to hold parameters fitted from 1D HEG."""
+    """Class to hold parameters fitted from the fully spin-polarised 1D HEG.
+
+    Only the fully spin-polarised parameterisation (keyed ``"spin_polerised"``) has been fitted; there is no
+    unpolarised set. See the module docstring for what this means for systems that are not fully spin-polarised.
+    """
 
     ex_lda = {}
     ex_lda["spin_polerised"] = {
@@ -64,6 +92,35 @@ class HEG:
     }
 
 
+def check_spin_polarisation(s: iDEA.system.System, stacklevel: int = 3) -> bool:
+    r"""
+    Check whether a system lies within the regime the LDA parameters were fitted to, warning if it does not.
+
+    iDEA's LDA parameters are a fit to the fully spin-polarised 1D HEG, and are evaluated on the total density, so
+    the functional carries no dependence on the spin polarisation. A system containing both up-spin and down-spin
+    electrons is therefore outside the fitted regime, and a warning is raised.
+
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     stacklevel: int, Stack level to report the warning against. (default = 3, the caller of the solver)
+
+    | Returns:
+    |     polarised: bool, True if the system is fully spin-polarised, False if a warning was raised.
+    """
+    if s.up_count != 0 and s.down_count != 0:
+        warnings.warn(
+            f"System '{s.electrons}' ({s.up_count} up, {s.down_count} down) is not fully spin-polarised, but "
+            "iDEA's LDA uses a parameterisation fitted only to the fully spin-polarised 1D HEG, evaluated on the "
+            "total density. The exchange-correlation energy and potential carry no dependence on the spin "
+            "polarisation, up-spin and down-spin electrons see an identical Hamiltonian, and 'restricted' has no "
+            "effect. This system lies outside the regime the functional was fitted to, so treat the results as "
+            "qualitative. See https://github.com/iDEA-org/iDEA/issues/47.",
+            stacklevel=stacklevel,
+        )
+        return False
+    return True
+
+
 def exchange_correlation_potential(s: iDEA.system.System, n: np.ndarray, separate: bool = False) -> np.ndarray:
     r"""
     Compute the LDA exchange-correlation potential from a density.
@@ -75,6 +132,11 @@ def exchange_correlation_potential(s: iDEA.system.System, n: np.ndarray, separat
 
     | Returns:
     |     v_xc: np.ndarray, Exchange correlation potential, or evolution of exchange correlation potential.
+
+    | Note:
+    |     The parameterisation used is a fit to the fully spin-polarised 1D HEG, and n is the total density, so
+    |     the returned potential is independent of how the density is split between up-spin and down-spin
+    |     electrons. See the module docstring.
     """
     if len(n.shape) == 1:
         p = HEG.vx_lda["spin_polerised"]
@@ -168,6 +230,11 @@ def hamiltonian(
 
     | Returns:
     |     H: np.ndarray, Hamiltonian, up Hamiltonian, down Hamiltonian.
+
+    | Note:
+    |     The exchange-correlation potential is evaluated on the total density up_n + down_n using the fully
+    |     spin-polarised 1D HEG fit, so the up and down Hamiltonians returned here are identical. See the module
+    |     docstring.
     """
     if K is None:
         K = kinetic_energy_operator(s)
@@ -190,6 +257,11 @@ def exchange_correlation_energy(s: iDEA.system.System, n: np.ndarray, separate: 
 
     | Returns:
     |     E_xc: np.ndarray, Exchange correlation energy, or evolution of exchange correlation energy.
+
+    | Note:
+    |     The parameterisation used is a fit to the fully spin-polarised 1D HEG, and n is the total density, so
+    |     the returned energy is independent of how the density is split between up-spin and down-spin electrons.
+    |     See the module docstring.
     """
     p = HEG.ex_lda["spin_polerised"]
     q = HEG.ec_lda["spin_polerised"]
@@ -265,7 +337,13 @@ def solve(
 
     | Returns:
     |     state: iDEA.state.SingleBodyState, Solved state.
+
+    | Note:
+    |     A warning is raised if s is not fully spin-polarised, as the LDA parameterisation is a fit to the fully
+    |     spin-polarised 1D HEG only. The restricted argument has no effect on this method, as the up and down
+    |     Hamiltonians are identical. See the module docstring.
     """
+    check_spin_polarisation(s)
     return iDEA.methods.non_interacting.solve(s, hamiltonian, k, restricted, mixing, tol, initial, name, silent)
 
 
@@ -290,5 +368,10 @@ def propagate(
 
     | Returns:
     |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
+
+    | Note:
+    |     A warning is raised if s is not fully spin-polarised, as the LDA parameterisation is a fit to the fully
+    |     spin-polarised 1D HEG only. See the module docstring.
     """
+    check_spin_polarisation(s)
     return iDEA.methods.non_interacting.propagate(s, state, v_ptrb, t, hamiltonian, restricted, name)
