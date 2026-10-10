@@ -92,3 +92,19 @@ def test_many_body_operator_raises():
     K = iDEA.methods.interacting.kinetic_energy_operator(s)
     with pytest.raises(NotImplementedError, match="one-body"):
         iDEA.observables.observable(s, K, state=state)
+
+
+def test_sparse_one_body_operator_single_electron():
+    # For one electron the interacting kinetic operator is a sparse (N_x, N_x) matrix. It must be contracted
+    # elementwise with the density matrix, not multiplied as a matrix product.
+    s = _system("u")
+    state = iDEA.methods.interacting.solve(s, k=0)
+    K_sparse = iDEA.methods.interacting.kinetic_energy_operator(s)
+    K_dense = iDEA.methods.non_interacting.kinetic_energy_operator(s)
+    assert K_sparse.shape == K_dense.shape
+    E_k_sparse = iDEA.observables.observable(s, K_sparse, state=state)
+    E_k_dense = iDEA.observables.observable(s, K_dense, state=state)
+    assert np.isclose(E_k_sparse, E_k_dense, rtol=0.0, atol=1e-12)
+    assert np.isclose(E_k_dense, _brute_force(s, K_sparse, state.space), rtol=0.0, atol=1e-10)
+    ni_state = iDEA.methods.non_interacting.solve(s, k=0)
+    assert np.isclose(E_k_dense, iDEA.observables.kinetic_energy(s, state=ni_state), rtol=0.0, atol=1e-8)

@@ -4,6 +4,7 @@ import string
 from typing import Union
 
 import numpy as np
+import scipy.sparse as sps
 
 import iDEA.methods.interacting
 import iDEA.methods.non_interacting
@@ -11,13 +12,17 @@ import iDEA.state
 import iDEA.system
 
 
-def _check_one_body_operator(s: iDEA.system.System, observable_operator: np.ndarray) -> None:
+def _one_body_operator(s: iDEA.system.System, observable_operator: np.ndarray) -> np.ndarray:
     r"""
-    Check that an operator is a one-body operator on the spatial grid, as required for many-body observables.
+    Check that an operator is a one-body operator on the spatial grid, as required for many-body observables,
+    and return it as a dense array (scipy sparse matrices are converted).
 
     | Args:
     |     s: iDEA.system.System, System object.
-    |     observable_operator: np.ndarray, Obserbable operator.
+    |     observable_operator: np.ndarray or scipy sparse matrix, Observable operator.
+
+    | Returns:
+    |     observable_operator: np.ndarray, Observable operator as a dense (N_x, N_x) array.
     """
     expected_shape = (s.x.shape[0], s.x.shape[0])
     if getattr(observable_operator, "shape", None) != expected_shape:
@@ -28,7 +33,9 @@ def _check_one_body_operator(s: iDEA.system.System, observable_operator: np.ndar
             "rather than the many-body operator from iDEA.methods.interacting. For the interaction energy use "
             "iDEA.observables.interaction_energy."
         )
-    return None
+    if sps.issparse(observable_operator):
+        return observable_operator.toarray()
+    return np.asarray(observable_operator)
 
 
 def observable(
@@ -46,11 +53,13 @@ def observable(
     :math:`\hat{O} = \sum_i \hat{o}_i` given as an N_x by N_x matrix, e.g. from
     iDEA.methods.non_interacting.kinetic_energy_operator. The expectation value is then evaluated from the one-body
     reduced density matrix, :math:`\langle \hat{O} \rangle = \int dx\, dx'\, o(x, x') \rho(x', x)`, without
-    building the many-body operator. Two-body (or general many-body) operators are not supported.
+    building the many-body operator. Two-body (or general many-body) operators are not supported. The operator may be
+    a dense array or a scipy sparse matrix. The many-body branches assume a Hermitian operator and return the real
+    part of the expectation value.
 
     | Args:
     |     s: iDEA.system.System, System object.
-    |     observable_operator: np.ndarray, Obserbable operator (one-body, shape (N_x, N_x)).
+    |     observable_operator: np.ndarray or scipy sparse matrix, Observable operator (one-body, shape (N_x, N_x)).
     |     state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
     |     evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
     |     return_spins: bool, True to also return the spin observables: total, up, down. (default = False)
@@ -59,10 +68,10 @@ def observable(
     |     observable: float or np.ndarray, Observable.
     """
     if state is not None and isinstance(state, iDEA.state.ManyBodyState):
-        _check_one_body_operator(s, observable_operator)
+        O_1 = _one_body_operator(s, observable_operator)
         _, up_p, down_p = density_matrix(s, state=state, return_spins=True)
-        up_O = np.sum(observable_operator * up_p.T) * s.dx
-        down_O = np.sum(observable_operator * down_p.T) * s.dx
+        up_O = np.einsum("ab,ba->", O_1, up_p) * s.dx
+        down_O = np.einsum("ab,ba->", O_1, down_p) * s.dx
         O = up_O + down_O
         if return_spins:
             return O.real, up_O.real, down_O.real
@@ -97,10 +106,10 @@ def observable(
             return O
 
     if evolution is not None and isinstance(evolution, iDEA.state.ManyBodyEvolution):
-        _check_one_body_operator(s, observable_operator)
+        O_1 = _one_body_operator(s, observable_operator)
         _, up_p, down_p = density_matrix(s, evolution=evolution, return_spins=True)
-        up_O = np.einsum("ab,tba->t", observable_operator, up_p) * s.dx
-        down_O = np.einsum("ab,tba->t", observable_operator, down_p) * s.dx
+        up_O = np.einsum("ab,tba->t", O_1, up_p) * s.dx
+        down_O = np.einsum("ab,tba->t", O_1, down_p) * s.dx
         O = up_O + down_O
         if return_spins:
             return O.real, up_O.real, down_O.real
@@ -402,9 +411,12 @@ def interaction_energy(
     r"""
     Compute the exact interaction energy of an interacting state.
 
-    This is evaluated from the pair density
+    This is evaluated from the pair density :math:`n_2(x, x')` as
+
     .. math:: E_{int} = \frac{1}{2} \int dx\, dx'\, n_2(x, x') v_{int}(x, x').
+
     For approximate (single-body) states use hartree_energy and exchange_energy instead.
+    Evolutions (ManyBodyEvolution) are not yet supported and raise NotImplementedError.
 
     | Args:
     |     s: iDEA.system.System, System object.
