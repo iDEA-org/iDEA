@@ -1,6 +1,7 @@
 """Defines the structures to describe the system states"""
 
 import copy
+import operator
 import pickle
 from abc import ABC as Interface
 
@@ -117,6 +118,46 @@ class ManyBodyStates(States):
             self.energies = iDEA.utilities.ArrayPlaceholder()
         else:
             self.energies = energies
+
+    def __len__(self) -> int:
+        r"""
+        Number of states in the collection.
+
+        | Returns:
+        |     count: int, Number of energy levels n stored.
+        """
+        if isinstance(self.energies, iDEA.utilities.ArrayPlaceholder):
+            return 0
+        return len(self.energies)
+
+    def __getitem__(self, n: int) -> ManyBodyState:
+        r"""
+        Extract the n-th state of the collection as a ManyBodyState, so that it can be used with
+        any function that accepts a single many-body state (e.g. iDEA.observables.density).
+
+        | Args:
+        |     n: int, Energy level of the state (0 = ground-state, negative values count from the highest level).
+
+        | Returns:
+        |     state: iDEA.state.ManyBodyState, The n-th state (arrays are copies of the stored data).
+        """
+        n = operator.index(n)
+        count = len(self)
+        if not -count <= n < count:
+            raise IndexError(f"state index {n} out of range for ManyBodyStates of length {count}.")
+        return ManyBodyState(
+            space=np.copy(self.spaces[..., n]),
+            spin=np.copy(self.spins[..., n]),
+            full=np.copy(self.fulls[..., n]),
+            energy=self.energies[n],
+        )
+
+    def __iter__(self):
+        r"""
+        Iterate over the states in order of energy level, yielding each as a ManyBodyState.
+        """
+        for n in range(len(self)):
+            yield self[n]
 
 
 class SingleBodyState(State):
