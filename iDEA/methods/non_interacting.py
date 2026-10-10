@@ -298,7 +298,6 @@ def solve(
         down_p_old = initial[5]
 
     # Construct the initial Hamiltonian. (And break the symmetry.)
-    H_old, up_H_old, down_H_old = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
     H, up_H, down_H = hamiltonian_function(s, up_n_old, down_n_old, up_p_old, down_p_old, **kwargs)
     down_H += sps.spdiags(1e-12 * s.x, np.array([0]), s.x.shape[0], s.x.shape[0]).toarray()
 
