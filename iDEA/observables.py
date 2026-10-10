@@ -415,6 +415,9 @@ def interaction_energy(
 
     .. math:: E_{int} = \frac{1}{2} \int dx\, dx'\, n_2(x, x') v_{int}(x, x').
 
+    Here :math:`n_2` is summed over spins and normalised to N(N-1), and the x = x' diagonal is included, consistent
+    with the interaction term of iDEA.methods.interacting.hamiltonian.
+
     For approximate (single-body) states use hartree_energy and exchange_energy instead.
     Evolutions (ManyBodyEvolution) are not yet supported and raise NotImplementedError.
 
