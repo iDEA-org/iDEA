@@ -252,6 +252,15 @@ def solve(
     r"""
     Solves the interacting Schrodinger equation of the given system.
 
+    The Hamiltonian is spin-free: spin enters only through the seed spin product state built from
+    s.electrons and the antisymmetrisation, which filters the spatial spectrum. As a result k indexes the
+    spin-mixed spectrum of all states compatible with the seed, ordered by energy, not the k-th state of a
+    fixed total spin. For example, for electrons="ud" a symmetric spatial state gives a singlet and an
+    antisymmetric spatial state gives the m=0 triplet, so for a two-electron Hooke's atom k=0, 1, 2, 3 are
+    singlet, triplet, singlet, triplet. In that case k=1 is the lowest triplet, not the first excited singlet.
+    For electrons="uu" only triplet states survive. Use iDEA.observables.total_spin_z and
+    iDEA.observables.total_spin_squared to identify the spin character of a returned state.
+
     | Args:
     |     s: iDEA.system.System, System object.
     |     H: np.ndarray, Hamiltonian [If None this will be computed from s]. (default = None)

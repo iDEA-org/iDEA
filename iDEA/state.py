@@ -55,9 +55,14 @@ class ManyBodyState(State):
         wavefunction
         .. math:: \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N).
 
+        Note: for states produced by iDEA.methods.interacting.solve, spin is the seed spin product state
+        built from s.electrons (e.g. |up down> for "ud") and is identical for every state k. It carries no
+        per-state spin information: the actual spin structure of a state (e.g. singlet vs triplet) lives
+        only in full. Use iDEA.observables.total_spin_z and iDEA.observables.total_spin_squared to measure it.
+
         | Args:
         |     space: np.ndarray, Spatial part of the wavefunction on the spatial grid \psi(x_1,x_2,\dots,x_N). (default = None)
-        |     spin: np.ndarray, Spin part of the wavefunction on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N). (default = None)
+        |     spin: np.ndarray, Seed spin product state on the spin grid \chi(\sigma_1,\sigma_2,\dots,\sigma_N), not antisymmetrised and not state-specific (see note above). (default = None)
         |     full: np.ndarray, Total antisymmetrised wavefunction \Psi(x_1,\sigma_1,x_2,\sigma_2,\dots,x_N,\sigma_N). (default = None)
         |     energy: float, Total energy of the state.
         """

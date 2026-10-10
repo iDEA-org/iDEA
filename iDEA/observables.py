@@ -509,6 +509,112 @@ def single_particle_energy(s: iDEA.system.System, state: iDEA.state.SingleBodySt
     )
 
 
+def _total_spin_operators(count: int) -> tuple:
+    r"""
+    Construct the total spin operators S_x, S_y and S_z of count spin-1/2 particles as dense matrices.
+
+    The basis is the product basis |\sigma_1 \sigma_2 \dots \sigma_N\rangle in C (row-major) order, with
+    index 0 = up and index 1 = down for each particle, matching the spin axes of ManyBodyState.full.
+
+    | Args:
+    |     count: int, Number of particles.
+
+    | Returns:
+    |     S: tuple, (S_x, S_y, S_z), each an np.ndarray of shape (2**count, 2**count).
+    """
+    single = (
+        0.5 * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex),
+        0.5 * np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex),
+        0.5 * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex),
+    )
+    identity = np.identity(2, dtype=complex)
+    S = []
+    for s_a in single:
+        total = np.zeros((2**count, 2**count), dtype=complex)
+        for i in range(count):
+            term = np.ones((1, 1), dtype=complex)
+            for j in range(count):
+                term = np.kron(term, s_a if j == i else identity)
+            total += term
+        S.append(total)
+    return tuple(S)
+
+
+def _spin_density_matrix(s: iDEA.system.System, state: iDEA.state.ManyBodyState) -> np.ndarray:
+    r"""
+    Compute the N-particle spin density matrix of a many-body state, tracing out all spatial coordinates.
+
+    .. math:: \rho_{\sigma\sigma'} = \int \Psi^*(x_1,\sigma_1,\dots,x_N,\sigma_N)\Psi(x_1,\sigma'_1,\dots,x_N,\sigma'_N) dx_1 \dots dx_N
+
+    normalised to unit trace.
+
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.ManyBodyState, State (uses state.full, indexed as (x_1,\sigma_1,x_2,\sigma_2,\dots)).
+
+    | Returns:
+    |     rho: np.ndarray, Spin density matrix of shape (2**N, 2**N).
+    """
+    full = np.asarray(state.full)
+    expected = (s.x.shape[0], 2) * s.count
+    if full.shape != expected:
+        raise ValueError(f"Expected state.full of shape {expected}, got {full.shape} instead.")
+    # Reorder (x_1,sigma_1,...,x_N,sigma_N) -> (x_1,...,x_N,sigma_1,...,sigma_N) and flatten to a matrix.
+    order = list(range(0, 2 * s.count, 2)) + list(range(1, 2 * s.count, 2))
+    psi = np.transpose(full, order).reshape(s.x.shape[0] ** s.count, 2**s.count)
+    rho = psi.conj().T @ psi
+    return rho / np.trace(rho).real
+
+
+def total_spin_z(s: iDEA.system.System, state: iDEA.state.ManyBodyState) -> float:
+    r"""
+    Compute the expectation value of the total spin projection <S_z> of a many-body state.
+
+    .. math:: S_z = \sum_i s_{z,i}, \quad \langle S_z \rangle = \frac{1}{2}(N_\uparrow - N_\downarrow)
+
+    This is evaluated from the spinor indices of state.full. For states returned by
+    iDEA.methods.interacting.solve, S_z is exactly conserved and equals (N_up - N_down)/2 of s.electrons.
+
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.ManyBodyState, State.
+
+    | Returns:
+    |     S_z: float, Expectation value of the total spin projection (in units of hbar).
+    """
+    if not isinstance(state, iDEA.state.ManyBodyState):
+        raise AttributeError("ManyBodyState must be provided.")
+    rho = _spin_density_matrix(s, state)
+    S_z = _total_spin_operators(s.count)[2]
+    return float(np.trace(rho @ S_z).real)
+
+
+def total_spin_squared(s: iDEA.system.System, state: iDEA.state.ManyBodyState) -> float:
+    r"""
+    Compute the expectation value of the total spin squared <S^2> of a many-body state.
+
+    .. math:: S^2 = S_x^2 + S_y^2 + S_z^2, \quad \langle S^2 \rangle = S(S+1) \text{ for a spin eigenstate}
+
+    This is evaluated from the spinor indices of state.full. For example, a two-electron singlet gives
+    <S^2> = 0 and a triplet gives <S^2> = 2. Note that S^2 is not guaranteed to be a good quantum number of
+    the states returned by iDEA.methods.interacting.solve (e.g. in the presence of degeneracies), so this can
+    be non-integer-valued for a spin-mixed state.
+
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.ManyBodyState, State.
+
+    | Returns:
+    |     S2: float, Expectation value of the total spin squared (in units of hbar^2).
+    """
+    if not isinstance(state, iDEA.state.ManyBodyState):
+        raise AttributeError("ManyBodyState must be provided.")
+    rho = _spin_density_matrix(s, state)
+    S_x, S_y, S_z = _total_spin_operators(s.count)
+    S2 = S_x @ S_x + S_y @ S_y + S_z @ S_z
+    return float(np.trace(rho @ S2).real)
+
+
 def _placeholder(
     s: iDEA.system.System,
     state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None,
