@@ -213,21 +213,13 @@ def antisymmetrize(s, spaces, spins, energies):
     for k in range(fulls.shape[-1]):
         fulls[..., k] = fulls[..., k] / np.sqrt(np.sum(abs(fulls[..., k]) ** 2) * s.dx**s.count)
 
-    # Filter out duplicates.
-    allowed_fulls = []
-    allowed_energies = []
-    for n in range(fulls.shape[-1] - 1):
-        if np.allclose(abs(fulls[..., n]), abs(fulls[..., n + 1])):
-            pass
-        else:
-            allowed_fulls.append(fulls[..., n])
-            allowed_energies.append(energies[n])
-    allowed_fulls.append(fulls[..., -1])
-    allowed_energies.append(energies[-1])
-    fulls = np.moveaxis(np.array(allowed_fulls), 0, -1)
-    spaces = spaces[..., : fulls.shape[-1]]
-    spins = spins[..., : fulls.shape[-1]]
-    energies = np.array(allowed_energies)
+    # Filter out duplicates, applying the same selection to all arrays so they stay aligned.
+    keep = [n for n in range(fulls.shape[-1] - 1) if not np.allclose(abs(fulls[..., n]), abs(fulls[..., n + 1]))]
+    keep.append(fulls.shape[-1] - 1)
+    fulls = fulls[..., keep]
+    spaces = spaces[..., keep]
+    spins = spins[..., keep]
+    energies = energies[keep]
 
     return fulls, spaces, spins, energies
 
