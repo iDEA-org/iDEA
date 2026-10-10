@@ -241,12 +241,18 @@ def _estimate_level(s: iDEA.system.System, k: int) -> int:
     Estimate the number of spatial eigenstates needed to reach the k-th antisymmetric energy state.
 
     The many-body Hamiltonian is solved for spatial eigenstates without any exchange symmetry, many of which are
-    annihilated by antisymmetrization. This estimate is the smallest level that can contain the first k + 1
-    antisymmetric states of the non-interacting system: every spatial product state of single-particle orbitals
-    (counting all distinct orderings of the particles) with energy strictly below the k-th antisymmetric (Slater
-    determinant) state, plus one for each of the k + 1 lowest antisymmetric states that lie at the k-th energy.
-    Repulsive interactions typically lower the antisymmetric states relative to the rest of the spectrum, so this is
-    usually sufficient. It is only a starting point: solve() increases the level automatically if it is too small.
+    annihilated by antisymmetrization. Two estimates are combined, and the smaller is used:
+
+    - The smallest level that can contain the first k + 1 antisymmetric states of the non-interacting system: every
+      spatial product state of single-particle orbitals (counting all distinct orderings of the particles) with
+      energy strictly below the k-th antisymmetric (Slater determinant) state, plus one for each of the k + 1 lowest
+      antisymmetric states that lie at the k-th energy. This is exact without interactions, but grows combinatorially
+      with the number of electrons, while repulsive interactions lower the antisymmetric states relative to the rest
+      of the spectrum, so it overestimates for many strongly interacting electrons.
+    - The cap (abs(up_count - down_count) + 1)**2 * count * (k + 1), so that the first solve is never larger than
+      with the original heuristic.
+
+    This is only a starting point: solve() increases the level automatically if it is too small.
 
     | Args:
     |     s: iDEA.system.System, System object.
@@ -255,6 +261,7 @@ def _estimate_level(s: iDEA.system.System, k: int) -> int:
     | Returns:
     |     level: int, Estimate of the number of spatial eigenstates needed.
     """
+    cap = (abs(s.up_count - s.down_count) + 1) ** 2 * s.count * (k + 1)
     eps = np.linalg.eigvalsh(iDEA.methods.non_interacting.hamiltonian(s)[0])
 
     # Energies of the k + 1 lowest antisymmetric non-interacting states.
@@ -263,19 +270,21 @@ def _estimate_level(s: iDEA.system.System, k: int) -> int:
     down_energies = [np.sum(eps[list(c)]) for c in itertools.combinations(range(orbitals), s.down_count)]
     energies = np.sort([u + d for u in up_energies for d in down_energies])
     if k >= energies.shape[0]:
-        return eps.shape[0] ** s.count
+        return cap
     target = energies[k]
     tol = 1e-6 * max(1.0, abs(target))
     level = k + 1 - np.count_nonzero(energies < target - tol)
 
-    # Count the spatial product states strictly below the target energy.
+    # Count the spatial product states strictly below the target energy, stopping once the cap is reached.
     # Only orbitals whose excitation energy fits below the target can contribute.
     orbitals = [j for j in range(eps.shape[0]) if eps[j] - eps[0] < target - s.count * eps[0] - tol]
     for c in itertools.combinations_with_replacement(orbitals, s.count):
+        if level >= cap:
+            return cap
         if np.sum(eps[list(c)]) < target - tol:
             # Number of distinct orderings of this multiset of orbitals.
             level += math.factorial(s.count) // math.prod(math.factorial(c.count(j)) for j in set(c))
-    return int(level)
+    return int(min(level, cap))
 
 
 def _solve_antisymmetric(s: iDEA.system.System, H, level: int, GPU: bool = False):
@@ -349,6 +358,14 @@ def solve(
     # Construct the Hamiltonian.
     if H is None:
         H = hamiltonian(s, GPU=GPU)
+
+    # The number of antisymmetric states this grid can hold (Slater determinants of the grid functions).
+    n = s.x.shape[0]
+    if k >= math.comb(n, s.up_count) * math.comb(n, s.down_count):
+        raise ValueError(
+            f"state k={k} cannot be found on this grid: it holds only "
+            f"{math.comb(n, s.up_count) * math.comb(n, s.down_count)} antisymmetric states."
+        )
 
     # Estimate the level of excitation (eigsh can solve for at most dimension - 1 eigenstates).
     max_level = H.shape[0] - 1

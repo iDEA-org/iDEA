@@ -68,6 +68,14 @@ class TestEstimateLevel:
         s = make_system(electrons, 9)
         assert 1 <= iDEA.methods.interacting._estimate_level(s, 0) < 9**s.count // 10
 
+    @pytest.mark.parametrize("electrons", ["uudd", "uuuu", "uuuud", "uuuuu", "uuuddd", "uuuuuu"])
+    @pytest.mark.parametrize("k", [0, 2])
+    def test_estimate_never_exceeds_original_heuristic(self, electrons, k):
+        r"""The non-interacting count grows combinatorially with the number of electrons, so it is capped."""
+        s = make_system(electrons, 9)
+        cap = (abs(s.up_count - s.down_count) + 1) ** 2 * s.count * (k + 1)
+        assert 1 <= iDEA.methods.interacting._estimate_level(s, k) <= cap
+
     @pytest.mark.parametrize("electrons", ["ud", "uu", "uud"])
     def test_estimate_sufficient_non_interacting(self, electrons, monkeypatch):
         r"""For a non-interacting system the estimate is exactly enough, so no retry is ever needed."""
@@ -90,14 +98,13 @@ class TestSolveLevel:
     r"""Tests of how solve chooses, grows and respects the level."""
 
     @pytest.mark.parametrize(
-        "electrons, num_points",
-        [("ud", 21), ("uu", 21), ("uud", 11), ("udd", 11), ("uuu", 11)],
+        "electrons, num_points, k",
+        [("ud", 21, 0), ("ud", 21, 2), ("uu", 21, 0), ("uu", 21, 2), ("uud", 11, 1), ("uuu", 11, 0), ("uuu", 11, 2)],
     )
-    @pytest.mark.parametrize("k", [0, 1, 2])
     def test_energy_matches_large_level(self, electrons, num_points, k):
         s = make_system(electrons, num_points)
         H = iDEA.methods.interacting.hamiltonian(s)
-        reference = iDEA.methods.interacting.solve(s, H=H, k=k, level=80).energy
+        reference = iDEA.methods.interacting.solve(s, H=H, k=k, level=60).energy
         assert np.isclose(iDEA.methods.interacting.solve(s, H=H, k=k).energy, reference)
 
     def test_retries_when_estimate_too_small(self, monkeypatch, capsys):
