@@ -259,7 +259,7 @@ def solve(
     |     s: iDEA.system.System, System object.
     |     hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
     |     k: int, Energy state to solve for. (default = 0, the ground-state)
-    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    |     restricted: bool, Is the calculation restricted (r) or unrestricted (u). (default=False) If True, H is used in place of up_H and down_H for both spin channels. This only matters for Hamiltonian functions with spin-dependent terms (hartree_fock and hybrid); the default non_interacting Hamiltonian is spin-independent, so for it this has no effect.
     |     mixing: float, Mixing parameter. (default = 0.5)
     |     tol: float, Tollerance of convergence. (default = 1e-10)
     |     initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)
@@ -382,7 +382,7 @@ def propagate_step(
     |     hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
     |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
     |     dt: float, Timestep.
-    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    |     restricted: bool, Is the calculation restricted (r) or unrestricted (u). (default=False) If True, H is used in place of up_H and down_H for both spin channels. This only matters for Hamiltonian functions with spin-dependent terms (hartree_fock and hybrid); the default non_interacting Hamiltonian is spin-independent, so for it this has no effect.
 
     | Returns:
     |     evolution: iDEA.state.SingleBodyEvolution, Time-dependent evolution solved at time index j from j-1.
@@ -437,7 +437,7 @@ def propagate(
     |    v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
     |    t: np.ndarray, Grid of time values. \n
     |    hamiltonian_function: Callable, Hamiltonian function [If None this will be the non_interacting function]. (default = None)
-    |    restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    |    restricted: bool, Is the calculation restricted (r) or unrestricted (u). (default=False) If True, H is used in place of up_H and down_H for both spin channels. This only matters for Hamiltonian functions with spin-dependent terms (hartree_fock and hybrid); the default non_interacting Hamiltonian is spin-independent, so for it this has no effect.
     |    name: str, Name of method. (default = "non_interacting")
 
     | Returns:

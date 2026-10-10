@@ -305,7 +305,7 @@ def solve(
     | Args:
     |     s: iDEA.system.System, System object.
     |     k: int, Energy state to solve for. (default = 0, the ground-state)
-    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    |     restricted: bool, Is the calculation restricted (r) or unrestricted (u). (default=False) Has no effect for this method, whose Hamiltonian is spin-independent (up_H = down_H = H); only hartree_fock and hybrid differ between restricted and unrestricted.
     |     mixing: float, Mixing parameter. (default = 0.5)
     |     tol: float, Tollerance of convergence. (default = 1e-10)
     |     initial: tuple. Tuple of initial values used to begin the self-consistency (n, up_n, down_n, p, up_p, down_p). (default = None)
@@ -343,7 +343,7 @@ def propagate(
     |     state: iDEA.state.SingleBodyState, State to be propigated.
     |     v_ptrb: np.ndarray, Local perturbing potential on the grid of t and x values, indexed as v_ptrb[time,space].
     |     t: np.ndarray, Grid of time values.
-    |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
+    |     restricted: bool, Is the calculation restricted (r) or unrestricted (u). (default=False) Has no effect for this method, whose Hamiltonian is spin-independent (up_H = down_H = H); only hartree_fock and hybrid differ between restricted and unrestricted.
     |     method_params: Dict[str, str], Dictionary of method parameters.
     | Returns:
     |     evolution: iDEA.state.SingleBodyEvolution, Solved time-dependent evolution.
