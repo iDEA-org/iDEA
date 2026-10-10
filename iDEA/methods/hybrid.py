@@ -97,7 +97,7 @@ def solve(
 
     | Args:
     |     s: iDEA.system.System, System object.
-    |     k: int, Energy state to solve for. (default = 0, the ground-state)
+    |     k: int, Excitation to solve for, i.e. the k-th lowest-energy occupation configuration (ranked by total_energy with the ground-state orbitals frozen), solved self-consistently (Delta SCF). See iDEA.methods.non_interacting.solve. (default = 0, the ground-state)
     |     restricted: bool, Is the calculation restricted (r) on unrestricted (u). (default=False)
     |     mixing: float, Mixing parameter. (default = 0.5)
     |     tol: float, Tollerance of convergence. (default = 1e-10)
@@ -109,7 +109,7 @@ def solve(
     |     state: iDEA.state.SingleBodyState, Solved state.
     """
     return iDEA.methods.non_interacting.solve(
-        s, hamiltonian, k, restricted, mixing, tol, initial, name, silent, alpha=alpha
+        s, hamiltonian, k, restricted, mixing, tol, initial, name, silent, energy_function=total_energy, alpha=alpha
     )
 
 
