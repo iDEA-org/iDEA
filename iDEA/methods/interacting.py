@@ -3,6 +3,7 @@
 import copy
 import functools
 import itertools
+import math
 import string
 from typing import Union
 
@@ -204,6 +205,9 @@ def antisymmetrize(s, spaces, spins, energies):
             allowed_energies.append(energies[n])
             allowed_spaces.append(spaces[..., n])
             allowed_spins.append(spins[..., n])
+    if not allowed_fulls:
+        # No state survived antisymmetrisation: return empty arrays and let the caller decide what to do.
+        return fulls[..., :0], spaces[..., :0], spins[..., :0], energies[:0]
     fulls = np.moveaxis(np.array(allowed_fulls), 0, -1)
     spaces = np.moveaxis(np.array(allowed_spaces), 0, -1)
     spins = np.moveaxis(np.array(allowed_spins), 0, -1)
@@ -234,44 +238,62 @@ def antisymmetrize(s, spaces, spins, energies):
 
 def _estimate_level(s: iDEA.system.System, k: int) -> int:
     r"""
-    Estimate the solution to the Schrodinger equation needed to eachive given antisymetric energy state.
+    Estimate the number of spatial eigenstates needed to reach the k-th antisymmetric energy state.
+
+    The many-body Hamiltonian is solved for spatial eigenstates without any exchange symmetry, many of which are
+    annihilated by antisymmetrization. This estimate is the smallest level that can contain the first k + 1
+    antisymmetric states of the non-interacting system: every spatial product state of single-particle orbitals
+    (counting all distinct orderings of the particles) with energy strictly below the k-th antisymmetric (Slater
+    determinant) state, plus one for each of the k + 1 lowest antisymmetric states that lie at the k-th energy.
+    Repulsive interactions typically lower the antisymmetric states relative to the rest of the spectrum, so this is
+    usually sufficient. It is only a starting point: solve() increases the level automatically if it is too small.
 
     | Args:
     |     s: iDEA.system.System, System object.
     |     k: int, Target energy state.
 
     | Returns:
-    |     level: int, Extimate of level of excitement.
+    |     level: int, Estimate of the number of spatial eigenstates needed.
     """
-    return (abs(s.up_count - s.down_count) + 1) ** 2 * s.count * (k + 1)
+    eps = np.linalg.eigvalsh(iDEA.methods.non_interacting.hamiltonian(s)[0])
+
+    # Energies of the k + 1 lowest antisymmetric non-interacting states.
+    orbitals = min(eps.shape[0], max(s.up_count, s.down_count) + k)
+    up_energies = [np.sum(eps[list(c)]) for c in itertools.combinations(range(orbitals), s.up_count)]
+    down_energies = [np.sum(eps[list(c)]) for c in itertools.combinations(range(orbitals), s.down_count)]
+    energies = np.sort([u + d for u in up_energies for d in down_energies])
+    if k >= energies.shape[0]:
+        return eps.shape[0] ** s.count
+    target = energies[k]
+    tol = 1e-6 * max(1.0, abs(target))
+    level = k + 1 - np.count_nonzero(energies < target - tol)
+
+    # Count the spatial product states strictly below the target energy.
+    # Only orbitals whose excitation energy fits below the target can contribute.
+    orbitals = [j for j in range(eps.shape[0]) if eps[j] - eps[0] < target - s.count * eps[0] - tol]
+    for c in itertools.combinations_with_replacement(orbitals, s.count):
+        if np.sum(eps[list(c)]) < target - tol:
+            # Number of distinct orderings of this multiset of orbitals.
+            level += math.factorial(s.count) // math.prod(math.factorial(c.count(j)) for j in set(c))
+    return int(level)
 
 
-def solve(
-    s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, GPU=False
-) -> Union[iDEA.state.ManyBodyState, iDEA.state.ManyBodyStates]:
+def _solve_antisymmetric(s: iDEA.system.System, H, level: int, GPU: bool = False):
     r"""
-    Solves the interacting Schrodinger equation of the given system.
+    Solve for the lowest spatial eigenstates of the many-body Hamiltonian and antisymmetrize them.
 
     | Args:
     |     s: iDEA.system.System, System object.
-    |     H: np.ndarray, Hamiltonian [If None this will be computed from s]. (default = None)
-    |     k: int, Energy state to solve for. If -1 will return all states. (default = 0, the ground-state)
-    |     level: int. Max level of excitation to use when solving the Schrodinger equation.
+    |     H: sparse matrix, Hamiltonian.
+    |     level: int, Number of spatial eigenstates to solve for.
     |     GPU: bool, Solve on GPU using cupy. If false will use scipy on CPU.
 
     | Returns:
-    |     state: iDEA.state.ManyBodyState or iDEA.state.ManyBodyStates, Solved state, or collection of all solved states if k=-1.
+    |     fulls: np.ndarray, Full anantisymmetrized wavefunction.
+    |     spaces: np.ndarray, Spatial parts of the wavefunction.
+    |     spins: np.ndarray, Spin parts of the wavefunction.
+    |     energies: np.ndarray, Energies.
     """
-    # Construct the Hamiltonian.
-    if H is None:
-        H = hamiltonian(s, GPU=GPU)
-
-    # Estimate the level of excitation.
-    if level is None:
-        if k == -1:
-            raise ValueError("level must be provided explicitly when k=-1 (all states).")
-        level = _estimate_level(s, k)
-
     # Solve the many-body Schrodinger equation.
     if GPU:
         import cupy as cp
@@ -303,7 +325,58 @@ def solve(
         spins[..., i] = spin
 
     # Antisymmetrize.
-    fulls, spaces, spins, energies = antisymmetrize(s, spaces, spins, energies)
+    return antisymmetrize(s, spaces, spins, energies)
+
+
+def solve(
+    s: iDEA.system.System, H: np.ndarray = None, k: int = 0, level=None, GPU=False
+) -> Union[iDEA.state.ManyBodyState, iDEA.state.ManyBodyStates]:
+    r"""
+    Solves the interacting Schrodinger equation of the given system.
+
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     H: np.ndarray, Hamiltonian [If None this will be computed from s]. (default = None)
+    |     k: int, Energy state to solve for. If -1 will return all states. (default = 0, the ground-state)
+    |     level: int. Number of spatial eigenstates to solve for before antisymmetrization. If None this is estimated
+    |         and increased automatically until state k is found. If given it is used as is, and a ValueError is
+    |         raised if it is too small to reach state k. (default = None)
+    |     GPU: bool, Solve on GPU using cupy. If false will use scipy on CPU.
+
+    | Returns:
+    |     state: iDEA.state.ManyBodyState or iDEA.state.ManyBodyStates, Solved state, or collection of all solved states if k=-1.
+    """
+    # Construct the Hamiltonian.
+    if H is None:
+        H = hamiltonian(s, GPU=GPU)
+
+    # Estimate the level of excitation (eigsh can solve for at most dimension - 1 eigenstates).
+    max_level = H.shape[0] - 1
+    automatic = level is None
+    if automatic:
+        if k == -1:
+            raise ValueError("level must be provided explicitly when k=-1 (all states).")
+        level = max(1, min(_estimate_level(s, k), max_level))
+
+    # Solve and antisymmetrize, increasing the level until state k survives antisymmetrization.
+    while True:
+        fulls, spaces, spins, energies = _solve_antisymmetric(s, H, level, GPU=GPU)
+        if fulls.shape[-1] > max(k, 0):
+            break
+        wanted = "no states were found" if k == -1 else f"state k={k} cannot be found"
+        if not automatic:
+            hint = "" if k == -1 else ", or leave it as None to estimate it"
+            raise ValueError(
+                f"Only {fulls.shape[-1]} state(s) survived antisymmetrization of the lowest {level} spatial "
+                f"eigenstates, so {wanted}: increase level{hint}."
+            )
+        if level >= max_level:
+            raise ValueError(
+                f"Only {fulls.shape[-1]} state(s) survived antisymmetrization of the lowest {level} spatial "
+                f"eigenstates, so {wanted} on this grid."
+            )
+        level = min(2 * level, max_level)
+        print(f"iDEA.methods.interacting.solve: too few antisymmetric states, retrying with level={level}...")
 
     # Populate the state.
     if k != -1:
