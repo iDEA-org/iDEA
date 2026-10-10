@@ -11,6 +11,26 @@ import iDEA.state
 import iDEA.system
 
 
+def _check_one_body_operator(s: iDEA.system.System, observable_operator: np.ndarray) -> None:
+    r"""
+    Check that an operator is a one-body operator on the spatial grid, as required for many-body observables.
+
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     observable_operator: np.ndarray, Obserbable operator.
+    """
+    expected_shape = (s.x.shape[0], s.x.shape[0])
+    if getattr(observable_operator, "shape", None) != expected_shape:
+        raise NotImplementedError(
+            "Many-body observables are only supported for one-body operators given as an N_x by N_x matrix "
+            f"(expected shape {expected_shape}, got {getattr(observable_operator, 'shape', None)}). "
+            "Pass the single-particle operator, e.g. iDEA.methods.non_interacting.kinetic_energy_operator(s), "
+            "rather than the many-body operator from iDEA.methods.interacting. For the interaction energy use "
+            "iDEA.observables.interaction_energy."
+        )
+    return None
+
+
 def observable(
     s: iDEA.system.System,
     observable_operator: np.ndarray,
@@ -21,9 +41,16 @@ def observable(
     r"""
     Compute an observable based on a given operator and state or evolution.
 
+    For a SingleBodyState or SingleBodyEvolution the operator is a one-body operator (an N_x by N_x matrix).
+    For a ManyBodyState or ManyBodyEvolution the operator must also be a one-body operator
+    :math:`\hat{O} = \sum_i \hat{o}_i` given as an N_x by N_x matrix, e.g. from
+    iDEA.methods.non_interacting.kinetic_energy_operator. The expectation value is then evaluated from the one-body
+    reduced density matrix, :math:`\langle \hat{O} \rangle = \int dx\, dx'\, o(x, x') \rho(x', x)`, without
+    building the many-body operator. Two-body (or general many-body) operators are not supported.
+
     | Args:
     |     s: iDEA.system.System, System object.
-    |     observable_operator: np.ndarray, Obserbable operator.
+    |     observable_operator: np.ndarray, Obserbable operator (one-body, shape (N_x, N_x)).
     |     state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
     |     evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
     |     return_spins: bool, True to also return the spin observables: total, up, down. (default = False)
@@ -32,7 +59,15 @@ def observable(
     |     observable: float or np.ndarray, Observable.
     """
     if state is not None and isinstance(state, iDEA.state.ManyBodyState):
-        raise NotImplementedError()
+        _check_one_body_operator(s, observable_operator)
+        _, up_p, down_p = density_matrix(s, state=state, return_spins=True)
+        up_O = np.sum(observable_operator * up_p.T) * s.dx
+        down_O = np.sum(observable_operator * down_p.T) * s.dx
+        O = up_O + down_O
+        if return_spins:
+            return O.real, up_O.real, down_O.real
+        else:
+            return O.real
 
     if state is not None and isinstance(state, iDEA.state.SingleBodyState):
         up_O = 0.0
@@ -62,7 +97,15 @@ def observable(
             return O
 
     if evolution is not None and isinstance(evolution, iDEA.state.ManyBodyEvolution):
-        raise NotImplementedError()
+        _check_one_body_operator(s, observable_operator)
+        _, up_p, down_p = density_matrix(s, evolution=evolution, return_spins=True)
+        up_O = np.einsum("ab,tba->t", observable_operator, up_p) * s.dx
+        down_O = np.einsum("ab,tba->t", observable_operator, down_p) * s.dx
+        O = up_O + down_O
+        if return_spins:
+            return O.real, up_O.real, down_O.real
+        else:
+            return O.real
 
     if evolution is not None and isinstance(evolution, iDEA.state.SingleBodyEvolution):
         up_O = np.zeros(shape=evolution.t.shape, dtype=complex)
@@ -317,22 +360,22 @@ def density_matrix(
 
 def kinetic_energy(
     s: iDEA.system.System,
-    state: iDEA.state.SingleBodyState = None,
-    evolution: iDEA.state.SingleBodyEvolution = None,
+    state: Union[iDEA.state.SingleBodyState, iDEA.state.ManyBodyState] = None,
+    evolution: Union[iDEA.state.SingleBodyEvolution, iDEA.state.ManyBodyEvolution] = None,
 ) -> Union[float, np.ndarray]:
     r"""
-    Compute the kinetic energy of a non_interacting state.
+    Compute the kinetic energy of a state or evolution.
 
     | Args:
     |     s: iDEA.system.System, System object.
-    |     state: iDEA.state.SingleBodyState, State. (default = None)
-    |     evolution: iDEA.state.SingleBodyEvolution, Evolution. (default = None)
+    |     state: iDEA.state.SingleBodyState or iDEA.state.ManyBodyState, State. (default = None)
+    |     evolution: iDEA.state.SingleBodyEvolution or iDEA.state.ManyBodyEvolution, Evolution. (default = None)
 
     | Returns:
     |     E_k: float or np.ndarray, Kinetic energy, or evolution of kinetic energy.
     """
     if state is not None and isinstance(state, iDEA.state.ManyBodyState):
-        K = iDEA.methods.interacting.kinetic_energy_operator(s)
+        K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
         return observable(s, K, state=state)
 
     if state is not None and isinstance(state, iDEA.state.SingleBodyState):
@@ -340,12 +383,53 @@ def kinetic_energy(
         return observable(s, K, state=state)
 
     if evolution is not None and isinstance(evolution, iDEA.state.ManyBodyEvolution):
-        K = iDEA.methods.interacting.kinetic_energy_operator(s)
+        K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
         return observable(s, K, evolution=evolution)
 
     if evolution is not None and isinstance(evolution, iDEA.state.SingleBodyEvolution):
         K = iDEA.methods.non_interacting.kinetic_energy_operator(s)
         return observable(s, K, evolution=evolution)
+
+    else:
+        raise AttributeError("State or Evolution must be provided.")
+
+
+def interaction_energy(
+    s: iDEA.system.System,
+    state: iDEA.state.ManyBodyState = None,
+    evolution: iDEA.state.ManyBodyEvolution = None,
+) -> float:
+    r"""
+    Compute the exact interaction energy of an interacting state.
+
+    This is evaluated from the pair density
+    .. math:: E_{int} = \frac{1}{2} \int dx\, dx'\, n_2(x, x') v_{int}(x, x').
+    For approximate (single-body) states use hartree_energy and exchange_energy instead.
+
+    | Args:
+    |     s: iDEA.system.System, System object.
+    |     state: iDEA.state.ManyBodyState, State. (default = None)
+    |     evolution: iDEA.state.ManyBodyEvolution, Evolution. (default = None)
+
+    | Returns:
+    |     E_int: float, Interaction energy.
+    """
+    if state is not None and isinstance(state, iDEA.state.ManyBodyState):
+        if s.count < 2:
+            return 0.0
+        tosum = tuple([1, 3] + list(range(4, s.count * 2)))
+        n2 = np.sum(abs(state.full) ** 2, axis=tosum) * s.dx ** (s.count - 2) * s.count * (s.count - 1)
+        E_int = 0.5 * np.sum(n2 * s.v_int) * s.dx * s.dx
+        return E_int
+
+    if state is not None and isinstance(state, iDEA.state.SingleBodyState):
+        raise NotImplementedError(
+            "interaction_energy is only available for ManyBodyState. For a SingleBodyState use "
+            "iDEA.observables.hartree_energy and iDEA.observables.exchange_energy."
+        )
+
+    if evolution is not None:
+        raise NotImplementedError("interaction_energy is not yet implemented for evolutions.")
 
     else:
         raise AttributeError("State or Evolution must be provided.")
