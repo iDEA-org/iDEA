@@ -64,9 +64,12 @@ def hamiltonian(
     if Vext is None:
         Vext = external_potential_operator(s)
     Vh = hartree_potential_operator(s, up_n + down_n)
-    Vx = exchange_potential_operator(s, up_p + down_p)
     up_Vx = exchange_potential_operator(s, up_p)
     down_Vx = exchange_potential_operator(s, down_p)
+    # Restricted exchange: Fock exchange only acts between electrons of the same spin, so the shared
+    # (restricted) operator is the electron-weighted average of the spin channels. For a closed shell
+    # (up_p == down_p) this is Vx[(up_p + down_p) / 2], and for a fully polarised system it is Vx[up_p].
+    Vx = (s.up_count * up_Vx + s.down_count * down_Vx) / max(s.count, 1)
     H = K + Vext + Vh + Vx
     up_H = K + Vext + Vh + up_Vx
     down_H = K + Vext + Vh + down_Vx
